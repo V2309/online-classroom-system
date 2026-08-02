@@ -1,0 +1,857 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model User {
+
+  id         String   @id @default(cuid())
+
+
+  username   String
+  class_name String
+  schoolname String
+  birthday   DateTime
+  address    String
+  img        String?
+  email     String?  @unique
+  phone     String?  @unique
+  role      UserRole @default(student)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  password  String?  // Đổi thành optional vì đăng nhập Google không cần password
+
+  isBanned   Boolean  @default(false)
+
+  emailVerified    Boolean  @default(false) // Email đã được xác thực qua OAuth
+  isEmailVerified  Boolean  @default(false) // Xác thực email thủ công
+  isPhoneVerified  Boolean  @default(false)
+  
+  verificationTokens VerificationToken[] // Quan hệ
+
+  // RELATIONS
+  student Student?
+
+  teacher Teacher?
+  // post 
+  posts Post[]
+
+  likes Like[]
+
+  saves SavedPosts[]
+
+  fileViews FileView[]
+  courseViews CourseView[]
+  videoViews VideoView[]
+
+  notificationsReceived Notification[]  @relation("recipient")
+  notificationsActed    Notification[]  @relation("actor")
+
+  messages  Message[]
+
+}
+// --- THÊM MODEL MỚI NÀY ---
+model VerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // Token duy nhất
+  expires   DateTime // Thời gian hết hạn
+
+  // Liên kết với user
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Đảm bảo 1 user chỉ có 1 token 1 lúc
+  @@unique([userId, token])
+}
+
+model Student {
+  id         String   @id
+  username   String
+  class_name String
+  schoolname String
+  birthday   DateTime
+  address    String
+  img         String?
+  email     String?  @unique
+  phone     String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  password  String
+
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
+
+  classes     Class[]
+  attendances Attendance[]
+  results     Result[]
+
+  homeworkSubmissions HomeworkSubmission[]
+  joinRequests ClassJoinRequest[]
+
+  // Group memberships
+  groupMemberships ClassGroupMember[] 
+}
+
+model Teacher {
+  id         String   @id
+  username   String
+  class_name String
+  schoolname String
+  birthday   DateTime
+  address    String
+  img        String?
+  email     String?  @unique
+  phone     String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+  password  String
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id]) // mối quan hệ 1 1 với User
+
+  subjects Subject[] // Mối quan hệ nhiều nhiều với Subject
+  lessons  Lesson[] // Mối quan hệ nhiều nhiều với Lesson
+  classes  Class[] // Mối quan hệ nhiều nhiều với Class
+
+  homeworks Homework[] // Mối quan hệ nhiều nhiều với Homework
+  files     File[]     // Mối quan hệ với tài liệu đã upload
+  
+  // Course system relations
+  folders   Folder[]   // Các thư mục do giáo viên tạo
+  courses   Course[]   // Các khóa học do giáo viên tạo
+  chapters  Chapter[]  // Các chương do giáo viên tạo
+  videos    Video[]    // Các video do giáo viên tạo
+
+  // Groups created by this teacher
+  createdGroups ClassGroup[]
+}
+
+model Grade {
+  id    Int    @id @default(autoincrement())
+  level String @unique
+
+  classess Class[]
+}
+
+model Class {
+  id         Int     @id @default(autoincrement())
+  name       String
+  capacity   Int
+  class_code String? @unique
+  img       String?
+
+  // Các trường boolean cho cài đặt lớp học
+  isProtected      Boolean @default(false)
+  isLocked         Boolean @default(false)
+  requiresApproval Boolean @default(false)
+  blockLeave       Boolean @default(false)
+  allowGradesView  Boolean @default(false)
+  
+  // Trường xóa mềm
+  deleted          Boolean @default(false)
+  deletedAt        DateTime?
+
+  supervisorId  String?
+  supervisor    Teacher?       @relation(fields: [supervisorId], references: [id])
+  lessons       Lesson[]
+  students      Student[]
+  gradeId       Int
+  grade         Grade          @relation(fields: [gradeId], references: [id])
+  events        Event[]
+  announcements Announcement[]
+
+  homeworks Homework[] // Thêm dòng này
+  files     File[]     // Mối quan hệ với tài liệu của lớp học
+
+  posts     Post[]     // Thêm dòng này
+  
+  // Course system relations
+  folders   Folder[]   // Các thư mục trong lớp học
+  courses   Course[]   // Các khóa học trong lớp học
+  
+  // Join requests relation
+  joinRequests ClassJoinRequest[]
+
+  // Class groups relation
+  groups    ClassGroup[]
+
+  whiteboard Whiteboard?
+  messages  Message[]
+}
+
+model Subject {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  teachers Teacher[]
+  lessons  Lesson[]
+
+  homeworks Homework[] // Thêm dòng này
+}
+
+model Lesson {
+  id        Int      @id @default(autoincrement())
+  name      String
+  day       Day
+  startTime DateTime
+  endTime   DateTime
+
+  subjectId   Int
+  subject     Subject      @relation(fields: [subjectId], references: [id])
+  classId     Int
+  class       Class        @relation(fields: [classId], references: [id])
+  teacherId   String
+  teacher     Teacher      @relation(fields: [teacherId], references: [id])
+  exams       Exam[]
+  assignments Assignment[]
+  attendances Attendance[]
+}
+
+model Exam {
+  id        Int      @id @default(autoincrement())
+  title     String
+  startTime DateTime
+  endTime   DateTime
+
+  lessonId Int
+  lesson   Lesson   @relation(fields: [lessonId], references: [id])
+  results  Result[]
+}
+
+model Assignment {
+  id        Int      @id @default(autoincrement())
+  title     String
+  startDate DateTime
+  dueDate   DateTime
+
+  lessonId Int
+  lesson   Lesson   @relation(fields: [lessonId], references: [id])
+  results  Result[]
+}
+
+model Result {
+  id    Int @id @default(autoincrement())
+  score Int
+
+  examId       Int?
+  exam         Exam?       @relation(fields: [examId], references: [id])
+  assignmentId Int?
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
+  studentId    String
+  student      Student     @relation(fields: [studentId], references: [id])
+}
+
+model Attendance {
+  id      Int      @id @default(autoincrement())
+  date    DateTime
+  present Boolean
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+  lessonId  Int
+  lesson    Lesson  @relation(fields: [lessonId], references: [id])
+}
+
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+
+  // === RECURRING EVENTS FIELDS ===
+  
+  // Loại lặp lại
+  recurrenceType RecurrenceType @default(NONE)
+  
+  // Khoảng cách lặp lại (ví dụ: cứ 2 tuần, cứ 3 ngày)
+  interval       Int            @default(1)
+  
+  // Ngày kết thúc chuỗi lặp lại (null = lặp vô hạn)
+  recurrenceEnd  DateTime?
+  
+  // Số lần lặp tối đa (null = không giới hạn)
+  maxOccurrences Int?
+  
+  // ID của sự kiện gốc (nếu đây là sự kiện được tạo từ recurring)
+  parentEventId  Int?
+  parentEvent    Event?  @relation("EventRecurrence", fields: [parentEventId], references: [id])
+  childEvents    Event[] @relation("EventRecurrence")
+  
+  // Các ngày trong tuần áp dụng (cho weekly recurrence)
+  // Lưu dạng JSON: [1,3,5] = Thứ 2, 4, 6 (0=CN, 1=T2, ..., 6=T7)
+  weekDays       Json?
+  
+  // Ngày trong tháng (cho monthly recurrence)
+  monthDay       Int?
+  
+  // Tuần trong tháng (cho monthly recurrence)  
+  // Ví dụ: 1 = tuần đầu, -1 = tuần cuối
+  weekOfMonth    Int?
+
+  // === MEETING FIELDS ===
+  // Link cuộc họp (nếu sự kiện này là một cuộc họp)
+  meetingLink String?
+  
+  // === RELATIONS ===
+  classId Int?
+  class   Class? @relation(fields: [classId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+// Enum cho loại lặp lại
+enum RecurrenceType {
+  NONE              // Không lặp
+  DAILY             // Hàng ngày
+  WEEKLY            // Hàng tuần vào thứ năm  
+  MONTHLY_BY_DATE   // Hàng tháng vào thứ năm cuối cùng
+  CUSTOM            // Tùy chỉnh
+}
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  date        DateTime
+
+  classId Int?
+  class   Class? @relation(fields: [classId], references: [id])
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+
+enum UserRole {
+  teacher
+  student
+  admin
+}
+
+
+
+
+model Homework {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?
+  content       String?
+  type          String?  // "original" hoặc "extracted"
+  originalFileUrl String? // URL file gốc
+  originalFileName String? // Tên file gốc
+  originalFileType String? // Loại file gốc
+  startTime     DateTime?
+  endTime       DateTime?
+  duration      Int?
+  maxAttempts   Int?
+  points        Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Quyền xem điểm của học sinh
+  studentViewPermission StudentViewPermission @default(NO_VIEW)
+  
+  // thiết lập điểm
+  gradingMethod GradingMethod @default(FIRST_ATTEMPT)
+
+  // có đảo đề không
+  isShuffleQuestions Boolean @default(false)
+
+  // có đảo đáp án không
+
+  isShuffleAnswers   Boolean @default(false)
+
+  // Thêm field mới: Chặn xem lại đề sau khi nộp bài
+  blockViewAfterSubmit Boolean @default(false)
+  
+  classCode String? @map("class_code")
+  class     Class?  @relation(fields: [classCode], references: [class_code])
+
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+
+  subjectId Int?
+  subject   Subject? @relation(fields: [subjectId], references: [id])
+
+  submissions HomeworkSubmission[] 
+  attachments HomeworkAttachment[] 
+  questions   Question[]           
+}
+
+// Enum mới cho quyền xem điểm
+enum StudentViewPermission {
+  NO_VIEW           // Không được xem điểm
+  SCORE_ONLY        // Chỉ xem điểm tổng
+  SCORE_AND_RESULT  // Xem điểm và đúng/sai từng câu
+  
+  @@map("student_view_permissions")
+}
+
+// Enum mới cho thiết lập bảng điểm
+enum GradingMethod {
+  FIRST_ATTEMPT    // Lấy điểm lần làm bài đầu tiên
+  LATEST_ATTEMPT   // Lấy điểm lần làm bài mới nhất
+  HIGHEST_ATTEMPT  // Lấy điểm lần làm bài cao nhất
+  
+  @@map("grading_methods")
+}
+
+
+model HomeworkSubmission {
+  id            Int      @id @default(autoincrement())
+  content       String
+  attemptNumber Int
+  submittedAt   DateTime @default(now())
+  grade         Float?
+  timeSpent     Int?
+  feedback      String?
+
+  homeworkId Int
+  homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id])
+  violationCount Int      @default(0)
+  attachments     HomeworkSubmissionAttachment[] 
+  questions       Question[]                     
+  questionAnswers QuestionAnswer[]               
+}
+
+model HomeworkAttachment {
+  id   Int     @id @default(autoincrement())
+  name String
+  url  String?
+  type String
+  size Int
+
+  homeworkId Int
+  homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+}
+
+model HomeworkSubmissionAttachment {
+  id   Int    @id @default(autoincrement())
+  name String
+  url  String
+  type String
+  size Int
+
+  submissionId Int
+  submission   HomeworkSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model Question {
+  id                   Int                 @id @default(autoincrement())
+  questionNumber       Int?                // Số thứ tự câu hỏi (1, 2, 3...)
+  content              String              // Nội dung câu hỏi
+  questionType         String?             // "multiple_choice", "fill_blank", etc.
+  options              Json?               // Lưu các lựa chọn A, B, C, D dạng JSON
+  answer               String              // Đáp án đúng
+  point                Float?              // Điểm cho câu hỏi này
+  
+  homeworkId           Int
+  homework             Homework            @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  
+  HomeworkSubmission   HomeworkSubmission? @relation(fields: [homeworkSubmissionId], references: [id], onDelete: Cascade)
+  homeworkSubmissionId Int?
+
+  questionAnswers QuestionAnswer[] 
+}
+
+model QuestionAnswer {
+  id        Int      @id @default(autoincrement())
+  answer    String
+  isCorrect Boolean?
+
+  questionId   Int
+  question     Question           @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  submissionId Int
+  submission   HomeworkSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model File {
+  id          String   @id @default(uuid())
+  name        String              // Tên gốc của file (ví dụ: "bai-giang-tuan-1.pdf")
+  url         String              // Đường dẫn đầy đủ đến file trên S3
+  type        String              // Loại file (pdf, docx, pptx, v.v.)
+  size        Int                 // Dung lượng file (bytes)
+  uploadedAt  DateTime @default(now())
+  uploadedBy  String              // ID của giáo viên upload
+
+  // Liên kết với giáo viên upload
+  teacher     Teacher  @relation(fields: [uploadedBy], references: [id])
+
+  // Liên kết với lớp học thông qua class code
+  classCode   String?  @map("class_code")
+  class       Class?   @relation(fields: [classCode], references: [class_code])
+
+  // Liên kết với lượt xem
+  views       FileView[]
+}
+
+model FileView {
+  id        String   @id @default(uuid())
+  viewedAt  DateTime @default(now())
+
+  // Liên kết với file
+  fileId    String
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  // Liên kết với user xem
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  // Đảm bảo một user chỉ có một record view cho một file
+  @@unique([fileId, userId])
+}
+
+// Course system models
+model Folder {
+  id          String   @id @default(uuid())
+  name        String              // Tên thư mục (ví dụ: "Machine Learning", "Web Development")
+  description String?             // Mô tả thư mục
+  color       String?             // Màu sắc thư mục (hex code)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Liên kết với giáo viên tạo thư mục
+  createdBy   String
+  teacher     Teacher  @relation(fields: [createdBy], references: [id])
+
+  // Liên kết với lớp học thông qua class code
+  classCode   String?  @map("class_code")
+  class       Class?   @relation(fields: [classCode], references: [class_code])
+
+  // Liên kết với các khóa học
+  courses     Course[]
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String              // Tên khóa học
+  description String?             // Mô tả khóa học
+  thumbnailUrl String?            // Ảnh thumbnail
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true) // Trạng thái kích hoạt
+
+  // Liên kết với thư mục
+  folderId    String?
+  folder      Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+
+  // Liên kết với giáo viên tạo khóa học
+  createdBy   String
+  teacher     Teacher  @relation(fields: [createdBy], references: [id])
+
+  // Liên kết với lớp học thông qua class code
+  classCode   String?  @map("class_code")
+  class       Class?   @relation(fields: [classCode], references: [class_code])
+
+  // Liên kết với các chương, video và lượt xem
+  chapters    Chapter[]  // Các chương trong khóa học
+  videos      Video[]    // Các video trong khóa học (có thể không thuộc chương nào)
+  views       CourseView[]
+}
+
+model Chapter {
+  id          String   @id @default(uuid())
+  title       String              // Tên chương (ví dụ: "Chương 1: Giới thiệu")
+  description String?             // Mô tả chương
+  orderIndex  Int      @default(0) // Thứ tự sắp xếp trong khóa học
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true) // Trạng thái kích hoạt
+
+  // Liên kết với khóa học
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Liên kết với giáo viên tạo chương
+  createdBy   String
+  teacher     Teacher  @relation(fields: [createdBy], references: [id])
+
+  // Liên kết với các video
+  videos      Video[]
+}
+
+model Video {
+  id          String   @id @default(uuid())
+  title       String              // Tên video
+  description String?             // Mô tả video
+  slug        String  @unique
+  url         String              // URL video (YouTube, Vimeo, hoặc file upload)
+  type        String   @default("youtube") // Loại video: youtube, vimeo, upload
+  duration    String?             // Thời lượng video (ví dụ: "10:30")
+  thumbnailUrl String?            // Ảnh thumbnail riêng cho video
+  orderIndex  Int      @default(0) // Thứ tự sắp xếp trong chương
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isActive    Boolean  @default(true) // Trạng thái kích hoạt
+
+  // Liên kết với chương
+  chapterId   String?
+  chapter     Chapter? @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+
+  // Liên kết với khóa học (có thể trực tiếp hoặc qua chapter)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Liên kết với giáo viên tạo video
+  createdBy   String
+  teacher     Teacher  @relation(fields: [createdBy], references: [id])
+
+  // Liên kết với lượt xem video
+  views       VideoView[]
+}
+
+model CourseView {
+  id        String   @id @default(uuid())
+  viewedAt  DateTime @default(now())
+
+  // Liên kết với khóa học
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Liên kết với user xem
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  // Đảm bảo một user chỉ có một record view cho một khóa học
+  @@unique([courseId, userId])
+}
+
+model VideoView {
+  id        String   @id @default(uuid())
+  viewedAt  DateTime @default(now())
+  watchTime Int?               // Thời gian đã xem (giây)
+  completed Boolean  @default(false) // Đã xem hết video chưa
+
+  // Liên kết với video
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  // Liên kết với user xem
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  // Đảm bảo một user chỉ có một record view cho một video
+  @@unique([videoId, userId])
+}
+
+
+// post model
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  desc        String?  @db.VarChar(255)
+  img         String?
+  imgHeight   Int?
+  video       String?
+  isSensitive Boolean  @default(false)
+
+  // RELATIONS
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  rePostId Int?
+  rePost   Post?  @relation("RePosts", fields: [rePostId], references: [id])
+  rePosts  Post[] @relation("RePosts")
+
+  parentPostId Int?
+  parentPost   Post?  @relation("PostComments", fields: [parentPostId], references: [id])
+  comments     Post[] @relation("PostComments")
+
+  likes Like[]
+
+  saves SavedPosts[]
+
+    // NEW: gắn bài viết vào 1 lớp (có thể để null nếu muốn post “toàn trường”)
+  classCode   String?  @map("class_code")
+  class       Class?   @relation(fields: [classCode], references: [class_code])
+}
+
+// like model
+model Like {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // RELATIONS
+  userId String
+  postId Int
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+}
+
+
+// saves model
+model SavedPosts {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // RELATIONS
+  userId String
+  postId Int
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+}
+
+// Model cho yêu cầu tham gia lớp học
+model ClassJoinRequest {
+  id        Int      @id @default(autoincrement())
+  studentId String
+  classCode String?  @map("class_code")
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  student   Student @relation(fields: [studentId], references: [id])
+  class     Class?  @relation(fields: [classCode], references: [class_code])
+
+  @@unique([studentId, classCode])
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+model Notification {
+  id        Int   @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  // Người nhận thông báo
+  recipientId String
+  recipient   User     @relation("recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  // Người thực hiện hành động (ví dụ: người like)
+  actorId     String
+  actor       User     @relation("actor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  // Loại thông báo
+  type        NotificationType
+
+  // Nội dung (ví dụ: "đã bình luận về bài đăng của bạn")
+  // Bạn có thể tạo tự động ở frontend dựa trên 'type'
+  content   String?
+
+  // Đường link khi bấm vào thông báo
+  link      String
+
+  // Trạng thái đã đọc/chưa đọc
+  isRead    Boolean  @default(false)
+
+  // Index để query nhanh
+  @@index([recipientId, isRead])
+}
+
+enum NotificationType {
+  POST_LIKE       // Có người like bài viết
+  POST_COMMENT    // Có người bình luận
+  CLASS_APPROVAL  // Yêu cầu tham gia lớp được duyệt
+  NEW_HOMEWORK    // Có bài tập mới
+  NEW_POST        // Có bài đăng mới trong lớp
+  SUBMISSION_GRADED // Bài nộp đã được chấm điểm
+  STUDENT_JOINED_CLASS // Có học sinh mới tham gia lớp
+}
+
+model Message {
+  id        Int   @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  content   String   @db.Text // Nội dung tin nhắn
+
+  // Người gửi
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Phòng chat (lớp học)
+  classCode String   @map("class_code")
+  class     Class    @relation(fields: [classCode], references: [class_code], onDelete: Cascade)
+
+  // Reply functionality
+  replyToId       Int?    @map("reply_to_id")
+  replyToContent  String? @map("reply_to_content") @db.Text
+  replyToUsername String? @map("reply_to_username")
+
+  // Pin functionality
+  isPinned      Boolean @default(false) @map("is_pinned")
+  pinnedAt      DateTime? @map("pinned_at")
+  pinnedByUserId String? @map("pinned_by_user_id")
+
+  @@index([classCode, createdAt])
+  @@index([classCode, isPinned, pinnedAt])
+}
+
+model Whiteboard {
+  id        String   @id @default(cuid())
+  classCode String   @unique // Mỗi lớp chỉ có 1 bảng trắng
+  class     Class    @relation(fields: [classCode], references: [class_code], onDelete: Cascade)
+  
+  content   Json?    // Lưu toàn bộ dữ liệu snapshot của tldraw
+  updatedAt DateTime @updatedAt
+}
+
+// === MODELS CHO CHỨC NĂNG NHÓM LỚP ===
+
+model ClassGroup {
+  id        String   @id @default(cuid())
+  name      String   // Tên nhóm (VD: "Nhóm 1", "Nhóm A")
+  color     String?  // Màu sắc nhóm (hex color)
+  maxSize   Int?     // Số thành viên tối đa (null = không giới hạn)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Thuộc về lớp học nào
+  classCode String   
+  class     Class    @relation(fields: [classCode], references: [class_code], onDelete: Cascade)
+
+  // Nhóm được tạo bởi giáo viên nào
+  createdById String
+  createdBy   Teacher @relation(fields: [createdById], references: [id])
+
+  // Các thành viên trong nhóm
+  members   ClassGroupMember[]
+
+  @@index([classCode])
+}
+
+model ClassGroupMember {
+  id       String   @id @default(cuid())
+  joinedAt DateTime @default(now())
+
+  // Thuộc về nhóm nào
+  groupId String
+  group   ClassGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  // Học sinh nào
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Vai trò trong nhóm (có thể mở rộng sau)
+  role ClassGroupRole @default(MEMBER)
+
+  @@unique([groupId, studentId]) // Một học sinh chỉ có thể ở trong một nhóm của cùng một lớp
+  @@index([groupId])
+  @@index([studentId])
+}
+
+enum ClassGroupRole {
+  LEADER  // Trưởng nhóm
+  MEMBER  // Thành viên
+}

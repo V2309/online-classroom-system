@@ -1,7 +1,35 @@
-node_modules
-venv
-__pycache__
+```gitignore
+# Dependencies
+node_modules/
+
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables
 .env
-.env.local
+.env.*
+!.env.example
+
+# Next.js
+.next/
+out/
+
+# OS files
 .DS_Store
-.next
+Thumbs.db
+
+# Logs
+*.log
+
+# Build files
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+```

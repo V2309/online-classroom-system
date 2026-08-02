@@ -1,0 +1,68 @@
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.*
+!.env.example
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+pip-wheel-metadata/
+
+# ========================
+# Virtual Environments
+# ========================
+venv/
+env/
+ENV/
+.venv/
+
+# ========================
+# Uploads & Temp Files
+# ========================
+uploads/
+*.mp3
+*.wav
+*.ogg
+
+# ========================
+# Vector Stores
+# ========================
+vector_stores/
+*.faiss
+*.pkl
+
+# ========================
+# IDE & OS
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
