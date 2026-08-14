@@ -1,3 +1,6 @@
+/**
+ * @deprecated - Logic upload và cấu hình ImageKit đã chuyển toàn bộ sang NestJS UploadModule (online-classroom-backend)
+ */
 import ImageKit from "imagekit";
 
 // Server-side ImageKit instance

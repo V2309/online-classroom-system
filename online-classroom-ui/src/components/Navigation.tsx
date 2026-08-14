@@ -4,7 +4,7 @@ import { useUser } from "@/hooks/useUser";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { logoutAction } from "@/lib/actions/auth.action";
+import { authService } from "@/services/auth.service";
 import Image from "@/components/Image";
 
 import Notification from "./Notification";
@@ -33,15 +33,11 @@ export default function Navigation() {
 
   const handleLogout = async () => {
     try {
-      const result = await logoutAction();
-      if (result.success) {
-        window.location.href = "/";
-      } else {
-        console.error("Logout failed:", result.error);
-        window.location.href = "/";
-      }
+      await authService.logout();
     } catch (err) {
       console.error("Logout failed:", err);
+    } finally {
+      // Redirect về trang chủ sau khi logout (dù thành công hay lỗi)
       window.location.href = "/";
     }
   };

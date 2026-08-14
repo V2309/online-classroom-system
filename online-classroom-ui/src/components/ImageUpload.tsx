@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import { uploadService } from "@/services/upload.service";
 
 interface ImageUploadProps {
   currentImage?: string | null;
@@ -41,28 +42,15 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
       const preview = URL.createObjectURL(file);
       setPreviewUrl(preview);
 
-      // Upload to server
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("classCode", classCode);
+      // Upload to NestJS server
+      const result = await uploadService.uploadClassImage(file);
+      const imageUrl = result.url || result.filePath;
 
-      const response = await fetch("/api/upload/class-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setPreviewUrl(result.url);
-        onImageUploaded(result.url);
-      } else {
-        setError(result.error || "Upload failed");
-        setPreviewUrl(currentImage || null);
-      }
-    } catch (error) {
+      setPreviewUrl(result.url || preview);
+      onImageUploaded(imageUrl);
+    } catch (error: any) {
       console.error("Upload error:", error);
-      setError("Có lỗi xảy ra khi upload ảnh");
+      setError(error.response?.data?.message || "Có lỗi xảy ra khi upload ảnh");
       setPreviewUrl(currentImage || null);
     } finally {
       setIsUploading(false);
@@ -91,6 +79,7 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
               src={previewUrl}
               alt="Ảnh bìa lớp học"
               fill
+              unoptimized
               className="object-cover rounded-md"
             />
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">

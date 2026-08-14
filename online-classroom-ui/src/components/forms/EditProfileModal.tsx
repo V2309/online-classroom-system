@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { X, Phone, Mail, Lock, User, FileText, Calendar, MapPin, School } from "lucide-react";
-import { updateUserProfile, changePassword } from "@/lib/actions/user.action"; // Import cả 2 actions
+import { userService } from "@/services/user.service";
 import { toast } from "react-toastify";
 
 interface EditProfileModalProps {
@@ -97,34 +97,27 @@ export default function EditProfileModal({
     try {
       // Xử lý đổi mật khẩu
       if (fieldKey === 'password') {
-        const result = await changePassword(newValue, confirmPassword);
-        
-        if (result.success) {
-          toast.success("Đổi mật khẩu thành công!");
-          onSuccess(); // Gọi hàm refresh data của trang profile
-          onClose();   // Đóng modal
-        } else {
-          setError(result.error || "Đổi mật khẩu thất bại");
-        }
+        await userService.changePassword(newValue, confirmPassword);
+        toast.success("Đổi mật khẩu thành công!");
+        onSuccess();
+        onClose();
         setIsLoading(false);
         return;
       }
 
       // Xử lý cho tất cả các trường khác
-      const result = await updateUserProfile(fieldKey, newValue);
+      await userService.updateProfile({
+        [fieldKey]: newValue,
+      });
 
-      if (result.success) {
-        toast.success("Cập nhật thành công!");
-        onSuccess(); // Gọi hàm refresh data của trang profile
-        onClose();   // Đóng modal
-      } else {
-        setError(result.error || "Lỗi không xác định");
-      }
-    } catch (err) {
-      setError("Có lỗi xảy ra. Vui lòng thử lại.");
+      toast.success("Cập nhật thành công!");
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (

@@ -1,65 +1,49 @@
-import prisma from "@/lib/prisma";
 import Post from "@/components/Post";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth-server";
+import { serverFetch } from "@/lib/server-api";
 import InfiniteFeed from "./InfiniteFeed";
 
-const Feed = async ({ userProfileId, classCode }: { userProfileId?: string, classCode?: string }) => {
-  const userSession = await getCurrentUser();
-
-  if (!userSession) return null;
-
-  // Lấy thông tin user đầy đủ từ database (để có avatar)
-  const user = await prisma.user.findUnique({
-    where: { id: userSession.id as string },
-    select: { 
-      id: true, 
-      username: true, 
-      img: true,
-      role: true 
-    }
-  });
-
+const Feed = async ({
+  userProfileId,
+  classCode,
+}: {
+  userProfileId?: string;
+  classCode?: string;
+}) => {
+  const user = getCurrentUser();
   if (!user) return null;
 
-  const whereCondition = classCode
-    ? { parentPostId: null, classCode: classCode }
-    : userProfileId
-    ? { parentPostId: null, userId: userProfileId }
-    : { parentPostId: null };
+  let initialPosts: any[] = [];
+  try {
+    const params = new URLSearchParams({ page: "1", limit: "3" });
+    if (classCode) params.append("classCode", classCode);
+    if (userProfileId) params.append("userId", userProfileId);
 
-  const postIncludeQuery = {
-    user: { select: { username: true, img: true } },
-    _count: { select: { likes: true, comments: true } },
-    likes: { where: { userId: user.id as string }, select: { id: true } },
-  };
-
-  // Lấy page đầu tiên (3 posts đầu tiên)
-  const initialPosts = await prisma.post.findMany({
-    where: whereCondition,
-    include: postIncludeQuery,
-    take: 3,
-    skip: 0,
-    orderBy: { createdAt: "desc" },
-  });
+    const res = await serverFetch<any>(`/posts?${params.toString()}`);
+    initialPosts = Array.isArray(res) ? res : res?.data || [];
+  } catch (error) {
+    console.error("Lỗi lấy danh sách bài viết ban đầu:", error);
+    initialPosts = [];
+  }
 
   // Nếu không có posts nào cả
   if (initialPosts.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8 bg-white rounded-lg border border-gray-100 shadow-sm">
         <p className="text-gray-500">Chưa có bài viết nào trong lớp này</p>
       </div>
     );
   }
 
   return (
-    <div className="">
+    <div>
       {/* Hiển thị posts đầu tiên */}
       {initialPosts.map((post) => (
-        <div key={post.id}>
+        <div key={post.id} className="mb-4">
           <Post post={post} />
         </div>
       ))}
-      
+
       {/* Infinite scroll cho các posts tiếp theo */}
       <InfiniteFeed userProfileId={userProfileId} classCode={classCode} />
     </div>

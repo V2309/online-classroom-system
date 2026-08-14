@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { X, Clock, Calendar, Users, Video, Copy, Check } from "lucide-react";
 import moment from "moment";
 import { useStreamVideoClient } from "@stream-io/video-react-sdk";
-import { createMeetingSchedule } from "@/lib/actions/schedule.action";
+import { scheduleService } from "@/services/schedule.service";
 import { MeetingScheduleSchema, meetingScheduleSchema } from "@/lib/formValidationSchema";
 import { useUser } from "@/hooks/useUser";
 
@@ -148,15 +148,11 @@ const MeetingScheduleForm = ({
       const meetingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/meeting/${meetingId}`;
 
       // 2. Tạo lịch trong database
-      const result = await createMeetingSchedule(
-        { success: false, error: false },
-        {
-          ...formData,
-          meetingId,
-          meetingLink,
-          isMeeting: true,
-        }
-      );
+      const result = await scheduleService.createMeetingSchedule({
+        ...formData,
+        meetingId,
+        meetingLink,
+      } as any);
 
       if (result?.success) {
         setMeetingCreated({ meetingId, meetingLink });
@@ -247,7 +243,7 @@ const MeetingScheduleForm = ({
                               style={{ backgroundColor: cls.color }}
                             >
                             <Image
-                              src={cls.img}
+                              src={cls.img?.startsWith('http') || cls.img?.startsWith('/') ? cls.img : '/class.png'}
                               alt={cls.name}
                               width={40}
                               height={40}
@@ -285,7 +281,7 @@ const MeetingScheduleForm = ({
                             style={{ backgroundColor: selectedClassData.color }}
                           >
                               <Image
-                              src={selectedClassData.img}
+                              src={selectedClassData.img?.startsWith('http') || selectedClassData.img?.startsWith('/') ? selectedClassData.img : '/class.png'}
                               alt={selectedClassData.name}
                               width={40}
                               height={40}

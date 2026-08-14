@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Post,
+  Query,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -75,16 +76,28 @@ export class AuthController {
     return result;
   }
 
-  // @Get('me')
-  // @UseGuards(JwtAuthGuard)
-  // me(@CurrentUser() user: AuthenticatedUser) {
-  //   return this.authService.getProfile(user.id);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Post('resend-verification')
+  @HttpCode(200)
+  resendVerification(@CurrentUser() user: AuthenticatedUser) {
+    return this.authService.resendVerification(user.id);
+  }
+
+  @Post('verify-email')
+  @HttpCode(200)
+  verifyEmail(@Body('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
+
+  @Get('verify-email')
+  verifyEmailQuery(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
 
   private setSessionCookie(res: Response, accessToken: string) {
     res.cookie('session', accessToken, {
       ...this.cookieOptions(),
-      maxAge: 15 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
     });
   }
 
@@ -92,7 +105,7 @@ export class AuthController {
     res.cookie('refreshToken', refreshToken, {
       ...this.cookieOptions(),
       path: '/api/auth/refresh',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 ngày
     });
   }
 

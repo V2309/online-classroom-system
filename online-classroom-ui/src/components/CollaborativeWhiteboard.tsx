@@ -6,7 +6,7 @@ import { Tldraw, Editor, StoreSnapshot, TLRecord } from "tldraw";
 import "tldraw/tldraw.css";
 import { useUser } from "@/hooks/useUser";
 import { pusherClient } from "@/lib/pusher-client";
-import { saveWhiteboardState, getWhiteboardState } from "@/lib/actions/whiteboard.action";
+import { whiteboardService } from "@/services/whiteboard.service";
 import { toast } from "react-toastify";
 import { throttle, debounce } from "lodash";
 
@@ -134,7 +134,7 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
   // 1. Tải dữ liệu cũ khi mới vào
   useEffect(() => {
     const loadData = async () => {
-      const data = await getWhiteboardState(classCode);
+      const data = await whiteboardService.getWhiteboardState(classCode);
       if (data) {
         setInitialData(data as any);
       }
@@ -159,14 +159,10 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const snapshot = editor.store.getStoreSnapshot();
-      // Serialize snapshot thành plain object để gửi qua Server Action
+      // Serialize snapshot thành plain object để gửi lên API
       const serializedSnapshot = JSON.parse(JSON.stringify(snapshot));
-      const result = await saveWhiteboardState(classCode, serializedSnapshot);
-      if (result.success) {
-        toast.success("Đã lưu bảng trắng", { position: "bottom-right" });
-      } else {
-        toast.error(result.error || "Lỗi khi lưu", { position: "bottom-right" });
-      }
+      await whiteboardService.saveWhiteboardState(classCode, serializedSnapshot);
+      toast.success("Đã lưu bảng trắng", { position: "bottom-right" });
     } catch (error) {
       console.error("Error saving whiteboard:", error);
       toast.error("Lỗi khi lưu bảng trắng", { position: "bottom-right" });
@@ -194,7 +190,7 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
       // Lưu state sau khi xóa
       const snapshot = editor.store.getStoreSnapshot();
       const serializedSnapshot = JSON.parse(JSON.stringify(snapshot));
-      await saveWhiteboardState(classCode, serializedSnapshot);
+      await whiteboardService.saveWhiteboardState(classCode, serializedSnapshot);
       toast.success("Đã xóa bảng trắng", { position: "bottom-right" });
     } catch (error) {
       console.error("Error clearing whiteboard:", error);
@@ -213,7 +209,7 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
         const snapshot = editorRef.current.store.getStoreSnapshot();
         // Save trực tiếp (async nhưng browser sẽ giữ connection)
         const serialized = JSON.parse(JSON.stringify(snapshot));
-        saveWhiteboardState(classCode, serialized).catch(console.error);
+        whiteboardService.saveWhiteboardState(classCode, serialized).catch(console.error);
       }
     };
 
@@ -223,7 +219,7 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
         debouncedSaveRef.current.cancel();
         const snapshot = editorRef.current.store.getStoreSnapshot();
         const serialized = JSON.parse(JSON.stringify(snapshot));
-        saveWhiteboardState(classCode, serialized).catch(console.error);
+        whiteboardService.saveWhiteboardState(classCode, serialized).catch(console.error);
       }
     };
 
@@ -238,7 +234,7 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
         debouncedSaveRef.current.cancel();
         const snapshot = editorRef.current.store.getStoreSnapshot();
         const serialized = JSON.parse(JSON.stringify(snapshot));
-        saveWhiteboardState(classCode, serialized).catch(console.error);
+        whiteboardService.saveWhiteboardState(classCode, serialized).catch(console.error);
       }
     };
   }, [classCode]);
@@ -265,7 +261,7 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
         
         const snapshot = editor.store.getStoreSnapshot();
         const serialized = JSON.parse(JSON.stringify(snapshot));
-        await saveWhiteboardState(classCode, serialized);
+        await whiteboardService.saveWhiteboardState(classCode, serialized);
       } catch (error) {
         console.error("Error auto saving whiteboard:", error);
       }
@@ -446,7 +442,7 @@ export default function CollaborativeWhiteboard({ classCode, onReady }: Collabor
         
         const snapshot = editor.store.getStoreSnapshot();
         const serialized = JSON.parse(JSON.stringify(snapshot));
-        await saveWhiteboardState(classCode, serialized);
+        await whiteboardService.saveWhiteboardState(classCode, serialized);
       } catch (error) {
         console.error("Error backup saving whiteboard:", error);
       }

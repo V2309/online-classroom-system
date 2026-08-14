@@ -4,20 +4,20 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Post from "./Post";
 import { useEffect, useMemo } from "react";
+import { postService } from "@/services/post.service";
 
 const fetchPosts = async (pageParam: number, userProfileId?: string, classCode?: string) => {
-  const params = new URLSearchParams({
-    cursor: pageParam.toString(),
+  const res = await postService.getPosts({
+    page: pageParam,
+    limit: 5,
+    classCode,
+    userId: userProfileId,
   });
-  
-  if (userProfileId) params.append("user", userProfileId);
-  if (classCode) params.append("classCode", classCode);
-  
-  const res = await fetch(`/api/posts?${params.toString()}`);
-  if (!res.ok) {
-    throw new Error('Failed to fetch posts');
-  }
-  return res.json();
+  return {
+    posts: res.data || [],
+    hasMore: res.hasMore,
+    total: res.total,
+  };
 };
 
 const InfiniteFeed = ({ userProfileId, classCode }: { userProfileId?: string, classCode?: string }) => {
@@ -30,7 +30,6 @@ const InfiniteFeed = ({ userProfileId, classCode }: { userProfileId?: string, cl
       if (!lastPage.hasMore || !lastPage.posts || lastPage.posts.length === 0) {
         return undefined;
       }
-      // Trả về page tiếp theo (bắt đầu từ page 3, 4, 5...)
       return pages.length + 2;
     },
   });

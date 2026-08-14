@@ -1,13 +1,17 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
+import * as crypto from 'crypto';
 import { UserRole } from '../../generated/prisma/enums';
 import { PrismaService } from '../../lib/database/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthenticatedUser } from './strategies/jwt.strategy';
@@ -27,7 +31,91 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly mailService: MailService,
   ) {}
+
+  /**
+   * Gửi lại email xác thực cho user đang đăng nhập
+   */
+  async resendVerification(userId: string): Promise<{ success: boolean; message: string }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, username: true, isEmailVerified: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng.');
+    }
+
+    if (!user.email) {
+      throw new BadRequestException('Tài khoản chưa cập nhật địa chỉ email.');
+    }
+
+    if (user.isEmailVerified) {
+      return { success: true, message: 'Email này đã được xác thực trước đó.' };
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 giờ
+
+    // Xóa token cũ của user nếu có
+    await this.prisma.verificationToken.deleteMany({
+      where: { userId: user.id },
+    });
+
+    // Tạo token mới
+    await this.prisma.verificationToken.create({
+      data: {
+        token,
+        expires,
+        userId: user.id,
+      },
+    });
+
+    // Gửi email qua MailService
+    await this.mailService.sendVerificationEmail(user.email, user.username, token);
+
+    return { success: true, message: 'Đã gửi email xác thực thành công!' };
+  }
+
+  /**
+   * Xác thực token email
+   */
+  async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
+    if (!token) {
+      throw new BadRequestException('Token xác thực không được để trống.');
+    }
+
+    const tokenRecord = await this.prisma.verificationToken.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!tokenRecord) {
+      throw new BadRequestException('Mã xác thực không hợp lệ hoặc đã được sử dụng.');
+    }
+
+    if (tokenRecord.expires < new Date()) {
+      await this.prisma.verificationToken.deleteMany({ where: { id: tokenRecord.id } });
+      throw new BadRequestException('Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại email mới.');
+    }
+
+    // Cập nhật trạng thái xác thực của user và xóa token
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: tokenRecord.userId },
+        data: {
+          isEmailVerified: true,
+          emailVerified: true,
+        },
+      }),
+      this.prisma.verificationToken.deleteMany({
+        where: { id: tokenRecord.id },
+      }),
+    ]);
+
+    return { success: true, message: 'Xác thực email thành công!' };
+  }
 
 async signup(dto: SignupDto): Promise<AuthResult> {
     await this.ensureUniqueIdentity(dto.email, dto.phone);
@@ -215,15 +303,15 @@ async signup(dto: SignupDto): Promise<AuthResult> {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(
         { sub: user.id, username: user.username, role: user.role },
-        { expiresIn: '15m' },
+        { expiresIn: '7d' },
       ),
       this.jwt.signAsync(
         { sub: user.id },
-        { expiresIn: '7d' },
+        { expiresIn: '30d' },
       ),
     ]);
 
-    return { accessToken, refreshToken, expiresIn: 900 };
+    return { accessToken, refreshToken, expiresIn: 7 * 24 * 3600 };
   }
 }
 

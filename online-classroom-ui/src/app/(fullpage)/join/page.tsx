@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useRef, KeyboardEvent, ClipboardEvent } from 'react';
-import { joinClassAction } from "@/lib/actions/class.action";
+import { classService } from "@/services/class.service";
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 
@@ -39,9 +39,6 @@ export default function JoinClass() {
     }
   };
 
-  /**
-   * TỐI ƯU UX: Xử lý khi người dùng dán (paste)
-   */
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     const pastedData = e.clipboardData.getData("text");
 
@@ -52,12 +49,12 @@ export default function JoinClass() {
       setCodeArr(newCodeArr);
       inputRefs.current[4]?.focus(); // Focus ô cuối
     }
-    // Nếu dán 1 ký tự, để handleInputChange xử lý
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = codeArr.join("");
+    // Let's check length: if codeArr is 5, code.length must be 5.
     if (code.length !== 5) {
       setError("Mã lớp phải gồm đúng 5 ký tự.");
       return;
@@ -67,25 +64,12 @@ export default function JoinClass() {
     setIsLoading(true);
 
     try {
-      const result = await joinClassAction(code);
-      if (result.success) {
-        // Kiểm tra nếu có message (nghĩa là cần phê duyệt)
-        if (result.message) {
-          setShowApprovalModal(true);
-        } else {
-          // Tham gia trực tiếp thành công
-          toast.success("Tham gia lớp thành công!");
-          router.push(`/class`);
-          router.refresh(); // Force refresh để đảm bảo data mới được load
-        }
-      } else {
-        setError(result.error || "Mã lớp không đúng hoặc có lỗi xảy ra.");
-        // Xóa các ô input khi nhập sai
-        setCodeArr(["", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-      }
-    } catch (error) {
-      setError("Có lỗi xảy ra khi tham gia lớp.");
+      await classService.joinClass(code);
+      setShowApprovalModal(true);
+    } catch (error: any) {
+      setError(error.response?.data?.message || "Mã lớp không đúng hoặc có lỗi xảy ra.");
+      setCodeArr(["", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
     } finally {
       setIsLoading(false);
     }

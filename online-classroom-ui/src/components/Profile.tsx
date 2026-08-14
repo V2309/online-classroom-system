@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 import EditProfileModal from "@/components/forms/EditProfileModal"; // Import Modal
 import UploadAvatarModal from "@/components/forms/UploadAvatarModal";
 import Image from "next/image";
-import { sendVerificationEmail } from "@/lib/actions/auth.action";
+import { authService } from "@/services/auth.service";
 import { ProfileData } from "@/types/auth";
 
 
@@ -237,17 +237,12 @@ export default function ProfilePage({
 
     setEmailVerificationState("loading");
     try {
-      const result = await sendVerificationEmail();
-      if (result.success) {
-        toast.success(result.success);
-        setEmailVerificationState("sent"); // Chuyển sang trạng thái "Đã gửi"
-      } else {
-        toast.error(result.error || "Gửi email thất bại.");
-        setEmailVerificationState("idle"); // Cho phép thử lại
-      }
-    } catch (err) {
-      toast.error("Lỗi máy chủ.");
-      setEmailVerificationState("idle"); // Cho phép thử lại
+      const result = await authService.resendVerification();
+      toast.success(result.message || "Đã gửi email xác thực!");
+      setEmailVerificationState("sent");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Gửi email thất bại.");
+      setEmailVerificationState("idle");
     }
   };
 
@@ -328,10 +323,11 @@ export default function ProfilePage({
                     <div className="relative w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden">
                       {user.avatar ? (
                         <Image
-                          src={`${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${user.avatar}`}
+                          src={user.avatar}
                           alt={user.name || "Avatar"}
                           width={128}
                           height={128}
+                          unoptimized
                           className="w-full h-full object-cover"
                         />
                       ) : (

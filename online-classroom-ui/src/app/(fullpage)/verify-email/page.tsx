@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { verifyEmailToken } from '@/lib/actions/auth.action';
+import { authService } from '@/services/auth.service';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -12,6 +12,7 @@ function VerifyEmailContent() {
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Đang xác minh email của bạn...');
+  const hasRequested = useRef(false);
 
   useEffect(() => {
     if (!token) {
@@ -20,18 +21,21 @@ function VerifyEmailContent() {
       return;
     }
 
+    if (hasRequested.current) return;
+    hasRequested.current = true;
+
     const verify = async () => {
-      const result = await verifyEmailToken(token);
-      if (result.success) {
+      try {
+        const result = await authService.verifyEmail(token);
         setStatus('success');
-        setMessage(result.success);
+        setMessage(result.message || 'Xác thực email thành công!');
         // Tự động chuyển về profile sau 3s
         setTimeout(() => {
           router.push('/profile');
         }, 3000);
-      } else {
+      } catch (err: any) {
         setStatus('error');
-        setMessage(result.error || 'Xác minh thất bại.');
+        setMessage(err.response?.data?.message || err.message || 'Xác minh thất bại.');
       }
     };
 

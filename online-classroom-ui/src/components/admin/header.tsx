@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Home,
   Users,
@@ -23,8 +24,8 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 
-// 1. Import action logout
-import { logoutAction } from "@/lib/actions/auth.action";
+// 1. Import authService
+import { authService } from "@/services/auth.service";
 
 // 2. Định nghĩa kiểu dữ liệu User nhận vào
 interface HeaderProps {
@@ -43,10 +44,17 @@ const navItems = [
 
 // 3. Nhận prop user
 export function Header({ user }: HeaderProps) {
+  const router = useRouter();
   
   // Hàm xử lý logout
   const handleLogout = async () => {
-    await logoutAction();
+    try {
+      await authService.logout();
+      window.location.href = "/login";
+    } catch (err) {
+      console.error("Logout error:", err);
+      window.location.href = "/login";
+    }
   };
 
   return (

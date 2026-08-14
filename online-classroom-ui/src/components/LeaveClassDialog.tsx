@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { leaveClassAction } from "@/lib/actions/class.action";
+import { classService } from "@/services/class.service";
 import { toast } from "react-toastify";
 
 interface LeaveClassDialogProps {
@@ -29,17 +29,12 @@ const LeaveClassDialog = ({
     setIsLoading(true);
     
     try {
-      const result = await leaveClassAction(classData.id);
-      
-      if (result.success) {
-        toast.success(result.message || "Rời lớp thành công!");
-        onClose();
-        onSuccess?.();
-      } else {
-        toast.error(result.error || "Có lỗi xảy ra khi rời lớp");
-      }
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi rời lớp");
+      await classService.leaveClass(classData.id);
+      toast.success("Rời lớp thành công!");
+      onClose();
+      onSuccess?.();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi rời lớp");
     } finally {
       setIsLoading(false);
     }

@@ -3,12 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { PendingRequest } from "@/app/(page)/class/[id]/member/page";
-import {
-  approveJoinRequest,
-  rejectJoinRequest,
-  approveAllRequests,
-  rejectAllRequests,
-} from "@/lib/actions/class.action"; // Import actions
+import { classService } from "@/services/class.service";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
@@ -31,29 +26,20 @@ export default function ApprovalSidebar({
   ) => {
     setLoading(true);
     try {
-      let result;
       if (action === "approve") {
-        result = await approveJoinRequest(requestId, studentId, classCode);
+        await classService.approveJoinRequest(requestId);
+        toast.success("Phê duyệt thành công!");
       } else {
-        result = await rejectJoinRequest(requestId);
+        await classService.rejectJoinRequest(requestId);
+        toast.success("Đã từ chối.");
       }
-
-      if (result.success) {
-        toast.success(
-          action === "approve" ? "Phê duyệt thành công!" : "Đã từ chối."
-        );
-        router.refresh(); // Làm mới dữ liệu trang
-      } else {
-        toast.error(result.error || "Có lỗi xảy ra");
-      }
-    } catch (err) {
-      toast.error("Lỗi máy chủ, vui lòng thử lại.");
+      router.refresh(); // Làm mới dữ liệu trang
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Lỗi máy chủ, vui lòng thử lại.");
     }
     setLoading(false);
   };
 
-  // TODO: Implement approveAll/rejectAll
-  // --- ĐÃ CẬP NHẬT HÀM NÀY ---
   const handleApproveAll = async () => {
     if (requests.length === 0) {
       toast.info("Không có yêu cầu nào để phê duyệt.");
@@ -61,20 +47,17 @@ export default function ApprovalSidebar({
     }
     setLoading(true);
     try {
-      const result = await approveAllRequests(classCode);
-      if (result.success) {
-        toast.success(result.message || "Đã phê duyệt tất cả!");
-        router.refresh();
-      } else {
-        toast.error(result.error || "Lỗi khi phê duyệt hàng loạt.");
+      for (const req of requests) {
+        await classService.approveJoinRequest(req.id);
       }
-    } catch (err) {
-      toast.error("Lỗi máy chủ, vui lòng thử lại.");
+      toast.success("Đã phê duyệt tất cả!");
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Lỗi khi phê duyệt hàng loạt.");
     }
     setLoading(false);
   };
 
-  // --- ĐÃ CẬP NHẬT HÀM NÀY ---
   const handleRejectAll = async () => {
     if (requests.length === 0) {
       toast.info("Không có yêu cầu nào để từ chối.");
@@ -82,15 +65,13 @@ export default function ApprovalSidebar({
     }
     setLoading(true);
     try {
-      const result = await rejectAllRequests(classCode);
-      if (result.success) {
-        toast.success(result.message || "Đã từ chối tất cả!");
-        router.refresh();
-      } else {
-        toast.error(result.error || "Lỗi khi từ chối hàng loạt.");
+      for (const req of requests) {
+        await classService.rejectJoinRequest(req.id);
       }
-    } catch (err) {
-      toast.error("Lỗi máy chủ, vui lòng thử lại.");
+      toast.success("Đã từ chối tất cả!");
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Lỗi khi từ chối hàng loạt.");
     }
     setLoading(false);
   };

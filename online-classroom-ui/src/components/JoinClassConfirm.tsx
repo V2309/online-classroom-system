@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { joinClassAction } from "@/lib/actions/class.action";
+import { classService } from "@/services/class.service";
 // Đảm bảo đường dẫn import type là chính xác
 import type { ClassInfoPayload } from '@/app/(fullpage)/join/[classCode]/page'; 
 import { toast } from 'react-toastify';
@@ -28,24 +28,10 @@ export default function JoinClassConfirm({ classInfo, isAlreadyJoined }: JoinCla
     setError(null);
     
     try {
-      const result = await joinClassAction(classInfo.class_code as string);
-      
-      if (result.success) {
-        if (result.message) {
-          // 2. SỬA LOGIC: Thay vì toast, hiển thị modal
-          setShowApprovalModal(true);
-        } else {
-          // Tham gia thành công
-          toast.success("Tham gia lớp thành công!");
-          router.push('/class'); // Chuyển về trang danh sách lớp
-          router.refresh();
-        }
-      } else {
-        // Lỗi từ server (ví dụ: Lớp đầy, Lỗi DB)
-        setError(result.error || "Có lỗi xảy ra.");
-      }
-    } catch (err) {
-      setError("Lỗi kết nối. Vui lòng thử lại.");
+      await classService.joinClass(classInfo.class_code as string);
+      setShowApprovalModal(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Lỗi kết nối. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +81,7 @@ export default function JoinClassConfirm({ classInfo, isAlreadyJoined }: JoinCla
             </div>
             <div className="flex flex-col items-end">
               <span className="text-gray-500">Giáo viên</span>
-              <span className="font-semibold text-gray-800">{classInfo.supervisor?.username || 'N/A'}</span>
+              <span className="font-semibold text-gray-800">{classInfo.supervisor?.user?.username || classInfo.supervisor?.username || 'N/A'}</span>
             </div>
           </div>
           

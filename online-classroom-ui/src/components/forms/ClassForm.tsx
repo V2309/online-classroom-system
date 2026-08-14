@@ -2,14 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, UseFormRegister, FieldError } from "react-hook-form";
-import InputField from "../InputField"; // Giữ nguyên InputField của bạn
+import InputField from "../InputField"; 
 import { classSchema, ClassSchema } from "@/lib/formValidationSchema";
-import { createClass, updateClass } from "@/lib/actions/class.action";
-import { useFormState } from "react-dom";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { classService } from "@/services/class.service";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion"; // 1. Import motion
+import { motion } from "framer-motion";
 
 // Định nghĩa props cho SelectField tái sử dụng
 type SelectFieldProps = {
@@ -61,11 +60,13 @@ const ClassForm = ({
   data,
   setOpen,
   relatedData,
+  onSuccess,
 }: {
   type: "create" | "update";
   data?: any;
   setOpen: Dispatch<SetStateAction<boolean>>;
   relatedData?: any;
+  onSuccess?: () => void;
 }) => {
   const {
     register,
@@ -83,41 +84,51 @@ const ClassForm = ({
     },
   });
 
-  const [state, formAction] = useFormState(
-    type === "create" ? createClass : updateClass,
-    {
-      success: false,
-      error: false,
-    }
-  );
-
-  const onSubmit = handleSubmit((data) => {
-    formAction(data);
-  });
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    if (state.success) {
-      toast.success(`Lớp học đã được tạo mới thành công!`);
+  const onSubmit = handleSubmit(async (formData) => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (type === "create") {
+        await classService.createClass({
+          name: formData.name,
+          capacity: formData.capacity ? Number(formData.capacity) : undefined,
+          gradeId: Number(formData.gradeId),
+        });
+        toast.success(`Lớp học đã được tạo mới thành công!`);
+      } else {
+        if (!formData.id) throw new Error("Thiếu ID lớp học.");
+        await classService.updateClass(formData.id, {
+          name: formData.name,
+          capacity: formData.capacity ? Number(formData.capacity) : undefined,
+          gradeId: Number(formData.gradeId),
+          supervisorId: formData.supervisorId,
+        });
+        toast.success(`Lớp học đã được cập nhật thành công!`);
+      }
       setOpen(false);
+      onSuccess?.();
       router.refresh();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!");
+    } finally {
+      setLoading(false);
     }
-    // Bạn cũng có thể thêm toast.error nếu state.error là một tin nhắn
-    if (state.error && typeof state.error === "string") {
-       toast.error(state.error);
-    }
-  }, [state, router, type, setOpen]);
+  });
 
-  const { teachers, grades } = relatedData;
+  const { teachers = [], grades = [] } = relatedData || {};
 
   // 3. Chuẩn bị dữ liệu cho SelectField
-  const teacherOptions = teachers.map((teacher: { id: string; username: string }) => ({
+  const teacherOptions = (teachers || []).map((teacher: { id: string; username: string }) => ({
     value: teacher.id,
     label: teacher.username,
   }));
 
-  const gradeOptions = grades.map((grade: { id: number; level: number }) => ({
+  const gradeOptions = (grades || []).map((grade: { id: number; level: number | string }) => ({
     value: grade.id,
     label: `${grade.level}`, // Thêm chữ "Khối" cho rõ ràng
   }));
@@ -214,21 +225,23 @@ const ClassForm = ({
       </div>
 
       {/* 8. Cập nhật style cho thông báo lỗi server */}
-      {state.error && (
+      {error && (
         <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm text-center">
-          <span>Có lỗi xảy ra, vui lòng thử lại!</span>
+          <span>{error}</span>
         </div>
       )}
 
       {/* 9. Cập nhật style cho button */}
       <button
         type="submit"
+        disabled={loading}
         className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold
                    hover:bg-blue-700 transition-colors duration-200
                    focus-visible:outline focus-visible:outline-2 
-                   focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                   focus-visible:outline-offset-2 focus-visible:outline-blue-600
+                   disabled:opacity-50 disabled:cursor-wait"
       >
-        {type === "create" ? "Tạo Lớp" : "Cập Nhật"}
+        {loading ? "Đang xử lý..." : (type === "create" ? "Tạo Lớp" : "Cập Nhật")}
       </button>
     </motion.form>
   );

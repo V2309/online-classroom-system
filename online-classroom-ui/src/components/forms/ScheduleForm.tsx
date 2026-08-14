@@ -10,8 +10,8 @@ import { Dispatch, SetStateAction, useEffect, useState, useCallback, useMemo } f
 import { motion } from "framer-motion";
 import { X, Search, Clock, Calendar, Users } from "lucide-react";
 import moment from "moment";
-// import { getTeacherClasses } from "@/lib/actions/class.action"; // <-- ĐÃ XÓA
-import { createSchedule, updateSchedule } from "@/lib/actions/schedule.action";
+import { scheduleService } from "@/services/schedule.service";
+import type { ScheduleEvent } from "@/types/schedule";
 import { scheduleSchema, ScheduleSchema } from "@/lib/formValidationSchema";
 
 // Sử dụng trực tiếp ScheduleSchema
@@ -71,16 +71,19 @@ const ScheduleForm = ({
 
   // TỐI ƯU: Khởi tạo `classes` từ prop, chỉ chạy 1 lần
   // Dữ liệu đã có sẵn, không cần `loadingClasses`
-  const [classes] = useState<ClassData[]>(() => 
-    teacherClasses.map((cls: any) => ({
+  const [classes] = useState<ClassData[]>(() => {
+    const rawList = Array.isArray(teacherClasses)
+      ? teacherClasses
+      : (teacherClasses as any)?.data || [];
+    return rawList.map((cls: any) => ({
       id: cls.id.toString(), // Giả định ID từ DB có thể là số, chuyển sang string
       name: cls.name,
-      img: cls.img, 
+      img: cls.img || "/class.png", 
       class_code: cls.class_code || "",
       studentCount: cls._count?.students || 0,
-      color: cls.img || "#3B82F6", // Lấy img làm màu (theo code cũ), nếu không có thì default
-    }))
-  );
+      color: cls.img?.startsWith('#') ? cls.img : "#3B82F6",
+    }));
+  });
   
   const {
     register,
@@ -198,15 +201,17 @@ const ScheduleForm = ({
 
     setIsLoading(true);
     try {
-      let result;
+      let result: { success: boolean; message: string; data?: ScheduleEvent };
       
       if (type === "create") {
-        result = await createSchedule({ success: false, error: false }, formData as ScheduleSchema);
+        result = await scheduleService.createSchedule(formData as any);
       } else if (type === "update" && data?.id) {
-        result = await updateSchedule(
-          { success: false, error: false },
-          { ...formData, id: data.id } as ScheduleSchema & { id: number }
-        );
+        result = await scheduleService.updateSingleEvent(data.id, {
+          title: formData.title,
+          description: formData.description,
+        });
+      } else {
+        result = { success: false, message: "Dữ liệu không hợp lệ" };
       }
 
       if (result?.success) {
@@ -326,7 +331,7 @@ const ScheduleForm = ({
                         <div 
                           className="w-12 h-12 rounded-lg flex-shrink-0"
                         >
-                          <Image src={classItem.img} alt={classItem.name} width={32} height={32} className="rounded-lg object-cover" />
+                          <Image src={classItem.img?.startsWith('http') || classItem.img?.startsWith('/') ? classItem.img : '/class.png'} alt={classItem.name} width={32} height={32} className="rounded-lg object-cover" />
                         </div>
                         
                         <div className="flex-1">
@@ -391,7 +396,7 @@ const ScheduleForm = ({
                     <div 
                       className="w-8 h-8 rounded flex-shrink-0"
                     >
-                      <Image src={selectedClass.img} alt={selectedClass.name} width={32} height={32} className="rounded object-cover" />
+                      <Image src={selectedClass.img?.startsWith('http') || selectedClass.img?.startsWith('/') ? selectedClass.img : '/class.png'} alt={selectedClass.name} width={32} height={32} className="rounded object-cover" />
                     </div>
                     <div>
                       <p className="font-medium text-blue-900">{selectedClass.name}</p>

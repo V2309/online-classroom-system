@@ -9,7 +9,7 @@ import DayColumn from "@/components/calendar/DayColumn";
 import RecurrenceUpdateDialog from "@/components/calendar/RecurrenceUpdateDialog";
 import RecurrenceDeleteDialog from "@/components/calendar/RecurrenceDeleteDialog";
 import type { ScheduleEvent } from "@/components/calendar/EventItem";
-import { checkRecurrenceGroup, updateSingleEvent, updateAllRecurrenceEvents, deleteSingleEvent, deleteAllRecurrenceEvents } from "@/lib/actions/schedule.action";
+import { scheduleService } from "@/services/schedule.service";
 import { toast } from "react-toastify";
 // 1. IMPORT ICON MỚI
 import { Printer, CalendarDays } from "lucide-react";
@@ -25,19 +25,19 @@ interface BigCalendarProps {
   schedules?: Array<{
     id: number;
     title: string;
-    description: string | null; // Sửa: cho phép null
-    startTime: Date;
-    endTime: Date;
+    description?: string | null;
+    startTime: Date | string;
+    endTime: Date | string;
     meetingLink?: string | null;
-    class: {
+    class?: {
       id: number;
       name: string;
-      class_code: string | null;
+      class_code?: string | null;
     } | null;
   }>;
   role?: string;
   classId?: number; // ID lớp học hiện tại (nếu đang ở trang lớp cụ thể)
-  teacherClasses?: any[]; // ** NHẬN PROP NÀY TỪ SERVER COMPONENT **
+  teacherClasses?: any[]; // Danh sách lớp học của giáo viên
 }
 
 
@@ -93,7 +93,7 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
       classInfo: schedule.class ? {
         id: schedule.class.id,
         name: schedule.class.name,
-        class_code: schedule.class.class_code,
+        class_code: schedule.class.class_code || null,
       } : undefined,
     }));
   }, [schedules]);
@@ -147,7 +147,7 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
 
   const handleDeleteEvent = useCallback(async (event: ScheduleEvent) => {
     // Kiểm tra recurrence trước khi hiển thị dialog
-    const recurrenceGroup = await checkRecurrenceGroup(event.id);
+    const recurrenceGroup = await scheduleService.checkRecurrenceGroup(event.id);
 
     setDeleteData({
       eventId: event.id,
@@ -176,10 +176,9 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
     if (!recurrenceData) return;
 
     try {
-      const result = await updateSingleEvent(
-        { success: false, error: false },
+      const result = await scheduleService.updateSingleEvent(
+        recurrenceData.eventId,
         {
-          id: recurrenceData.eventId,
           title: recurrenceData.title,
           description: recurrenceData.description || ""
         }
@@ -199,10 +198,9 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
     if (!recurrenceData) return;
 
     try {
-      const result = await updateAllRecurrenceEvents(
-        { success: false, error: false },
+      const result = await scheduleService.updateAllRecurrenceEvents(
+        recurrenceData.eventId,
         {
-          id: recurrenceData.eventId,
           title: recurrenceData.title,
           description: recurrenceData.description || ""
         }
@@ -222,10 +220,7 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
     if (!deleteData) return;
 
     try {
-      const result = await deleteSingleEvent(
-        { success: false, error: false },
-        { id: deleteData.eventId }
-      );
+      const result = await scheduleService.deleteSingleEvent(deleteData.eventId);
 
       if (result.success) {
         toast.success('Xóa lịch học thành công!');
@@ -245,10 +240,7 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
     if (!deleteData) return;
 
     try {
-      const result = await deleteAllRecurrenceEvents(
-        { success: false, error: false },
-        { id: deleteData.eventId }
-      );
+      const result = await scheduleService.deleteAllRecurrenceEvents(deleteData.eventId);
 
       if (result.success) {
         toast.success(result.message || 'Xóa lịch học thành công!');
@@ -377,7 +369,7 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
             if (!editingEvent) return false;
 
             // Kiểm tra recurrence trước khi submit
-            const recurrenceGroup = await checkRecurrenceGroup(editingEvent.id);
+            const recurrenceGroup = await scheduleService.checkRecurrenceGroup(editingEvent.id);
 
             // Luôn hiển thị dialog bước 2, bất kể có recurrence hay không
             setRecurrenceData({

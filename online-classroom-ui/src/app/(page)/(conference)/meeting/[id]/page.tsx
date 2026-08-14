@@ -9,7 +9,7 @@ import { useParams } from 'next/navigation';
 import { Loader } from 'lucide-react';
 
 import { useGetCallById } from '@/hooks/useGetCallById';
-import { getEventByMeetingId } from '@/lib/actions/schedule.action';
+import { scheduleService } from '@/services/schedule.service';
 import Alert from '@/components/Alert';
 import MeetingSetup from '@/components/MeetingSetup';
 import MeetingRoom from '@/components/MeetingRoom';
@@ -27,7 +27,7 @@ const MeetingPage = () => {
     const checkMeetingTime = async () => {
       if (typeof id === 'string') {
         try {
-          const event = await getEventByMeetingId(id);
+          const event = await scheduleService.getEventByMeetingId(id);
           if (event) {
             setEventData(event);
             const now = new Date();

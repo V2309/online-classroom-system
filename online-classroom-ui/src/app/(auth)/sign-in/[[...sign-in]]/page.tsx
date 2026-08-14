@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { authService } from "@/services/auth.service"; // Nhớ sửa lại đường dẫn này cho khớp dự án
+import { authService } from "@/services/auth.service";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -20,38 +20,25 @@ export default function SignInPage() {
     const password = formData.get("password") as string;
 
     try {
-      const response = await authService.login({ email, password } as any);
+      // authService.login() trả về AuthData trực tiếp (interceptor đã unwrap)
+      // BE set cookie `session` (httpOnly) và `refreshToken` (httpOnly) qua Set-Cookie header
+      // → FE không cần và không nên tự set document.cookie thủ công
+      const authData = await authService.login({ email, password });
 
-      // Kiểm tra API trả về thành công (dựa theo cấu trúc JSON của bạn có statusCode 200)
-      if (response && response.statusCode === 200) {
-        
-        // 1. Trích xuất đúng dữ liệu từ JSON
-        const token = response.data?.accessToken;
-        const role = response.data?.user?.role;
-        const expiresIn = response.data?.expiresIn || 900; // API của bạn trả về 900s
+      const role = authData.user?.role;
 
-        // 2. Lưu token và role vào Cookie
-        if (token) {
-          // path=/ giúp cookie có tác dụng trên toàn bộ website
-          document.cookie = `session=${token}; path=/; max-age=${expiresIn}`;
-          document.cookie = `userRole=${role}; path=/; max-age=${expiresIn}`;
-        }
+      // Thông báo cho các component khác biết user đã login
+      window.dispatchEvent(new CustomEvent('user-logged-in'));
 
-        // Trigger custom event để báo cho Header/Sidebar biết đã login
-        window.dispatchEvent(new CustomEvent('user-logged-in'));
-        
-        // 3. Điều hướng dựa trên role đã lấy chính xác
-        if (role === "admin") {
-          router.push("/dashboard");
-        } else if (role === "teacher") {
-          router.push("/class");
-        } else if (role === "student") {
-          router.push("/overview");
-        } else {
-          router.push("/");
-        }
+      // Điều hướng theo role
+      if (role === "admin") {
+        router.push("/dashboard");
+      } else if (role === "teacher") {
+        router.push("/class");
+      } else if (role === "student") {
+        router.push("/overview");
       } else {
-        setError(response.message || "Đăng nhập không thành công.");
+        router.push("/");
       }
     } catch (err: any) {
       const errorMessage =

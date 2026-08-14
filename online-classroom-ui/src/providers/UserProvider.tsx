@@ -1,10 +1,10 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
-import type { User } from "@prisma/client";
+import type { UserProfile } from "@/types/auth";
 import { authService } from "@/services/auth.service";
 
 interface UserContextType {
-  user: User | null;
+  user: UserProfile | null;
   error: string | null;
   loading: boolean;
   refetchUser: () => void;
@@ -17,19 +17,25 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchUser = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await authService.getProfile();
-      setUser(res.data as any);
+      // getProfile() trả về UserProfile trực tiếp (đã unwrap bởi interceptor)
+      const profile = await authService.getProfile();
+      setUser(profile);
       setError(null);
     } catch (err: any) {
-      console.error("Error fetching user:", err);
-      setError(err.response?.data?.message || "Failed to load user information");
+      // 401 → user chưa đăng nhập (bình thường ở public routes)
+      if (err.response?.status === 401) {
+        setUser(null);
+      } else {
+        console.error("Error fetching user:", err);
+        setError(err.response?.data?.message || "Failed to load user information");
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -39,16 +45,16 @@ export function UserProvider({ children }: UserProviderProps) {
   useEffect(() => {
     fetchUser();
 
-    // Listen for login events
+    // Lắng nghe sự kiện login/update profile để refetch
     const handleLogin = () => {
       fetchUser();
     };
 
     window.addEventListener("user-logged-in", handleLogin);
-window.addEventListener("profile-updated", handleLogin);
+    window.addEventListener("profile-updated", handleLogin);
     return () => {
       window.removeEventListener("user-logged-in", handleLogin);
-window.removeEventListener("profile-updated", handleLogin);
+      window.removeEventListener("profile-updated", handleLogin);
     };
   }, [fetchUser]);
 

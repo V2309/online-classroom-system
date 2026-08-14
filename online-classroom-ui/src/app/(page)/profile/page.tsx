@@ -1,16 +1,15 @@
-import { cookies } from 'next/headers';
 import Profile from '@/components/Profile';
-import { userService } from '@/services/user.service';
+import { serverFetch } from '@/lib/server-api';
+import { getCurrentUser } from '@/lib/auth-server';
 
 export default async function StudentProfilePage() {
-  const token = cookies().get("session")?.value;
-  if (!token) {
+  const userSession = getCurrentUser();
+  if (!userSession) {
     return <div className="p-8 text-center text-red-500">Bạn chưa đăng nhập.</div>;
   }
 
   try {
-    const response = await userService.getProfile(token);
-    const user = response.data;
+    const user = await serverFetch<any>('/users/me');
 
     if (!user) {
       return <div className="p-8 text-center text-red-500">Không tìm thấy thông tin người dùng.</div>;

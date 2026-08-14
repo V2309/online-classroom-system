@@ -1,45 +1,35 @@
 import BigCalendar from "@/components/BigCalendar";
-import { getTeacherSchedules, getStudentSchedules } from "@/lib/actions/schedule.action";
-import { getCurrentUser } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server";
+import { serverFetch } from "@/lib/server-api";
 
 export default async function SchedulePage() {
-  // Lấy user hiện tại
-  const user = await getCurrentUser();
-  
+  const user = getCurrentUser();
+
   if (!user || (user.role !== "teacher" && user.role !== "student")) {
-    return <div>Bạn không có quyền truy cập.</div>;
+    return <div className="p-4 text-red-500">Bạn không có quyền truy cập.</div>;
   }
-  // Lấy dữ liệu lịch học và danh sách lớp (song song)
-  const [schedules, teacherClasses] = await Promise.all([
-    // Lấy dữ liệu lịch học theo role
-    user.role === "teacher" ? getTeacherSchedules() : getStudentSchedules(),
-    
-    // Lấy danh sách lớp học của giáo viên (chỉ khi là teacher)
-    user.role === "teacher" 
-      ? prisma.class.findMany({
-          where: {
-            supervisor: { userId: user.id as string },
-            deleted: false,
-          },
-          include: {
-            _count: {
-              select: { students: true }
-            }
-          },
-          orderBy: { name: 'asc' }
-        })
-      : []
-  ]);
-  
+
+  let schedules: any[] = [];
+  let teacherClasses: any[] = [];
+
+  try {
+    const [schedulesData, classesData] = await Promise.all([
+      serverFetch<any[]>('/schedule'),
+      user.role === 'teacher' ? serverFetch<any>('/classes') : Promise.resolve([]),
+    ]);
+    schedules = Array.isArray(schedulesData) ? schedulesData : (schedulesData as any)?.data || [];
+    teacherClasses = Array.isArray(classesData) ? classesData : (classesData as any)?.data || [];
+  } catch (error) {
+    console.error("Failed to load schedule data:", error);
+  }
+
   return (
     <div className="w-full overflow-hidden">
-      {/* Calendar Container */}
       <div>
-        <BigCalendar 
-          schedules={schedules} 
+        <BigCalendar
+          schedules={schedules}
           role={user.role as "teacher" | "student"}
-          teacherClasses={teacherClasses} // Truyền danh sách lớp học của giáo viên
+          teacherClasses={teacherClasses}
         />
       </div>
     </div>

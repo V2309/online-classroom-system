@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import MeetingTypeList from "@/components/MeetingTypeList";
-import { getUpcomingMeeting } from "@/lib/actions/schedule.action";
+import { scheduleService } from "@/services/schedule.service";
 
 export default function ConferencePage() {
   const [now, setNow] = useState(new Date());
@@ -23,7 +23,7 @@ export default function ConferencePage() {
   useEffect(() => {
     const fetchUpcomingMeeting = async () => {
       try {
-        const meeting = await getUpcomingMeeting();
+        const meeting = await scheduleService.getUpcomingMeeting();
         setUpcomingMeeting(meeting);
       } catch (error) {
         console.error("Error fetching upcoming meeting:", error);

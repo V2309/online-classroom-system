@@ -16,7 +16,11 @@ interface ClassItem {
   capacity?: number;
   class_code?: string;
   img?: string;
-  supervisor?: { username?: string } | null;
+  supervisor?: {
+    id?: string;
+    username?: string;
+    user?: { username?: string; img?: string | null };
+  } | null;
   deleted?: boolean;
   deletedAt?: Date | null;
   _count?: { students?: number };
@@ -102,7 +106,7 @@ export default function ClassListPageCommon({
         <span className="font-mono text-sm">{item.class_code || "—"}</span>
       </td>
       <td className="hidden lg:table-cell">
-        {item.supervisor?.username || "Chưa phân công"}
+        {item.supervisor?.user?.username || item.supervisor?.username || "Chưa phân công"}
       </td>
       <td className="hidden lg:table-cell">
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -313,7 +317,7 @@ export default function ClassListPageCommon({
                     <div className="mt-2 space-y-1 text-sm text-slate-600">
                       {role === "teacher" && (
                         <div>
-                          Giáo viên: <span className="font-medium">{item.supervisor?.username || "Chưa phân công"}</span>
+                          Giáo viên: <span className="font-medium">{item.supervisor?.user?.username || item.supervisor?.username || "Chưa phân công"}</span>
                         </div>
                       )}
                       <div>

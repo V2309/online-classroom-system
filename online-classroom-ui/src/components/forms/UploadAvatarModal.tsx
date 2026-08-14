@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { X, Upload, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { uploadAvatar } from '@/lib/actions/user.action';
+import { uploadService } from '@/services/upload.service';
 import Image from 'next/image';
 interface UploadAvatarModalProps {
   onClose: () => void;
@@ -54,21 +54,13 @@ export default function UploadAvatarModal({ onClose, onSuccess }: UploadAvatarMo
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('avatar', selectedFile);
-
-      const result = await uploadAvatar(formData);
-
-      if (result.success) {
-        toast.success('Cập nhật avatar thành công!');
-        onSuccess(); // Refresh data
-        onClose(); // Đóng modal
-      } else {
-        toast.error(result.error || 'Upload thất bại');
-      }
-    } catch (error) {
+      await uploadService.uploadAvatar(selectedFile);
+      toast.success('Cập nhật avatar thành công!');
+      onSuccess(); // Refresh data
+      onClose(); // Đóng modal
+    } catch (error: any) {
       console.error('Upload error:', error);
-      toast.error('Có lỗi xảy ra, vui lòng thử lại');
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại');
     } finally {
       setLoading(false);
     }

@@ -9,7 +9,7 @@ import MeetingModal from '@/components/MeetingModal';
 import MeetingScheduleForm from '@/components/forms/MeetingScheduleForm';
 import { Call, useStreamVideoClient } from '@stream-io/video-react-sdk';
 import { useUser } from "@/hooks/useUser";
-import { getTeacherClasses } from '@/lib/actions/class.action';
+import { classService } from '@/services/class.service';
 import Loader from '@/components/Loader';
 import { Textarea } from './ui/textarea';
 import ReactDatePicker from 'react-datepicker';
@@ -41,8 +41,8 @@ const MeetingTypeList = () => {
     const loadTeacherClasses = async () => {
       if (user?.role === 'teacher') {
         try {
-          const classes = await getTeacherClasses();
-          setTeacherClasses(classes);
+          const res = await classService.getClasses();
+          setTeacherClasses(res.data || []);
         } catch (error) {
           console.error('Error loading teacher classes:', error);
         }

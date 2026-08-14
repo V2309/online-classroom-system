@@ -39,7 +39,11 @@ interface MenuClassProps {
     capacity: number;
     supervisor?: { 
       username?: string;
-      img?: string | null; 
+      img?: string | null;
+      user?: {
+        username?: string;
+        img?: string | null;
+      } | null;
     } | null;
     students: { id: string; username?: string }[];
     grade?: { level?: string } | null;
@@ -122,7 +126,9 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
           <p className="text-sm md:text-sm text-gray-500 mt-1">
             Mã lớp: {classDetail.class_code}
           </p>
-          <p className="text-xs md:text-sm text-gray-500 mt-2">Giáo viên: {classDetail.supervisor?.username || "Chưa phân công"}</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-2">
+            Giáo viên: {classDetail.supervisor?.user?.username || classDetail.supervisor?.username || "Chưa phân công"}
+          </p>
      
         </div>
 

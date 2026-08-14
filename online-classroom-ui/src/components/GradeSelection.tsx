@@ -11,9 +11,15 @@ interface GradeSelectionProps {
   grades: Grade[];
   currentGradeId: number;
   currentGradeLevel: string;
+  onGradeSelect?: (gradeId?: number, newGradeLevel?: string) => void;
 }
 
-export default function GradeSelection({ grades, currentGradeId, currentGradeLevel }: GradeSelectionProps) {
+export default function GradeSelection({
+  grades,
+  currentGradeId,
+  currentGradeLevel,
+  onGradeSelect,
+}: GradeSelectionProps) {
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [showNewGradeInput, setShowNewGradeInput] = useState(false);
   const [newGradeValue, setNewGradeValue] = useState("");
@@ -32,6 +38,7 @@ export default function GradeSelection({ grades, currentGradeId, currentGradeLev
     setSelectedGrade(gradeId);
     if (gradeId === "other") {
       setShowNewGradeInput(true);
+      onGradeSelect?.(undefined, newGradeValue);
       // Focus on the input field - chỉ chạy trên client
       if (typeof window !== "undefined") {
         setTimeout(() => {
@@ -44,7 +51,13 @@ export default function GradeSelection({ grades, currentGradeId, currentGradeLev
     } else {
       setShowNewGradeInput(false);
       setNewGradeValue("");
+      onGradeSelect?.(Number(gradeId), undefined);
     }
+  };
+
+  const handleNewGradeInputChange = (val: string) => {
+    setNewGradeValue(val);
+    onGradeSelect?.(undefined, val);
   };
 
   // Render placeholder during hydration
@@ -141,7 +154,7 @@ export default function GradeSelection({ grades, currentGradeId, currentGradeLev
               type="text"
               id="newGradeInput"
               value={newGradeValue}
-              onChange={(e) => setNewGradeValue(e.target.value)}
+              onChange={(e) => handleNewGradeInputChange(e.target.value)}
               className="w-full border border-green-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
               placeholder="Ví dụ: Lớp 11, Khối A1, 12A2..."
               autoComplete="off"

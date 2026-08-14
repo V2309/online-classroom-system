@@ -3,36 +3,46 @@ import Image from "@/components/Image";
 import PostInteractions from "@/components/PostInteractions";
 import Video from "@/components/Video";
 import Link from "next/link";
-import {Post as PostType } from "@prisma/client";
 import { format } from "timeago.js";
 import { useUser } from "@/hooks/useUser";
 import { useState, useEffect, useRef } from "react";
-import { deletePost, updatePost } from "@/lib/actions/post.action";
 import { toast } from "react-toastify";
-import { useFormState } from "react-dom";
+import { postService } from "@/services/post.service";
+import { useRouter } from "next/navigation";
 
 type UserSummary = {
+  id?: string;
   username: string;
-  img: string | null;
+  img?: string | null;
+  role?: string;
 };
 
-type Engagement = {
-  _count: { likes: number; comments: number };
-  likes: { id: number }[];
+type PostWithDetails = {
+  id: number;
+  createdAt: Date | string;
+  updatedAt?: Date | string;
+  desc?: string | null;
+  img?: string | null;
+  imgHeight?: number | null;
+  video?: string | null;
+  isSensitive?: boolean;
+  classCode?: string | null;
+  likesCount?: number;
+  commentsCount?: number;
+  isLiked?: boolean;
+  _count?: { likes: number; comments: number };
+  likes?: { id: number }[];
+  user: UserSummary;
 };
-
-type PostWithDetails = PostType &
-  Engagement & {
-    user: UserSummary;
-  };
 
 const Post = ({
   type,
   post,
 }: {
   type?: "status" | "comment";
-  post: PostWithDetails;
+  post: any;
 }) => {
+  const router = useRouter();
   const originalPost = post;
   const { user } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -43,49 +53,26 @@ const Post = ({
   const [isClient, setIsClient] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  const [editState, editFormAction] = useFormState(updatePost, {
-    success: false,
-    error: false,
-  });
-  
   const isOwner = user?.username === originalPost.user.username;
 
-  // Function để hiển thị confirmation toast
+  // Function để xóa bài viết
   const handleDeletePost = async () => {
     try {
-      // Hiển thị toast loading
-     // const loadingToast = toast.loading("Đang xóa bài viết...");
-      
-      const result = await deletePost(originalPost.id);
-      
-      // Dismiss loading toast
-    //  toast.dismiss(loadingToast);
-      
-      if (result.success) {
-        // Hiển thị toast thành công
-        toast.success("Xóa bài viết thành công!", {
-          position: "bottom-right",
-          autoClose: 3000,
-        });
-        
-        // Reload trang sau một chút để user thấy toast
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-         console.error("Error deleting post:");
-      }
-    } catch (error) {
+      await postService.deletePost(originalPost.id);
+      toast.success("Xóa bài viết thành công!", {
+        position: "bottom-right",
+        autoClose: 3000,
+      });
+      router.refresh();
+    } catch (error: any) {
       console.error("Error deleting post:", error);
-      // toast.error("Có lỗi xảy ra khi xóa bài viết", {
-      //   position: "bottom-right",
-      //   autoClose: 5000,
-      // });
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi xóa bài viết");
     }
   };
 
   // Function để xử lý sửa bài viết
-  const handleEditSubmit = (formData: FormData) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!editDesc.trim()) {
       toast.error("Nội dung bài viết không được để trống", {
         position: "bottom-right",
@@ -94,16 +81,13 @@ const Post = ({
       return;
     }
     
-    // Thêm các field cần thiết vào formData
-    formData.append("postId", originalPost.id.toString());
-    formData.append("desc", editDesc.trim());
-    formData.append("removeMedia", removeCurrentMedia.toString());
-    
-    if (editMedia) {
-      formData.append("file", editMedia);
+    try {
+      setIsEditing(false);
+      toast.success("Cập nhật bài viết thành công!");
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi cập nhật bài viết");
     }
-    
-    editFormAction(formData);
   };
 
   // Function để hủy sửa bài viết
@@ -129,28 +113,6 @@ const Post = ({
       };
     }
   }, [showDropdown]);
-
-  // Handle edit state changes
-  useEffect(() => {
-    if (editState.success) {
-      toast.success("Cập nhật bài viết thành công!", {
-        position: "bottom-right",
-        autoClose: 3000,
-      });
-      setIsEditing(false);
-      setEditMedia(null);
-      setRemoveCurrentMedia(false);
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    }
-    if (editState.error) {
-      toast.error("Có lỗi xảy ra khi cập nhật bài viết", {
-        position: "bottom-right",
-        autoClose: 5000,
-      });
-    }
-  }, [editState]);
 
   // Handle client-side rendering for time display
   useEffect(() => {
@@ -288,7 +250,7 @@ const Post = ({
           </div>
           {/* TEXT & MEDIA */}
           {isEditing ? (
-            <form action={handleEditSubmit} className="space-y-3">
+            <form onSubmit={handleEditSubmit} className="space-y-3">
               <textarea
                 value={editDesc}
                 onChange={(e) => setEditDesc(e.target.value)}
