@@ -214,6 +214,13 @@
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1400px;
+
+  /* ---------- BACKGROUND IMAGES ---------- */
+  --background-image-hero: url('/images/hero-background.png');
+}
+
+.bg-hero {
+  background-image: url('/images/hero-background.png');
 }
 
 /* ============================================================

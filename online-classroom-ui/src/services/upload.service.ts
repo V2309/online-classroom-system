@@ -11,12 +11,24 @@ export interface UploadResponse {
 }
 
 export const uploadService = {
-  // Upload file tổng quát
+  // Upload file tổng quát (ImageKit)
   async uploadFile(file: File, folder?: string): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
 
     const response = await api.post<UploadResponse>("/upload", formData, {
+      params: folder ? { folder } : {},
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  },
+
+  // Upload tài liệu lớp học lên Cloudflare R2
+  async uploadDocument(file: File, folder?: string): Promise<{ url: string; key: string; name: string; size: number; type: string }> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await api.post<{ url: string; key: string; name: string; size: number; type: string }>("/upload/document", formData, {
       params: folder ? { folder } : {},
       headers: { "Content-Type": "multipart/form-data" },
     });

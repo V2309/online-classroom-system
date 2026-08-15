@@ -2,23 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createCourse, updateCourse } from "@/lib/actions/file.action";
-import { Course, Folder, Chapter, Video } from "@prisma/client";
+import { courseService } from "@/services/course.service";
+import { CourseItem, FolderItem, ChapterItem, VideoItem } from "@/types/course";
 import { X, Plus, Folder as FolderIcon, ChevronDown, Save } from "lucide-react";
 import { toast } from "react-toastify";
 
 // --- Định nghĩa các kiểu dữ liệu (Interfaces) ---
 
-// Kiểu dữ liệu đầy đủ cho một khóa học để chỉnh sửa
-type CourseWithChaptersAndVideos = Course & {
-    chapters: (Chapter & {
-        videos: Video[];
-    })[];
+type CourseWithChaptersAndVideos = CourseItem & {
+    chapters?: ChapterItem[];
 };
 
 interface CourseFormProps {
     classCode: string;
-    folders: Folder[];
+    folders: FolderItem[];
     course?: CourseWithChaptersAndVideos; // Prop `course` là tùy chọn, dùng cho chế độ chỉnh sửa
 }
 
@@ -54,21 +51,21 @@ export default function CourseForm({ classCode, folders, course }: CourseFormPro
     
     // Khởi tạo chapters và videos, đảm bảo các trường null/undefined được chuyển thành chuỗi rỗng
     const [chapters, setChapters] = useState<ChapterFormData[]>(
-        course?.chapters.map(ch => ({
+        course?.chapters?.map(ch => ({
             ...ch,
             id: ch.id, // Sử dụng ID thật từ database
             description: ch.description || "",
-            videos: ch.videos.map(v => ({
+            videos: ch.videos?.map(v => ({
                 ...v,
                 id: v.id, // Sử dụng ID thật từ database
                 duration: v.duration || "",
                 description: v.description || ""
-            }))
+            })) || []
         })) || []
     );
     
     // Folder state
-    const [allFolders, setAllFolders] = useState<Folder[]>(folders);
+    const [allFolders, setAllFolders] = useState<FolderItem[]>(folders);
     const [showNewFolderForm, setShowNewFolderForm] = useState(false);
     const [newFolderName, setNewFolderName] = useState("");
     const [newFolderDescription, setNewFolderDescription] = useState("");
@@ -100,22 +97,23 @@ export default function CourseForm({ classCode, folders, course }: CourseFormPro
     };
 
     const addVideoToChapter = (chapterId: string) => {
-        const newVideo: VideoFormData = {
-            id: Date.now().toString(), // ID tạm thời cho video mới
-            title: "",
-            description: "",
-            url: "",
-            duration: "",
-            orderIndex: 0
-        };
-        setChapters(chapters.map(chapter =>
-            chapter.id === chapterId
-                ? {
+        setChapters(chapters.map(chapter => {
+            if (chapter.id === chapterId) {
+                const newVideo: VideoFormData = {
+                    id: Date.now().toString(),
+                    title: "",
+                    description: "",
+                    url: "",
+                    duration: "",
+                    orderIndex: chapter.videos.length
+                };
+                return {
                     ...chapter,
-                    videos: [...chapter.videos, { ...newVideo, orderIndex: chapter.videos.length }]
-                }
-                : chapter
-        ));
+                    videos: [...chapter.videos, newVideo]
+                };
+            }
+            return chapter;
+        }));
     };
 
     const removeVideoFromChapter = (chapterId: string, videoId: string) => {
@@ -154,50 +152,43 @@ export default function CourseForm({ classCode, folders, course }: CourseFormPro
         setError(null);
 
         try {
-            const formData = new FormData();
-            formData.append("title", title);
-            formData.append("description", description);
-            formData.append("classCode", classCode);
-
-            if (folderId) {
-                formData.append("folderId", folderId);
-            }
-            if (showNewFolderForm && newFolderName.trim()) {
-                formData.append("newFolderName", newFolderName.trim());
-                if (newFolderDescription.trim()) {
-                    formData.append("newFolderDescription", newFolderDescription.trim());
-                }
-                formData.append("newFolderColor", newFolderColor);
-            }
-            
-            // Re-order index before submitting
             const orderedChapters = chapters.map((chapter, chapterIndex) => ({
-                ...chapter,
+                title: chapter.title,
+                description: chapter.description || undefined,
                 orderIndex: chapterIndex,
                 videos: chapter.videos.map((video, videoIndex) => ({
-                    ...video,
-                    orderIndex: videoIndex
-                }))
+                    title: video.title,
+                    url: video.url,
+                    description: video.description || undefined,
+                    duration: video.duration || undefined,
+                    orderIndex: videoIndex,
+                })),
             }));
-            formData.append("chapters", JSON.stringify(orderedChapters));
+
+            const payload = {
+                title,
+                description,
+                classCode,
+                folderId: folderId || undefined,
+                chapters: orderedChapters,
+                newFolderName: showNewFolderForm && newFolderName.trim() ? newFolderName.trim() : undefined,
+                newFolderDescription: showNewFolderForm && newFolderDescription.trim() ? newFolderDescription.trim() : undefined,
+                newFolderColor: showNewFolderForm ? newFolderColor : undefined,
+            };
             
-            let result;
             if (isEditMode) {
-                formData.append("courseId", course.id); // Thêm ID của khóa học để cập nhật
-                result = await updateCourse({ success: false, error: false }, formData);
+                await courseService.updateCourse(course.id, payload);
             } else {
-                result = await createCourse({ success: false, error: false }, formData);
+                await courseService.createCourse(payload);
             }
 
-            if (result.success) {
-                toast.success(isEditMode ? "Cập nhật khóa học thành công" : "Tạo khóa học thành công");
-                router.push(`/class/${classCode}/video`);
-            } else {
-                setError(result.error?.toString() || `Có lỗi xảy ra khi ${isEditMode ? 'cập nhật' : 'tạo'} khóa học`);
-            }
-        } catch (err) {
+            toast.success(isEditMode ? "Cập nhật khóa học thành công" : "Tạo khóa học thành công");
+            router.push(`/class/${classCode}/video`);
+        } catch (err: any) {
             console.error(err);
-            setError(`Có lỗi xảy ra khi ${isEditMode ? 'cập nhật' : 'tạo'} khóa học`);
+            const msg = err.response?.data?.message || `Có lỗi xảy ra khi ${isEditMode ? 'cập nhật' : 'tạo'} khóa học`;
+            setError(msg);
+            toast.error(msg);
         } finally {
             setIsLoading(false);
         }

@@ -4,21 +4,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Eye, User, Clock, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
-
-// BƯỚC 1: Cập nhật interface ViewerData
-interface ViewerData {
-  id: string;
-  username: string;
-  role: string;
-  viewedAt: string;
-  isStillInClass: boolean; // <-- ĐÃ THÊM CỜ MỚI
-}
-
-interface ViewersStats {
-  totalViews: number;
-  studentViews: number;
-  totalStudents: number;
-}
+import { documentService } from "@/services/document.service";
+import { DocumentViewerItem, DocumentStats } from "@/types/document";
 
 interface FileViewersModalProps {
   docId: string;
@@ -35,7 +22,7 @@ const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
   hour: "2-digit",
   minute: "2-digit",
 });
-const formatDate = (dateString: string) =>
+const formatDate = (dateString: string | Date) =>
   dateFormatter.format(new Date(dateString));
 
 const getRoleColor = (role: string) => {
@@ -68,26 +55,18 @@ export default function FileViewersModal({
   isOpen,
   onClose,
 }: FileViewersModalProps) {
-  const [viewers, setViewers] = useState<ViewerData[]>([]); // Đã dùng interface mới
-  const [stats, setStats] = useState<ViewersStats>({
+  const [viewers, setViewers] = useState<DocumentViewerItem[]>([]);
+  const [stats, setStats] = useState<DocumentStats>({
     totalViews: 0,
     studentViews: 0,
     totalStudents: 0,
   });
   const [loading, setLoading] = useState(false);
 
-  // ... (Giữ nguyên useCallback fetchViewers và useEffect) ...
   const fetchViewers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/files/${docId}/view`);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch viewers");
-      }
-
-      const data = await response.json();
+      const data = await documentService.getDocumentViewers(docId);
       setViewers(data.viewers || []);
       setStats(
         data.stats || { totalViews: 0, studentViews: 0, totalStudents: 0 }
@@ -101,6 +80,7 @@ export default function FileViewersModal({
       setLoading(false);
     }
   }, [docId]);
+
 
   useEffect(() => {
     if (isOpen) {

@@ -6,7 +6,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import { Folder, Loader2, X } from "lucide-react";
 import { FolderWithCourseCount } from "@/app/(page)/class/[id]/video/page"; // Import type
-import { moveCourseToFolder } from "@/lib/actions/file.action"; // Import server action
+import { courseService } from "@/services/course.service";
 import { toast } from "react-toastify";
 
 interface MoveCourseModalProps {
@@ -38,24 +38,20 @@ export default function MoveCourseModal({
     setIsLoading(true);
 
     try {
-      const result = await moveCourseToFolder({
-        courseId,
-        newFolderId: selectedFolderId,
+      await courseService.moveCourseToFolder(courseId, {
+        newFolderId: selectedFolderId === "unassigned" ? null : selectedFolderId,
         classCode,
       });
 
-      if (result.success) {
-        toast.success("Di chuyển khóa học thành công!");
-        onSuccess(); // Gọi onSuccess (sẽ refresh và đóng modal)
-      } else {
-        throw new Error(result.error);
-      }
+      toast.success("Di chuyển khóa học thành công!");
+      onSuccess(); // Gọi onSuccess (sẽ refresh và đóng modal)
     } catch (error: any) {
-      toast.error(error.message || "Đã xảy ra lỗi");
+      toast.error(error.response?.data?.message || "Đã xảy ra lỗi");
     } finally {
       setIsLoading(false);
     }
   };
+
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>

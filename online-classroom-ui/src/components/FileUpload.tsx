@@ -5,22 +5,26 @@ import React from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
 import { useParams } from "next/navigation";
+import { documentService } from "@/services/document.service";
+import { uploadService } from "@/services/upload.service";
 
 interface FileUploadProps {
-  onFileUploaded?: () => void; // Callback để refresh danh sách file
+  onFileUploaded?: () => void;
 }
 
 const FileUpload = ({ onFileUploaded }: FileUploadProps) => {
   const [uploading, setUploading] = React.useState(false);
   const [uploadedUrl, setUploadedUrl] = React.useState<string | null>(null);
   const params = useParams();
-  const classCode = params?.id as string; // Lấy class code từ URL
+  const classCode = params?.id as string;
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "application/pdf": [".pdf"],
       "application/msword": [".doc"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+        ".docx",
+      ],
     },
     maxFiles: 1,
     onDrop: async (acceptedFiles) => {
@@ -34,55 +38,30 @@ const FileUpload = ({ onFileUploaded }: FileUploadProps) => {
 
       try {
         setUploading(true);
-        
-        // 1. Upload file lên S3 thông qua API
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("classCode", classCode);
 
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
+        // 1. Upload file tài liệu lên Cloudflare R2 thông qua backend uploadService
+        const uploadData = await uploadService.uploadDocument(file, "documents");
+
+        // 2. Lưu thông tin file vào database thông qua documentService
+        await documentService.createDocument({
+          name: file.name,
+          url: uploadData.url,
+          type: file.type || uploadData.type || "application/pdf",
+          size: file.size,
+          classCode: classCode,
         });
 
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload file');
-        }
-
-        const uploadData = await uploadResponse.json();
-        
-        // 2. Lưu thông tin file vào database
-        const saveResponse = await fetch('/api/files', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: uploadData.fileName,
-            url: uploadData.fileUrl,
-            type: uploadData.fileType,
-            size: uploadData.fileSize,
-            classCode: classCode,
-          }),
-        });
-
-        if (!saveResponse.ok) {
-          throw new Error('Failed to save file to database');
-        }
-
-        const saveData = await saveResponse.json();
-        console.log('File saved to database:', saveData);
-
-        setUploadedUrl(uploadData.fileUrl);
+        setUploadedUrl(uploadData.url);
         toast.success("Tải lên và lưu tài liệu thành công!");
-        
-        // Gọi callback để refresh danh sách file nếu có
+
         if (onFileUploaded) {
           onFileUploaded();
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Upload error:", error);
-        toast.error("Lỗi khi tải lên hoặc lưu tài liệu");
+        toast.error(
+          error.response?.data?.message || "Lỗi khi tải lên hoặc lưu tài liệu"
+        );
       } finally {
         setUploading(false);
       }
@@ -106,7 +85,9 @@ const FileUpload = ({ onFileUploaded }: FileUploadProps) => {
         ) : (
           <>
             <Inbox className="w-10 h-10 text-blue-500" />
-            <p className="mt-2 text-sm text-slate-400">Kéo thả hoặc chọn file tài liệu (PDF, Word)</p>
+            <p className="mt-2 text-sm text-slate-400">
+              Kéo thả hoặc chọn file tài liệu (PDF, Word)
+            </p>
           </>
         )}
       </div>

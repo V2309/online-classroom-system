@@ -74,3 +74,34 @@ export interface ClassListResponse {
   currentClassCount: number;
   page: number;
 }
+
+export interface StudentMember {
+  id: string;
+  username: string;
+  schoolname: string;
+  img: string | null;
+  class_name: string;
+  classes: { name: string }[];
+}
+
+export interface PendingMemberRequest {
+  id: number;
+  classCode: string;
+  studentId: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  student: {
+    id: string;
+    username: string;
+    img: string | null;
+  };
+}
+
+export interface ClassMembersResponse {
+  data: StudentMember[];
+  count: number;
+  capacity?: number;
+  pendingRequests: PendingMemberRequest[];
+  page: number;
+}
+

@@ -2,14 +2,13 @@
 
 import { useState, useMemo } from "react";
 import { CourseWithChaptersAndVideos } from "@/app/(page)/class/[id]/video/[videoId]/page";
-import { Video } from "@prisma/client";
+import type { VideoItem } from "@/types/course";
 import CourseContent from "@/components/CourseContent";
 import ProgressBar from "@/components/ProgressBar";
 import VideoPlayer from "@/components/VideoPlayer";
-
-import {ArrowLeft} from "lucide-react";
-
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+
 interface CourseDetailClientProps {
   course: CourseWithChaptersAndVideos;
   classCode: string;
@@ -21,19 +20,20 @@ export default function CourseDetailClient({
   classCode,
   role,
 }: CourseDetailClientProps) {
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(
-    course.chapters[0]?.videos[0] || null
-  );
+  const chapters = course.chapters || [];
+  const firstVideo = chapters[0]?.videos?.[0] || null;
+
+  const [currentVideo, setCurrentVideo] = useState<VideoItem | null>(firstVideo);
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(
     new Set(currentVideo ? [currentVideo.id] : [])
   );
 
   const totalVideos = useMemo(
-    () => course.chapters.reduce((acc, chapter) => acc + chapter.videos.length, 0),
-    [course.chapters]
+    () => chapters.reduce((acc, chapter) => acc + (chapter.videos?.length || 0), 0),
+    [chapters]
   );
 
-  const handleSelectVideo = (video: Video) => {
+  const handleSelectVideo = (video: VideoItem) => {
     setCurrentVideo(video);
     setWatchedVideos((prev) => {
       const next = new Set(prev);
@@ -45,20 +45,20 @@ export default function CourseDetailClient({
   const progressPercentage =
     totalVideos > 0 ? (watchedVideos.size / totalVideos) * 100 : 0;
 
-  // Lấy role từ router
   const router = useRouter();
   const handleGoBack = () => {
     router.back();
   };
+
   return (
-    <div className="min-h-screen  text-white antialiased">
+    <div className="min-h-screen text-white antialiased">
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8">
           <div className="flex justify-between items-center mb-4">
             {/* quay lại */}
             <button
               onClick={handleGoBack}
-              className="text-md text-blue-400 hover:underline border border-blue-400 px-3 py-1 rounded-md" 
+              className="text-md text-blue-400 hover:underline border border-blue-400 px-3 py-1 rounded-md"
             >
               <ArrowLeft className="inline-block mr-1" />
               Quay lại
@@ -81,7 +81,7 @@ export default function CourseDetailClient({
           </div>
           <div className="lg:col-span-1">
             <CourseContent
-              chapters={course.chapters}
+              chapters={chapters}
               onSelectVideo={handleSelectVideo}
               currentVideoId={currentVideo?.id}
               watchedVideos={watchedVideos}

@@ -4,14 +4,15 @@ import { useState } from 'react';
 import Image from '@/components/Image';
 import { toast } from 'react-toastify';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { ClassGroupWithMembers, StudentWithoutGroup } from '@/app/(page)/class/[id]/groups/page';
-import { createGroup, updateGroupMembers, deleteGroup } from '@/lib/actions/group.actions';
+import { ClassGroupItem, StudentWithoutGroup } from '@/types/group';
+import { groupService } from '@/services/group.service';
+
 
 interface ClassGroupsPageProps {
   classCode: string;
   className: string;
   userRole: string;
-  groups: ClassGroupWithMembers[];
+  groups: ClassGroupItem[];
   studentsWithoutGroup: StudentWithoutGroup[];
   isTeacher: boolean;
 }
@@ -121,23 +122,18 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
     }
 
     try {
-      // Gọi Server Action
-      const result = await updateGroupMembers({
+      await groupService.updateGroupMembers({
         studentId,
         targetGroupId,
         classCode,
       });
 
-      if (result.success) {
-        // Cập nhật UI ngay lập tức
-        updateUIAfterDrop(studentId, sourceGroupId, targetGroupId);
-        toast.success(targetGroupId ? "Đã thêm vào nhóm" : "Đã loại khỏi nhóm");
-      } else {
-        toast.error(result.error || "Có lỗi xảy ra");
-      }
-    } catch (error) {
+      // Cập nhật UI ngay lập tức
+      updateUIAfterDrop(studentId, sourceGroupId, targetGroupId);
+      toast.success(targetGroupId ? "Đã thêm vào nhóm" : "Đã loại khỏi nhóm");
+    } catch (error: any) {
       console.error(error);
-      toast.error("Có lỗi xảy ra khi cập nhật nhóm");
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi cập nhật nhóm");
     }
   };
 
@@ -149,24 +145,20 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
     }
 
     try {
-      const result = await createGroup({
+      const createdGroup = await groupService.createGroup({
         name: newGroupName,
         classCode,
         color: groupColors[selectedColor as keyof typeof groupColors],
         maxSize: maxGroupSize,
       });
 
-      if (result.success && result.group) {
-        setGroups(prev => [...prev, result.group!]);
-        setNewGroupName('');
-        setIsCreatingGroup(false);
-        toast.success("Tạo nhóm thành công");
-      } else {
-        toast.error(result.error || "Có lỗi xảy ra");
-      }
-    } catch (error) {
+      setGroups(prev => [...prev, createdGroup]);
+      setNewGroupName('');
+      setIsCreatingGroup(false);
+      toast.success("Tạo nhóm thành công");
+    } catch (error: any) {
       console.error(error);
-      toast.error("Có lỗi xảy ra khi tạo nhóm");
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi tạo nhóm");
     }
   };
 
@@ -177,27 +169,24 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
     }
 
     try {
-      const result = await deleteGroup(groupId);
+      await groupService.deleteGroup(groupId);
 
-      if (result.success) {
-        // Di chuyển tất cả thành viên của nhóm về danh sách chưa phân nhóm
-        const deletedGroup = groups.find(g => g.id === groupId);
-        if (deletedGroup && deletedGroup.members.length > 0) {
-          const membersToMove = deletedGroup.members.map(member => member.student);
-          setStudentsWithoutGroup(prev => [...prev, ...membersToMove]);
-        }
-
-        // Xóa nhóm khỏi state
-        setGroups(prev => prev.filter(g => g.id !== groupId));
-        toast.success("Xóa nhóm thành công");
-      } else {
-        toast.error(result.error || "Có lỗi xảy ra");
+      // Di chuyển tất cả thành viên của nhóm về danh sách chưa phân nhóm
+      const deletedGroup = groups.find(g => g.id === groupId);
+      if (deletedGroup && deletedGroup.members.length > 0) {
+        const membersToMove = deletedGroup.members.map(member => member.student);
+        setStudentsWithoutGroup(prev => [...prev, ...membersToMove]);
       }
-    } catch (error) {
+
+      // Xóa nhóm khỏi state
+      setGroups(prev => prev.filter(g => g.id !== groupId));
+      toast.success("Xóa nhóm thành công");
+    } catch (error: any) {
       console.error(error);
-      toast.error("Có lỗi xảy ra khi xóa nhóm");
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra khi xóa nhóm");
     }
   };
+
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>

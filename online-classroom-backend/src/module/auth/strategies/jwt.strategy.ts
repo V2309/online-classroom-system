@@ -17,6 +17,7 @@ export interface AuthenticatedUser {
   username: string;
   email: string | null;
   phone: string | null;
+  img?: string | null;
   role: UserRole;
 }
 
@@ -53,6 +54,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         username: true,
         email: true,
         phone: true,
+        img: true,
         role: true,
         isBanned: true,
       },
@@ -67,6 +69,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       username: user.username,
       email: user.email,
       phone: user.phone,
+      img: user.img,
       role: user.role,
     };
   }

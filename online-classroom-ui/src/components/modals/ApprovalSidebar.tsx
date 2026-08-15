@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { PendingRequest } from "@/app/(page)/class/[id]/member/page";
+import { PendingMemberRequest } from "@/types/class";
 import { classService } from "@/services/class.service";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
 interface ApprovalSidebarProps {
-  requests: PendingRequest[];
+  requests: PendingMemberRequest[];
   classCode: string;
 }
+
 
 export default function ApprovalSidebar({
   requests,

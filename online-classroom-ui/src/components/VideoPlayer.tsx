@@ -1,11 +1,11 @@
 // components/VideoPlayer.tsx
 "use client";
 
-import type { Video } from "@prisma/client";
+import type { VideoItem } from "@/types/course";
 import { extractYouTubeVideoId } from "@/lib/utils";
 
 type VideoPlayerProps = {
-  video: Video | null;
+  video: VideoItem | null;
 };
 
 // Convert YouTube URL to embed URL

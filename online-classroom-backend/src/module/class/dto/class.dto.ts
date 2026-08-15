@@ -89,3 +89,14 @@ export class ClassQueryDto {
   @IsString()
   search?: string;
 }
+
+export class ClassMembersQueryDto {
+  @IsOptional()
+  @IsString()
+  page?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+}
+

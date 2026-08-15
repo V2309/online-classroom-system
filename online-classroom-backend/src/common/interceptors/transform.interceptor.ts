@@ -31,8 +31,13 @@ export class TransformInterceptor<T> implements NestInterceptor {
       this.reflector.get<string>('response-message', reflectorContext) ||
       'Success';
 
+    const bypass = this.reflector.get<boolean>('bypass-transform', reflectorContext);
+
     return next.handle().pipe(
       map((data: T) => {
+        if (response.headersSent || bypass || (data && typeof data === 'object' && 'auth' in data)) {
+          return data as any;
+        }
         return {
           statusCode,
           message,

@@ -5,11 +5,12 @@ import { useEffect, useState, useRef, FormEvent } from "react";
 import { useUser } from "@/hooks/useUser";
 import { pusherClient } from "@/lib/pusher-client";
 import { type Channel, type Members } from "pusher-js";
-import { sendMessage, deleteMessage, recallMessage, pinMessage, unpinMessage, getPinnedMessages } from "@/lib/actions/chat.action";
+import { chatService } from "@/services/chat.service";
 import { toast } from "react-toastify";
 import { globalPresenceManager } from "@/lib/presence-manager";
 
-import Image from "next/image";
+
+import Image from "@/components/Image";
 // Type cho tin nhắn
 interface ChatGroupMessage {
   id: string;
@@ -478,7 +479,7 @@ export function ChatBox({
 
     try {
       // Gửi lên server
-      const result = await sendMessage({ 
+      await chatService.sendMessage({ 
         content: messageContent, 
         classCode,
         replyTo: replyData ? {
@@ -487,16 +488,10 @@ export function ChatBox({
           user: replyData.user
         } : undefined
       });
-
-      if (result.error) {
-        toast.error(result.error);
-        // Xóa tin nhắn lạc quan nếu lỗi
-        setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
-      }
       // Khi thành công, Pusher sẽ gửi lại và thay thế optimistic message
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
-      toast.error('Gửi tin nhắn thất bại');
+      toast.error(error.response?.data?.message || 'Gửi tin nhắn thất bại');
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
     } finally {
       setIsSubmitting(false);
@@ -506,28 +501,20 @@ export function ChatBox({
   // Handle delete message
   const handleDeleteMessage = async (messageId: string) => {
     try {
-      const result = await deleteMessage(messageId, classCode);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success('Tin nhắn đã được xóa');
-      }
-    } catch (error) {
-      toast.error('Xóa tin nhắn thất bại');
+      await chatService.deleteMessage(messageId, classCode);
+      toast.success('Tin nhắn đã được xóa');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Xóa tin nhắn thất bại');
     }
   };
 
   // Handle recall message
   const handleRecallMessage = async (messageId: string) => {
     try {
-      const result = await recallMessage(messageId, classCode);
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success('Tin nhắn đã được thu hồi');
-      }
-    } catch (error) {
-      toast.error('Thu hồi tin nhắn thất bại');
+      await chatService.recallMessage(messageId, classCode);
+      toast.success('Tin nhắn đã được thu hồi');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Thu hồi tin nhắn thất bại');
     }
   };
 
@@ -541,20 +528,10 @@ export function ChatBox({
           : msg
       ));
       
-      const result = await pinMessage(messageId, classCode);
-      if (result.error) {
-        toast.error(result.error);
-        // Revert optimistic update on error
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, isPinned: false, pinnedAt: undefined }
-            : msg
-        ));
-      } else {
-        toast.success('Tin nhắn đã được ghim');
-      }
-    } catch (error) {
-      toast.error('Ghim tin nhắn thất bại');
+      await chatService.pinMessage(messageId, classCode);
+      toast.success('Tin nhắn đã được ghim');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Ghim tin nhắn thất bại');
       // Revert optimistic update on error
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
@@ -574,20 +551,10 @@ export function ChatBox({
           : msg
       ));
       
-      const result = await unpinMessage(messageId, classCode);
-      if (result.error) {
-        toast.error(result.error);
-        // Revert optimistic update on error
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, isPinned: true, pinnedAt: new Date().toISOString() }
-          : msg
-        ));
-      } else {
-        toast.success('Đã bỏ ghim tin nhắn');
-      }
-    } catch (error) {
-      toast.error('Bỏ ghim tin nhắn thất bại');
+      await chatService.unpinMessage(messageId, classCode);
+      toast.success('Đã bỏ ghim tin nhắn');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Bỏ ghim tin nhắn thất bại');
       // Revert optimistic update on error
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
@@ -596,6 +563,7 @@ export function ChatBox({
       ));
     }
   };
+
 
   return (
     <div className="flex h-full w-full bg-gray-50 overflow-hidden">
@@ -623,15 +591,11 @@ export function ChatBox({
                   <div key={`pinned-${pinnedMsg.id}`} className="bg-white rounded-lg p-2 shadow-sm border border-yellow-200">
                     <div className="flex items-start gap-2">
                       <Image
-                        src={
-                          pinnedMsg.user.img
-                            ? `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${pinnedMsg.user.img}`
-                            : "/avatar.png"
-                        }
+                        path={pinnedMsg.user.img || "/avatar.png"}
                         alt={pinnedMsg.user.username}
-                        width={24}
-                        height={24}
-                        className="rounded-full flex-shrink-0"
+                        w={24}
+                        h={24}
+                        className="rounded-full flex-shrink-0 object-cover"
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -716,15 +680,11 @@ export function ChatBox({
                   <div className="flex-shrink-0">
                     <div className="relative">
                       <Image
-                        src={
-                          chatMsg.user.img
-                            ? `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${chatMsg.user.img}`
-                            : "/avatar.png"
-                        }
+                        path={chatMsg.user.img || "/avatar.png"}
                         alt={chatMsg.user.username}
-                        width={40}
-                        height={40}
-                        className="rounded-full ring-2 ring-white shadow-sm"
+                        w={40}
+                        h={40}
+                        className="rounded-full ring-2 ring-white shadow-sm object-cover"
                       />
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
                     </div>
@@ -890,15 +850,11 @@ export function ChatBox({
                   <div className="flex-shrink-0">
                     <div className="relative">
                       <Image
-                        src={
-                          user?.img
-                            ? `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${user.img}`
-                            : "/avatar.png"
-                        }
+                        path={user?.img || "/avatar.png"}
                         alt={user?.username || 'You'}
-                        width={40}
-                        height={40}
-                        className="rounded-full ring-2 ring-blue-100 shadow-sm"
+                        w={40}
+                        h={40}
+                        className="rounded-full ring-2 ring-blue-100 shadow-sm object-cover"
                       />
                     </div>
                   </div>
@@ -983,7 +939,7 @@ export function ChatBox({
       <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
         {/* Header thành viên */}
         <div className="p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-800 text-lg mb-1">
+          <h3 className="font-semibold text-gray-800 text-lg">
             Thành viên
           </h3>
           <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -1007,15 +963,11 @@ export function ChatBox({
                 }`}>
                   <div className="relative flex-shrink-0">
                     <Image
-                      src={
-                        member.img
-                          ? `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${member.img}`
-                          : "/avatar.png"
-                      }
+                      path={member.img || "/avatar.png"}
                       alt={member.username}
-                      width={44}
-                      height={44}
-                      className="rounded-full ring-2 ring-white shadow-sm"
+                      w={44}
+                      h={44}
+                      className="rounded-full ring-2 ring-white shadow-sm object-cover"
                     />
                     {/* Status indicator */}
                     <div

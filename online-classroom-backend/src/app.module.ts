@@ -11,6 +11,13 @@ import { UploadModule } from './module/upload/upload.module';
 import { NotificationModule } from './module/notification/notification.module';
 import { WhiteboardModule } from './module/whiteboard/whiteboard.module';
 import { ScheduleModule } from './module/schedule/schedule.module';
+import { GroupModule } from './module/group/group.module';
+import { PusherModule } from './lib/pusher/pusher.module';
+import { ChatModule } from './module/chat/chat.module';
+import { CourseModule } from './module/course/course.module';
+import { DocumentModule } from './module/document/document.module';
+import { RealtimeModule } from './module/realtime/realtime.module';
+import { R2Module } from './lib/r2/r2.module';
 
 @Module({
   imports: [
@@ -18,6 +25,8 @@ import { ScheduleModule } from './module/schedule/schedule.module';
       isGlobal: true, // để mọi module khác dùng ConfigService mà không cần import lại
     }),
     PrismaModule,
+    PusherModule,
+    R2Module,
     AuthModule,
     UserModule,
     ClassModule,
@@ -26,6 +35,11 @@ import { ScheduleModule } from './module/schedule/schedule.module';
     NotificationModule,
     WhiteboardModule,
     ScheduleModule,
+    GroupModule,
+    ChatModule,
+    CourseModule,
+    DocumentModule,
+    RealtimeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

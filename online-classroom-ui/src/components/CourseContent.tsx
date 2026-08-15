@@ -2,18 +2,18 @@
 "use client";
 
 import { useState } from "react";
-import type { Chapter, Video } from "@prisma/client";
+import type { ChapterItem, VideoItem } from "@/types/course";
 import { ChevronDownIcon, PlayCircleIcon, CheckCircleIcon } from "./Icons";
 
 type CourseContentProps = {
-  chapters: (Chapter & { videos: Video[] })[];
-  onSelectVideo: (video: Video) => void;
+  chapters?: ChapterItem[];
+  onSelectVideo: (video: VideoItem) => void;
   currentVideoId?: string;
   watchedVideos: Set<string>;
 };
 
 export default function CourseContent({
-  chapters,
+  chapters = [],
   onSelectVideo,
   currentVideoId,
   watchedVideos,
@@ -49,7 +49,7 @@ export default function CourseContent({
 
             {openChapterId === chapter.id && (
               <ul className=" py-2 space-y-2  rounded-b-md">
-                {chapter.videos.map((video) => {
+                {(chapter.videos || []).map((video: VideoItem) => {
                   const isPlaying = video.id === currentVideoId;
                   const isWatched = watchedVideos.has(video.id);
 

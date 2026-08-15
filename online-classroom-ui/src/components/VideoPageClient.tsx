@@ -4,7 +4,7 @@ import TableSearch from "@/components/TableSearch";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "@/components/Image";
 import { useSearchParams, useRouter } from "next/navigation";
 import FolderForm from "@/components/forms/FolderForm";
 import {
@@ -14,14 +14,17 @@ import {
   Play,
   Eye,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import {
   CourseWithDetails,
   FolderWithCourseCount,
 } from "@/app/(page)/class/[id]/video/page";
 import { useState, useCallback } from "react";
-import FormModal from "./FormModal"; // Giả sử component này tồn tại
 import MoveCourseModal from "@/components/modals/MoveCourseModal";
+import { courseService } from "@/services/course.service";
+import { toast } from "react-toastify";
+
 // TỐI ƯU: Tạo formatter một lần bên ngoài component
 const dateFormatter = new Intl.DateTimeFormat("vi-VN");
 const formatDate = (date: Date) => dateFormatter.format(new Date(date));
@@ -115,6 +118,43 @@ export default function VideoList({
     [classCode]
   );
 
+  const handleDeleteCourse = useCallback(
+    async (courseId: string) => {
+      if (!confirm("Bạn có chắc chắn muốn xóa khóa học này không?")) return;
+      try {
+        await courseService.deleteCourse(courseId);
+        toast.success("Khóa học đã được xóa thành công!");
+        router.refresh();
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || "Có lỗi xảy ra khi xóa khóa học."
+        );
+      }
+    },
+    [router]
+  );
+
+  const handleDeleteFolder = useCallback(
+    async (folderId: string) => {
+      if (
+        !confirm(
+          "Bạn có chắc chắn muốn xóa thư mục này không? Các khóa học sẽ chuyển về 'Tất cả'."
+        )
+      )
+        return;
+      try {
+        await courseService.deleteFolder(folderId);
+        toast.success("Thư mục đã được xóa thành công!");
+        router.refresh();
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || "Có lỗi xảy ra khi xóa thư mục."
+        );
+      }
+    },
+    [router]
+  );
+
   // BƯỚC 3.3: Tạo callback để mở modal di chuyển
   const handleOpenMoveModal = useCallback((course: CourseWithDetails) => {
     setCourseToMove(course);
@@ -138,11 +178,11 @@ export default function VideoList({
             <div className="relative w-20 h-12 overflow-hidden rounded-lg bg-slate-200 flex-shrink-0">
               {course.thumbnailUrl ? (
                 <Image
-                  src={course.thumbnailUrl}
+                  path={course.thumbnailUrl}
                   alt={course.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  className="object-cover"
+                  w={80}
+                  h={48}
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
@@ -156,7 +196,7 @@ export default function VideoList({
               </h3>
               <p className="text-sm text-slate-500 mt-1">
                 <span className="font-medium text-blue-600">
-                  {course._count.videos} videos
+                  {course._count?.videos || 0} videos
                 </span>
                 {course.folder && <span className="mx-2">•</span>}
                 {course.folder && <span>{course.folder.name}</span>}
@@ -179,10 +219,10 @@ export default function VideoList({
         {/* Ngày tạo */}
         <td className="hidden lg:table-cell p-4">
           <time
-            dateTime={course.createdAt.toISOString()}
+            dateTime={new Date(course.createdAt).toISOString()}
             className="text-sm text-slate-500"
           >
-            {formatDate(course.createdAt)}
+            {formatDate(new Date(course.createdAt))}
           </time>
         </td>
         {/* Actions */}
@@ -215,17 +255,19 @@ export default function VideoList({
                         <span>Chỉnh sửa</span>
                       </Link>
                       <button 
-                      onClick={() => handleOpenMoveModal(course)}
-                      className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-slate-700 hover:bg-slate-100">
+                        onClick={() => handleOpenMoveModal(course)}
+                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-slate-700 hover:bg-slate-100"
+                      >
                         <Folder className="w-4 h-4" />
                         <span>Di chuyển</span>
                       </button>
-                      <FormModal
-                        table="course"
-                        type="delete"
-                        id={course.id}
-                        data={{ classCode: classCode }}
-                      />
+                      <button
+                        onClick={() => handleDeleteCourse(course.id)}
+                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>Xóa</span>
+                      </button>
                     </>
                   )}
                 </div>
@@ -235,8 +277,9 @@ export default function VideoList({
         </td>
       </tr>
     ),
-   [classCode, role, openMenuId, handleOpenMenu, handleOpenMoveModal]// Dependencies cho renderRow
+    [classCode, role, openMenuId, handleOpenMenu, handleOpenMoveModal, handleDeleteCourse]
   );
+
 
   return (
     // RESPONSIVE: flex-col trên di động, flex-row trên desktop
@@ -283,7 +326,7 @@ export default function VideoList({
                 </div>
                 <span className="truncate flex-1">{folder.name}</span>
                 <span className="text-xs bg-slate-200 px-2 py-1 rounded-full">
-                  {folder._count.courses}
+                  {folder._count?.courses || 0}
                 </span>
               </Link>
               {/* Nút 3 chấm cho folder */}
@@ -306,12 +349,13 @@ export default function VideoList({
                           <Pencil className="w-3 h-3" />
                           Chỉnh sửa
                         </button>
-                        <FormModal
-                          table="folder"
-                          type="delete"
-                          id={folder.id}
-                          data={{ classCode }}
-                        />
+                        <button
+                          onClick={() => handleDeleteFolder(folder.id)}
+                          className="w-full px-2 py-1.5 text-xs text-left text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Xóa
+                        </button>
                       </div>
                     </div>
                   )}

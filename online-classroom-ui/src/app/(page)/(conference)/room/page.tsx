@@ -77,10 +77,10 @@ export default function ConferencePage() {
                 </div>
               )}
               {!upcomingMeeting && !loading && (
-                <div className="text-gray-600">Không có cuộc họp sắp tới</div>
+                <div className="text-white">Không có cuộc họp sắp tới</div>
               )}
               {loading && (
-                <div className="text-gray-600">Đang tải thông tin cuộc họp...</div>
+                <div className="text-white">Đang tải thông tin cuộc họp...</div>
               )}
             </div>
             <div className="flex flex-col gap-2">

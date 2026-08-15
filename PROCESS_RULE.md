@@ -117,18 +117,23 @@ Trước khi đụng code, phải:
 | 4 | Auth | `GET /users/me` (current user) | `src/lib/auth.ts` (`getCurrentUser`) | ✅ Đã xác nhận |
 | 5 | Auth | verify email | `src/lib/actions/auth.action.ts` (`sendVerificationEmail`, `verifyEmailToken`) | ✅ Đã xác nhận |
 | 6 | Users | update profile / avatar / đổi mật khẩu | `src/lib/actions/user.action.ts` | ✅ Đã xác nhận |
-| 7 | Classes | CRUD lớp, join/leave, join-request | `src/lib/actions/class.action.ts` | ✅ Đã xác nhận |
+| 7 | Classes | CRUD lớp, join/leave, join-request, danh sách & xóa thành viên (`/members`) | `src/lib/actions/class.action.ts`, `src/app/(page)/class/[id]/member/page.tsx` | ✅ Đã xác nhận |
 | 8 | Grades | tạo/khối lớp (`Grade`) | `src/lib/actions/class.action.ts` (`createGrade`) | ✅ Đã xác nhận |
 | 9 | Schedule | Event/Attendance/meeting | `src/lib/actions/schedule.action.ts` | ✅ Đã xác nhận |
-| 10 | Chat | message/pin/recall | `src/lib/actions/chat.action.ts`, `src/app/api/chat/route.ts` | ⬜ Chưa làm |
-| 11 | Groups | ClassGroup | `src/lib/actions/group.actions.ts` | ⬜ Chưa làm |
-| 12 | Courses | Course/Chapter/Video | `src/lib/actions/file.action.ts` | ⬜ Chưa làm |
-| 13 | Documents | File/Folder/FileView | `src/lib/actions/file.action.ts`, `src/app/api/files/**` | ⬜ Chưa làm |
+| 10 | Chat | message/pin/recall | `src/lib/actions/chat.action.ts`, `src/app/(page)/class/[id]/groupchat/page.tsx` | ✅ Đã xác nhận |
+| 11 | Groups | ClassGroup (CRUD, kéo thả thành viên, nhóm trưởng) | `src/lib/actions/group.actions.ts`, `src/app/(page)/class/[id]/groups/page.tsx` | ✅ Đã xác nhận |
+
+
+
+| 12 | Courses | Course/Chapter/Video/Folder (CRUD, di chuyển folder, player) | `src/lib/actions/file.action.ts`, `src/app/(page)/class/[id]/video/**` | ✅ Đã xác nhận |
+
+| 13 | Documents | File/FileView (Upload Cloudflare R2, danh sách, chi tiết PDF, thống kê & xem người xem, xóa) | `src/lib/actions/file.action.ts`, `src/app/api/files/**`, `src/app/(page)/class/[id]/documents/**` | ✅ Đã xác nhận |
+
 | 14 | Upload | avatar / class-image / documents | `src/app/api/upload*/route.ts` | ✅ Đã xác nhận |
 | 15 | Posts | feed/like/comment | `src/lib/actions/post.action.ts`, `src/app/api/posts/**` | ✅ Đã xác nhận |
 | 16 | Whiteboard | state | `src/lib/actions/whiteboard.action.ts` | ✅ Đã xác nhận |
-| 17 | Notifications | list/mark read | `src/app/api/notifications/route.ts` | ✅ Đã xác nhận |
-| 18 | Realtime | Pusher auth, Stream token | `src/app/api/pusher/auth/route.ts`, `src/lib/actions/stream.action.ts` | ⬜ Chưa làm |
+| 18 | Realtime | Pusher auth (Channel/Presence/User auth), Stream token | `src/app/api/pusher/auth/route.ts`, `src/lib/actions/stream.action.ts` | ✅ Đã xác nhận |
+
 | 19 | Mail | gửi lại email xác minh | (đã gộp ở #5, tách nếu cần) | ⬜ Chưa làm |
 | 20 | AI Gateway | proxy sang FastAPI | các nơi gọi `NEXT_PUBLIC_FLASK_API_URL` | ⬜ Chưa làm |
 | 21 | Dashboard | thống kê admin | `src/lib/actions/dashboard.action.ts` | ⬜ Chưa làm |

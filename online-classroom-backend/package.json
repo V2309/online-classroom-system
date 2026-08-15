@@ -24,6 +24,8 @@
     "db:studio": "npx prisma studio"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1111.0",
+    "@aws-sdk/s3-request-presigner": "^3.1111.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
@@ -32,6 +34,7 @@
     "@nestjs/platform-express": "^11.0.1",
     "@prisma/adapter-pg": "^7.9.0",
     "@prisma/client": "^7.9.0",
+    "@stream-io/node-sdk": "^0.7.63",
     "@types/multer": "^2.2.0",
     "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
@@ -41,6 +44,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.22.0",
+    "pusher": "^5.3.4",
     "reflect-metadata": "^0.2.2",
     "resend": "^6.20.0",
     "rxjs": "^7.8.1"

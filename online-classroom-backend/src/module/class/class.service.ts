@@ -55,20 +55,22 @@ export class ClassService {
       where.name = { contains: query.search, mode: 'insensitive' };
     }
 
+    const include: any = {
+      supervisor: {
+        include: { user: { select: { username: true, img: true } } },
+      },
+      grade: true,
+      _count: { select: { students: true } },
+    };
+
+    if (role === 'student' && query.type === 'pending') {
+      include.joinRequests = { where: { status: 'PENDING' } };
+    }
+
     const [data, count] = await this.prisma.$transaction([
       this.prisma.class.findMany({
         where,
-        include: {
-          supervisor: {
-            include: { user: { select: { username: true, img: true } } },
-          },
-          grade: true,
-          joinRequests:
-            role === 'student' && query.type === 'pending'
-              ? { where: { status: 'PENDING' } }
-              : false,
-          _count: { select: { students: true } },
-        },
+        include,
         take: ITEM_PER_PAGE,
         skip,
       }),
@@ -359,4 +361,147 @@ export class ClassService {
       },
     });
   }
+
+  // ─── GET /classes/:code/members — Danh sách thành viên lớp học ─────────────
+  async getClassMembers(
+    classCode: string,
+    userId: string,
+    role: string,
+    query: { page?: string; search?: string },
+  ) {
+    const cls = await this.prisma.class.findUnique({
+      where: { class_code: classCode, deleted: false },
+      select: { id: true, capacity: true, supervisorId: true },
+    });
+    if (!cls) throw new NotFoundException('Lớp học không tồn tại.');
+
+    const pageNum = parseInt(query.page || '1', 10);
+    const skip = ITEM_PER_PAGE * (pageNum - 1);
+
+    const where: any = {
+      classes: {
+        some: {
+          class_code: classCode,
+        },
+      },
+    };
+
+    if (query.search) {
+      where.user = {
+        username: {
+          contains: query.search,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    const [rawStudents, count] = await this.prisma.$transaction([
+      this.prisma.student.findMany({
+        where,
+        select: {
+          id: true,
+          user: {
+            select: {
+              username: true,
+              schoolname: true,
+              img: true,
+              class_name: true,
+            },
+          },
+          classes: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        take: ITEM_PER_PAGE,
+        skip,
+      }),
+      this.prisma.student.count({
+        where,
+      }),
+    ]);
+
+    let pendingRequests: any[] = [];
+    if (role === 'teacher') {
+      const rawRequests = await this.prisma.classJoinRequest.findMany({
+        where: {
+          classCode,
+          status: 'PENDING',
+        },
+        include: {
+          student: {
+            include: {
+              user: {
+                select: {
+                  username: true,
+                  img: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+
+      pendingRequests = rawRequests.map((r) => ({
+        id: r.id,
+        classCode: r.classCode,
+        studentId: r.studentId,
+        status: r.status,
+        createdAt: r.createdAt,
+        student: {
+          id: r.student.id,
+          username: r.student.user.username,
+          img: r.student.user.img,
+        },
+      }));
+    }
+
+    const data = rawStudents.map((s) => ({
+      id: s.id,
+      username: s.user.username,
+      schoolname: s.user.schoolname,
+      img: s.user.img,
+      class_name: s.user.class_name,
+      classes: s.classes,
+    }));
+
+    return {
+      data,
+      count,
+      capacity: cls.capacity,
+      pendingRequests,
+      page: pageNum,
+    };
+  }
+
+  // ─── DELETE /classes/:code/members/:studentId — Xóa học sinh khỏi lớp ───────
+  async removeStudentFromClass(classCode: string, studentId: string, userId: string) {
+    const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
+    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể xóa học sinh khỏi lớp.');
+
+    const cls = await this.prisma.class.findUnique({
+      where: { class_code: classCode, deleted: false },
+    });
+    if (!cls) throw new NotFoundException('Lớp học không tồn tại.');
+    if (cls.supervisorId !== teacher.id) {
+      throw new ForbiddenException('Bạn không có quyền quản lý lớp này.');
+    }
+
+    await this.prisma.class.update({
+      where: { id: cls.id },
+      data: {
+        students: {
+          disconnect: { id: studentId },
+        },
+      },
+    });
+
+    return { message: 'Đã xóa học sinh khỏi lớp học thành công.' };
+  }
 }
+
+

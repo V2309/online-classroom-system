@@ -2,6 +2,7 @@ import { api } from '@/lib/api';
 import {
   ClassItem,
   ClassListResponse,
+  ClassMembersResponse,
   CreateClassRequest,
   JoinRequest,
   UpdateClassRequest,
@@ -82,7 +83,7 @@ export const classService = {
     await api.post(`/classes/join-requests/${requestId}/reject`);
   },
 
-  // ─── Lấy danh sách lớp đã xóa (teacher only) ─────────────────────────────
+  // ─── Lấy danh sách lớp đã xóa (teacher only) ─────────────────────
   async getDeletedClasses(): Promise<ClassItem[]> {
     const response = await api.get<ClassItem[]>('/classes/deleted');
     return response.data;
@@ -91,6 +92,28 @@ export const classService = {
   // ─── Lấy danh sách khối lớp (Grades) ───────────────────────────────────────
   async getGrades(): Promise<{ id: number; level: string }[]> {
     const response = await api.get<{ id: number; level: string }[]>('/classes/grades');
+    return response.data;
+  },
+
+  // ─── Lấy danh sách thành viên của lớp ────────────────────────────────────
+  async getClassMembers(
+    classCode: string,
+    params?: { page?: number; search?: string }
+  ): Promise<ClassMembersResponse> {
+    const response = await api.get<ClassMembersResponse>(`/classes/${classCode}/members`, {
+      params,
+    });
+    return response.data;
+  },
+
+  // ─── Xóa học sinh khỏi lớp (teacher only) ─────────────────────────────────
+  async removeStudentFromClass(
+    classCode: string,
+    studentId: string
+  ): Promise<{ message: string }> {
+    const response = await api.delete<{ message: string }>(
+      `/classes/${classCode}/members/${studentId}`
+    );
     return response.data;
   },
 };

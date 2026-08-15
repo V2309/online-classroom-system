@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { folderSchema } from "@/lib/formValidationSchema";
 import { z } from "zod";
-import { createFolder, updateFolder } from "@/lib/actions/file.action";
+import { courseService } from "@/services/course.service";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -52,55 +52,35 @@ const FolderForm = ({ type, data, classCode, setOpen, onSuccess }: FolderFormPro
     setIsLoading(true);
     try {
       if (type === "create") {
-        const formDataForAction = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          if (key === "description") {
-            // Chỉ append description nếu nó không rỗng
-            if (value && value.trim()) {
-              formDataForAction.append(key, value as string);
-            }
-          } else if (value) {
-            formDataForAction.append(key, value as string);
-          }
+        await courseService.createFolder({
+          name: formData.name,
+          classCode,
+          description: formData.description?.trim() || null,
+          color: formData.color,
         });
-
-        const result = await createFolder({ success: false, error: false }, formDataForAction);
         
-        if (result.success) {
-          toast.success("Tạo thư mục thành công!");
-          setOpen(false);
-          onSuccess?.();
-        } else {
-          toast.error("Có lỗi xảy ra khi tạo thư mục!");
-        }
+        toast.success("Tạo thư mục thành công!");
+        setOpen(false);
+        onSuccess?.();
       } else if (type === "update" && data?.id) {
-        const updateData = {
-          id: data.id,
-          ...formData,
-        };
+        await courseService.updateFolder(data.id, {
+          name: formData.name,
+          description: formData.description?.trim() || null,
+          color: formData.color,
+        });
         
-        // Convert empty description to null
-        if (updateData.description && !updateData.description.trim()) {
-          updateData.description = null;
-        }
-        
-        const result = await updateFolder(updateData);
-        
-        if (result.success) {
-          toast.success(result.message || "Cập nhật thư mục thành công!");
-          setOpen(false);
-          onSuccess?.();
-        } else {
-          toast.error(result.message || "Có lỗi xảy ra khi cập nhật thư mục!");
-        }
+        toast.success("Cập nhật thư mục thành công!");
+        setOpen(false);
+        onSuccess?.();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
-      toast.error("Có lỗi xảy ra, vui lòng thử lại!");
+      toast.error(error.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại!");
     } finally {
       setIsLoading(false);
     }
   });
+
 
   // Suggested colors
   const suggestedColors = [
