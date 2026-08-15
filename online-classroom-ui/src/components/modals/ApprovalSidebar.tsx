@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import Image from "@/components/Image";
 import { PendingMemberRequest } from "@/types/class";
 import { classService } from "@/services/class.service";
 import { toast } from "react-toastify";
@@ -109,14 +109,10 @@ export default function ApprovalSidebar({
               <div key={req.id} className="p-2 hover:bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <Image
-                    src={
-                      req.student.img
-                        ? `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${req.student.img}`
-                        : "/avatar.png" // Đường dẫn đến ảnh mặc định trong thư mục /public
-                    }
+                    path={req.student.img || "/avatar.png"}
                     alt={req.student.username}
-                    width={40}
-                    height={40}
+                    w={40}
+                    h={40}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <span className="font-medium text-gray-900">

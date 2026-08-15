@@ -11,6 +11,7 @@ import { classService } from "@/services/class.service";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import ClassPageHeader from "@/components/ClassPageHeader";
 
 interface MemberListProps {
   data: StudentMember[];
@@ -116,18 +117,16 @@ const MemberList = ({
   return (
     <div className="flex flex-col md:flex-row h-full">
       {/* Cột 1: Danh sách thành viên (chiếm 2/3) */}
-      <div className="bg-white p-4 rounded-lg shadow-sm flex-1 md:flex-[2_2_0%] h-full flex flex-col">
+      <div className="bg-white rounded-lg shadow-sm flex-1 md:flex-[2_2_0%] h-full flex flex-col">
         {/* Top */}
-        <div className="flex items-center justify-between">
-          <h1 className="hidden md:block text-lg font-semibold">
-            Thành viên lớp học ({count}{capacity ? `/${capacity}` : ""})
-          </h1>
-          <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
-            <TableSearch />
-          </div>
-        </div>
+        <ClassPageHeader
+          title="Thành viên lớp học"
+          count={`${count}${capacity ? `/${capacity}` : ""}`}
+        >
+          <TableSearch />
+        </ClassPageHeader>
         {/* List */}
-        <div className="flex-1 mt-4">
+        <div className="flex-1 px-4 mt-4">
           <Table columns={columns} renderRow={renderRow} data={data} />
         </div>
         {/* Pagination */}

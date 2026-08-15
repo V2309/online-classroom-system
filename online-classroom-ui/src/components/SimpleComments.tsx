@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/hooks/useUser";
-import Image from "next/image";
+import Image from "@/components/Image";
 import { useState } from "react";
 
 interface Comment {
@@ -44,11 +44,11 @@ const SimpleComments = ({
             <div key={comment.id} className="flex gap-2 sm:gap-3">
               <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden flex-shrink-0">
                 <Image
-                  src={comment.user.img ? `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${comment.user.img}` : "/avatar.png"}
-                  alt="User Avatar"
-                  width={32}
-                  height={32}
-                  className="object-cover w-full h-full"
+                  path={comment.user.img || "/avatar.png"}
+                  alt={comment.user.username || "User Avatar"}
+                  w={32}
+                  h={32}
+                  className="object-cover w-full h-full rounded-full"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -73,11 +73,11 @@ const SimpleComments = ({
         <form onSubmit={handleSubmit} className="flex items-center gap-2 sm:gap-0">
           <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full overflow-hidden flex-shrink-0">
             <Image
-              src={user?.img ? `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${user.img}` : "/avatar.png"}
-              alt="User Avatar cmt1"
-              width={32}
-              height={32}
-              className="object-cover w-full h-full"
+              path={user?.img || "/avatar.png"}
+              alt="User Avatar"
+              w={32}
+              h={32}
+              className="object-cover w-full h-full rounded-full"
             />
           </div>
           <div className="flex-1 sm:ml-3 relative">

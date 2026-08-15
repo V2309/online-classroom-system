@@ -82,7 +82,7 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
               unoptimized
               className="object-cover rounded-md"
             />
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
               <span className="text-white font-semibold">
                 {isUploading ? "Đang upload..." : "Thay đổi ảnh"}
               </span>
@@ -108,7 +108,7 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
         )}
         
         {isUploading && (
-          <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-lg">
+          <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
               <p className="text-sm text-gray-600">Đang upload...</p>

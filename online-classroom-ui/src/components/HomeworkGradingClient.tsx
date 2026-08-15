@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import Image from "@/components/Image";
 import Link from "next/link";
 import { ArrowLeft, Save, User, Clock, FileText } from "lucide-react";
 import { toast } from "react-toastify";
+import { homeworkService } from "@/services/homework.service";
 
 interface Student {
   id: string;
@@ -143,31 +144,21 @@ export default function HomeworkGradingClient({
       // Tính điểm theo thang 10 để lưu vào database
       const gradeOutOf10 = totalMaxPoints > 0 ? (totalGrade / totalMaxPoints) * 10 : 0;
       
-      const response = await fetch(`/api/homework/${submission.homework.id}/grade`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          submissionId: submission.id,
-          grade: gradeOutOf10, // Điểm theo thang 10 cho database
-          feedback: feedback,
-          questionGrades: grades, // Điểm thực từng câu
-        }),
+      await homeworkService.gradeSubmission(submission.homework.id, {
+        submissionId: submission.id,
+        grade: gradeOutOf10, // Điểm theo thang 10 cho database
+        feedback: feedback,
+        questionGrades: grades, // Điểm thực từng câu
       });
 
-      if (response.ok) {
-        toast.success("Đã chấm điểm thành công!");
-        
-        // Revalidate server data trước khi navigate
-        router.refresh();
-        
-        // Navigate với timestamp để force refresh
-        const timestamp = new Date().getTime();
-        router.push(`/class/${classId}/homework/${submission.homework.id}/teacher-detail?_t=${timestamp}`);
-      } else {
-        toast.error("Có lỗi xảy ra khi chấm điểm");
-      }
+      toast.success("Đã chấm điểm thành công!");
+      
+      // Revalidate server data trước khi navigate
+      router.refresh();
+      
+      // Navigate với timestamp để force refresh
+      const timestamp = new Date().getTime();
+      router.push(`/class/${classId}/homework/${submission.homework.id}/teacher-detail?_t=${timestamp}`);
     } catch (error) {
       console.error("Error grading:", error);
       toast.error("Có lỗi xảy ra khi chấm điểm");
@@ -214,22 +205,17 @@ export default function HomeworkGradingClient({
               <h3 className="text-lg font-medium text-gray-900 mb-4">Thông tin học sinh</h3>
               
               <div className="flex items-center mb-4">
-                {submission.student.img ? (
+                <div className="h-12 w-12 rounded-full overflow-hidden flex-shrink-0">
                   <Image
-                src={`${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${submission.student.img}`}
+                    path={submission.student.img || "/avatar.png"}
                     alt={submission.student.username}
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 rounded-full"
+                    w={48}
+                    h={48}
+                    className="h-12 w-12 rounded-full object-cover"
                   />
-                ) : (
-                  <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
-                    <User size={20} className="text-gray-600" />
-                  </div>
-                )}
+                </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900">{submission.student.username}</p>
-                  
                 </div>
               </div>
 

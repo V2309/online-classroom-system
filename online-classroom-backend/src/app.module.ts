@@ -18,6 +18,7 @@ import { CourseModule } from './module/course/course.module';
 import { DocumentModule } from './module/document/document.module';
 import { RealtimeModule } from './module/realtime/realtime.module';
 import { R2Module } from './lib/r2/r2.module';
+import { HomeworkModule } from './module/homework/homework.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { R2Module } from './lib/r2/r2.module';
     CourseModule,
     DocumentModule,
     RealtimeModule,
+    HomeworkModule,
   ],
   controllers: [AppController],
   providers: [AppService],

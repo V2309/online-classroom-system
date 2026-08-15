@@ -1,147 +1,32 @@
-// @/app/overview/page.tsx
-// Đã gộp và tối ưu từ 2 file `overview` và `results`
-
 import Link from 'next/link';
 import Image from 'next/image';
-import prisma from '@/lib/prisma';
-import { getCurrentUser } from '@/lib/auth';
-import Table from '@/components/Table'; // Giả định bạn có component Table này
+import { getCurrentUser } from '@/lib/auth-server';
+import Table from '@/components/Table';
 import dynamic from 'next/dynamic';
+import { serverFetch } from '@/lib/server-api';
 
 // Tải bất đồng bộ component biểu đồ để không làm chậm server
 const StudentHomeworkChart = dynamic(() => import('@/components/StudentHomeworkChart'), { ssr: false });
 
-/**
- * Lấy ảnh icon dựa trên loại file
- */
-function getAttachmentImage(fileType: string): string {
-  if (fileType.includes('pdf')) {
-    return "/pdf_red.png";
-  }
-  // Thêm các trường hợp khác nếu cần
-  // if (fileType.includes('word')) {
-  //   return "/doc_blue.png"; 
-  // }
-  return "/doc_blue.png"; // Ảnh mặc định
-}
-
 export default async function OverviewPage() {
-  const user = await getCurrentUser();
+  const user = getCurrentUser();
 
   if (!user || user.role !== 'student') {
     return <div className="p-8 text-center text-red-500">Không có quyền truy cập</div>;
   }
 
-  // === TỐI ƯU HÓA TRUY VẤN ===
-  // Chạy MỘT truy vấn duy nhất để lấy tất cả dữ liệu cần thiết
-  const student = await prisma.student.findUnique({
-    where: { userId: user.id as string },
-    include: {
-      classes: { // Lấy tất cả các lớp học
-        include: {
-          supervisor: { // Lấy thông tin giáo viên
-            select: { username: true } 
-          },
-          homeworks: { // Lấy tất cả bài tập của lớp
-            orderBy: { createdAt: 'asc' },
-            include: {
-              attachments: { take: 1 }, // Chỉ lấy 1 attachment để lấy icon
-              submissions: { // Lấy TẤT CẢ bài nộp của HỌC SINH NÀY
-                where: { studentId: user.id as string },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
+  let overviewData = {
+    pendingHomeworks: [] as any[],
+    classResults: [] as any[],
+  };
 
-  if (!student) {
-    return <div className="p-8 text-center text-red-500">Không tìm thấy thông tin học sinh</div>;
+  try {
+    overviewData = await serverFetch('/homework/student/overview');
+  } catch (error) {
+    console.error('Error fetching student overview:', error);
   }
 
-  // === XỬ LÝ DỮ LIỆU ===
-
-  const allHomeworks = student.classes.flatMap(classInfo => 
-    classInfo.homeworks.map(hw => ({
-      ...hw,
-      className: classInfo.name,
-      classCode: classInfo.class_code
-    }))
-  );
-
-  // 1. Lọc Bài tập chưa nộp (Logic từ file `overview`)
-  const pendingHomeworks = allHomeworks
-    .filter(hw => {
-      const hasSubmission = hw.submissions.length > 0;
-      const isExpired = hw.endTime && new Date() > new Date(hw.endTime);
-      return !hasSubmission && !isExpired; // Chưa nộp VÀ chưa hết hạn
-    })
-    .map(hw => {
-      const attachmentType = hw.attachments?.[0]?.type || "";
-      const attachmentImage = getAttachmentImage(attachmentType);
-      
-      return {
-        id: hw.id,
-        title: hw.title,
-        className: hw.className,
-        endTime: hw.endTime,
-        classCode: hw.classCode,
-        attachmentImage,
-      };
-    });
-
-  // 2. Xử lý Thành tích học tập (Logic từ file `results`)
-  const classResults = student.classes.map(classInfo => {
-    
-    // Lấy điểm cao nhất của mỗi bài tập
-    const homeworksWithHighestGrade = classInfo.homeworks.map(hw => {
-      if (hw.submissions.length === 0) {
-        return {
-          title: hw.title,
-          grade: null,
-          submittedAt: null,
-        };
-      }
-      
-      // Tìm bài nộp có điểm cao nhất
-      const highestSubmission = hw.submissions.reduce((max, sub) => {
-        if (sub.grade === null) return max;
-        if (max.grade === null) return sub;
-        return sub.grade > max.grade ? sub : max;
-      });
-
-      return {
-        title: hw.title,
-        grade: highestSubmission.grade,
-        submittedAt: highestSubmission.submittedAt,
-      };
-    });
-
-    // Chỉ lấy các bài đã có điểm để tính trung bình
-    const gradedHomeworks = homeworksWithHighestGrade.filter(hw => hw.grade !== null);
-    
-    const averageGrade = gradedHomeworks.length > 0
-      ? (gradedHomeworks.reduce((sum, hw) => sum + (hw.grade || 0), 0) / gradedHomeworks.length).toFixed(2)
-      : 'Chưa có điểm';
-      
-    // Tính toán tỷ lệ hoàn thành (từ file `overview`)
-    const totalHomeworks = classInfo.homeworks.length;
-    const completedHomeworks = classInfo.homeworks.filter(hw => hw.submissions.length > 0).length;
-    const completionRate = totalHomeworks > 0 ? Math.round((completedHomeworks / totalHomeworks) * 100) : 0;
-
-    return {
-      className: classInfo.name,
-      teacherName: classInfo.supervisor?.username || 'Chưa có giáo viên',
-      averageGrade,
-      completionRate,
-      totalHomeworks,
-      completedHomeworks,
-      // Dùng cho biểu đồ và bảng
-      chartData: homeworksWithHighestGrade.filter(hw => hw.submittedAt), // Chỉ hiển thị bài đã nộp
-      tableData: homeworksWithHighestGrade, // Hiển thị tất cả
-    };
-  });
+  const { pendingHomeworks = [], classResults = [] } = overviewData || {};
 
   // === RENDER GIAO DIỆN ===
   return (
@@ -280,14 +165,14 @@ export default async function OverviewPage() {
 
           {/* Bảng điểm chi tiết - Chỉ hiển thị bài tập đã có điểm */}
           <h4 className="text-md font-semibold mb-2 text-slate-700">Bảng điểm chi tiết</h4>
-          {cls.tableData.filter(item => item.grade !== null && item.grade !== undefined).length > 0 ? (
+          {cls.tableData.filter((item: any) => item.grade !== null && item.grade !== undefined).length > 0 ? (
             <Table
               columns={[
                 { header: 'Tên bài tập', accessor: 'title' },
                 { header: 'Điểm cao nhất', accessor: 'grade' },
                 { header: 'Ngày nộp', accessor: 'submittedAt' },
               ]}
-              data={cls.tableData.filter(item => item.grade !== null && item.grade !== undefined)}
+              data={cls.tableData.filter((item: any) => item.grade !== null && item.grade !== undefined)}
               renderRow={(item: any) => (
                 <tr key={item.title} className="border-t hover:bg-blue-50 transition-colors">
                   <td className="px-4 py-2 font-medium">{item.title}</td>

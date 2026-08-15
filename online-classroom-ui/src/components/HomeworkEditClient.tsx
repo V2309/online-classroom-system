@@ -6,7 +6,7 @@ import FileViewer from './FileViewer';
 import QuestionCardGrid from './QuestionCardGrid';
 import ExtractedQuestionEditGrid from './ExtractedQuestionEditGrid';
 import HomeworkSettings from './HomeworkSettings';
-import { updateHomeworkWithQuestions, updateHomeworkSettings } from '@/lib/actions/actions';
+import { homeworkService } from '@/services/homework.service';
 import { toast } from 'react-hot-toast';
 
 interface Question {
@@ -140,7 +140,7 @@ export default function HomeworkEditClient({ homework, classId }: HomeworkEditCl
           options: Array.isArray(q.options) ? q.options : undefined
         }));
         
-        await updateHomeworkWithQuestions(homework.id, transformedQuestions);
+        await homeworkService.updateHomeworkWithQuestions(homework.id, transformedQuestions);
       }
       
       // Lưu settings - đảm bảo có đầy đủ dữ liệu
@@ -164,7 +164,7 @@ export default function HomeworkEditClient({ homework, classId }: HomeworkEditCl
       };
 
       console.log('Final settings to save:', finalSettings);
-      await updateHomeworkSettings(homework.id, finalSettings);
+      await homeworkService.updateHomeworkSettings(homework.id, finalSettings);
       
       toast.success('Lưu tất cả thay đổi thành công!');
       router.push(`/class/${classId}/homework/list`);

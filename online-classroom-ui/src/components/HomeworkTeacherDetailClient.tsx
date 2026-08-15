@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import Image from "@/components/Image";
 import Link from "next/link";
 import { ArrowLeft, Clock, User, FileText, Edit3 } from "lucide-react";
 
@@ -244,27 +244,13 @@ export default function HomeworkTeacherDetailClient({
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-8 w-8">
-                            {student.img ? (
-                              <Image
-                              src={`${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${student.img}`}
-                                alt={student.username}
-                                width={32}
-                                height={32}
-                                className="h-8 w-8 rounded-full"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                  if (target.nextElementSibling) {
-                                    (target.nextElementSibling as HTMLElement).style.display = 'flex';
-                                  }
-                                }}
-                              />
-                            ) : null}
-                            <div className={`h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center ${student.img ? 'hidden' : ''}`}>
-                              <span className="text-xs font-medium text-gray-700">
-                                {student.username.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
+                            <Image
+                              path={student.img || "/avatar.png"}
+                              alt={student.username}
+                              w={32}
+                              h={32}
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
                           </div>
                           <div className="ml-3">
                             <div className="text-sm font-medium text-gray-900">

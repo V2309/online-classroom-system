@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createHomeworkWithQuestions } from '@/lib/actions/actions';
+import { homeworkService } from '@/services/homework.service';
 import Breadcrumb from "@/components/Breadcrumb";
 import HomeworkFileUpload from "@/components/HomeworkFileUpload";
 import FileViewer from "@/components/FileViewer";
@@ -100,9 +100,10 @@ export default function AddHomeworkPage({ params }: { params: { id: string } }) 
         q.answer = answers[index] || '';
       });
 
-      await createHomeworkWithQuestions({
+      await homeworkService.createHomework({
         class_code: classId,
-        fileUrl: fileUrl, // File đã được upload lên S3
+        type: 'original',
+        fileUrl: fileUrl, // File đã được upload lên Cloudflare R2
         fileName: file.name,
         fileType: file.type,
         points: formData.points,

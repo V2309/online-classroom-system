@@ -15,8 +15,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import ExportHomeworkModal from "@/components/ExportHomeworkModal";
-import FormModal from "@/components/FormModal";
 import { memo } from "react";
+import { homeworkService } from "@/services/homework.service";
 
 /** ================= Types ================= */
 type Role = "teacher" | "student";
@@ -72,11 +72,8 @@ export function HomeWorkInfo({
     if (role === "student") {
       const fetchSubmissionData = async () => {
         try {
-          const response = await fetch(
-            `/api/homework/submissions/count?homeworkId=${homework.id}`
-          );
-          const data = await response.json();
-          if (data.success) {
+          const data: any = await homeworkService.getSubmissionsCount(homework.id);
+          if (data) {
             setSubmissionCount(data.count);
             setBestSubmissionId(data.bestSubmissionId ?? null);
             setCurrentGrade(data.bestGrade ?? null);
@@ -140,10 +137,9 @@ export function HomeWorkInfo({
     try {
       toast.info("Đang chuẩn bị file để tải...");
       
-      const response = await fetch(`/api/homework/${homework.id}/download`);
-      const data = await response.json();
+      const data: any = await homeworkService.getDownloadInfo(homework.id);
       
-      if (data.success && data.fileUrl) {
+      if (data && data.fileUrl) {
         // Tạo link download
         const link = document.createElement('a');
         link.href = data.fileUrl;
@@ -162,7 +158,7 @@ export function HomeWorkInfo({
         
         toast.success(`Đã tải file: ${fileName}`);
       } else {
-        toast.error(data.error || "Không tìm thấy file để tải về");
+        toast.error("Không tìm thấy file để tải về");
       }
     } catch (error) {
       console.error("Download error:", error);
@@ -405,9 +401,33 @@ const DeleteButton = memo(function DeleteButton({
   homeworkId: number; 
   homeworkData: Homework; 
 }) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa bài tập "${homeworkData.title}" không?`)) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await homeworkService.deleteHomework(homeworkId);
+      toast.success("Đã xóa bài tập thành công!");
+      router.refresh();
+    } catch (error) {
+      console.error("Error deleting homework:", error);
+      toast.error("Có lỗi xảy ra khi xóa bài tập");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="flex items-center gap-2 py-1 rounded text-red-600 hover:bg-red-50 cursor-pointer">
-      <FormModal table="homework" type="delete" id={homeworkId} data={homeworkData} />
+    <div 
+      onClick={handleDelete}
+      className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
+    >
+      <Trash2 className="w-4 h-4" />
+      <span>{isDeleting ? "Đang xóa..." : "Xóa bài tập"}</span>
     </div>
   );
 });

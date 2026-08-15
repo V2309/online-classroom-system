@@ -41,7 +41,7 @@ export default async function Document({ params, searchParams }: DocumentPagePro
   }
 
   return (
-    <div className="px-4 py-4 bg-white rounded-lg shadow-md flex flex-col h-full">
+    <div className="bg-white rounded-lg shadow-md flex flex-col h-full">
       <DocumentPageClient
         userRole={user.role as string}
         initialFiles={data.files || []}

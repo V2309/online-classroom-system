@@ -32,7 +32,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly mailService: MailService,
-  ) {}
+  ) { }
 
   /**
    * Gửi lại email xác thực cho user đang đăng nhập
@@ -117,7 +117,7 @@ export class AuthService {
     return { success: true, message: 'Xác thực email thành công!' };
   }
 
-async signup(dto: SignupDto): Promise<AuthResult> {
+  async signup(dto: SignupDto): Promise<AuthResult> {
     await this.ensureUniqueIdentity(dto.email, dto.phone);
 
     const hashedPassword = await hash(dto.password, 10);

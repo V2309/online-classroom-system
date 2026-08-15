@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { uploadService } from "@/services/upload.service";
 
 interface HomeworkFileUploadProps {
   onFileSelect: (file: File, url: string) => void;
@@ -36,25 +37,12 @@ export default function HomeworkFileUpload({
     }
 
     try {
-      // Upload trực tiếp lên AWS S3 (có thời hạn)
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('temporary', 'true'); // Đánh dấu là file tạm thời
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload file');
-      }
-
-      const result = await response.json();
-      onFileSelect(file, result.fileUrl);
+      // Upload trực tiếp lên Cloudflare R2 (folder: homework)
+      const result = await uploadService.uploadDocument(file, 'homework');
+      onFileSelect(file, result.url);
     } catch (error) {
       console.error('Upload error:', error);
-      onError("Có lỗi khi tải file lên. Vui lòng thử lại.");
+      onError("Có lỗi khi tải file lên Cloudflare R2. Vui lòng thử lại.");
     }
   };
 

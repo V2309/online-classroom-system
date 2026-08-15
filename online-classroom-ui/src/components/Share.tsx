@@ -101,13 +101,13 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
               }`}
             />
             <div
-              className="absolute top-2 left-2 bg-black bg-opacity-50 text-white py-1 px-4 rounded-full font-bold text-sm cursor-pointer"
+              className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm text-white py-1 px-4 rounded-full font-bold text-sm cursor-pointer"
               onClick={() => setIsEditorOpen(true)}
             >
               Edit
             </div>
             <div
-              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white h-8 w-8 flex items-center justify-center rounded-full cursor-pointer font-bold text-sm"
+              className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white h-8 w-8 flex items-center justify-center rounded-full cursor-pointer font-bold text-sm"
               onClick={() => setMedia(null)}
             >
               X
@@ -118,7 +118,7 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
           <div className="relative">
             <video src={previewURL} controls />
             <div
-              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white h-8 w-8 flex items-center justify-center rounded-full cursor-pointer font-bold text-sm"
+              className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm text-white h-8 w-8 flex items-center justify-center rounded-full cursor-pointer font-bold text-sm"
               onClick={() => setMedia(null)}
             >
               X

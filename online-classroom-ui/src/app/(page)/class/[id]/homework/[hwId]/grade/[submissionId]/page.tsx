@@ -1,33 +1,26 @@
-import { getCurrentUser } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import HomeworkGradingClient from "@/components/HomeworkGradingClient";
+import { serverFetch } from "@/lib/server-api";
 
 interface PageProps {
   params: { id: string; hwId: string; submissionId: string };
 }
 
-
 export default async function HomeworkGradingPage({ params }: PageProps) {
-  const user = await getCurrentUser();
+  const user = getCurrentUser();
   
   if (!user || user.role !== 'teacher') {
     redirect("/404");
   }
 
-  // Lấy thông tin submission cần chấm
-  const submission = await prisma.homeworkSubmission.findUnique({
-    where: { id: Number(params.submissionId) },
-    include: {
-      student: true,
-      homework: {
-        include: {
-          questions: true,
-          class: true,
-        },
-      },
-    },
-  });
+  let submission: any = null;
+  try {
+    submission = await serverFetch(`/homework/submissions/detail?utid=${params.submissionId}`);
+  } catch (error) {
+    console.error("Error fetching submission for grading:", error);
+    redirect("/404");
+  }
 
   if (!submission) {
     redirect("/404");
@@ -36,25 +29,23 @@ export default async function HomeworkGradingPage({ params }: PageProps) {
   // Parse answers từ JSON string
   let answers: Record<string | number, string> = {};
   try {
-    const parsedContent = JSON.parse(submission.content);
-    console.log("DEBUG parsed content:", parsedContent);
+    const parsedContent =
+      typeof submission.content === 'string'
+        ? JSON.parse(submission.content)
+        : submission.content;
     
-    // Kiểm tra nếu parsedContent là object với key là questionId
     if (parsedContent && typeof parsedContent === 'object' && !Array.isArray(parsedContent)) {
       answers = parsedContent;
     } else if (Array.isArray(parsedContent)) {
-      // Nếu là array thì convert thành object
       answers = {};
       parsedContent.forEach((item: any) => {
         if (item.questionId) {
           answers[item.questionId] = item.answer;
         }
       });
-    } else {
-      console.warn("Unexpected content structure:", parsedContent);
     }
   } catch (error) {
-    console.error("Error parsing answers:", error, "Raw content:", submission.content);
+    console.error("Error parsing answers:", error);
   }
 
   return (

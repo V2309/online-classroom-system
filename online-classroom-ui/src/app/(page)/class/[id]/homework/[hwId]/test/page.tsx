@@ -1,17 +1,23 @@
-import prisma from "@/lib/prisma";
-import { TestHomeWork } from "@/components/TestHomeWork"; //
+import { TestHomeWork } from "@/components/TestHomeWork";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth-server";
+import { serverFetch } from "@/lib/server-api";
 
 export default async function HomeworkTestPage({ params }: { params: { id: string; hwId: number } }) {
-  // 1. Lấy thông tin bài tập
-  const homework = await prisma.homework.findUnique({
-    where: { id: Number(params.hwId) },
-    include: {
-      questions: true,
-      attachments: true,
-    },
-  });
+  const user = getCurrentUser();
+  
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  // 1. Lấy thông tin bài tập qua serverFetch
+  let homework: any = null;
+  try {
+    homework = await serverFetch(`/homework/${params.hwId}`);
+  } catch (error) {
+    console.error("Error fetching homework test:", error);
+    redirect("/404");
+  }
 
   if (!homework) {
     redirect("/404");
@@ -22,8 +28,8 @@ export default async function HomeworkTestPage({ params }: { params: { id: strin
     redirect(`/class/${params.id}/homework/${params.hwId}/essay-test`);
   }
 
-  // 2. Map dữ liệu câu hỏi
-  const questions = homework.questions.map((q: any) => ({
+  // Map dữ liệu câu hỏi
+  const questions = (homework.questions || []).map((q: any) => ({
     id: q.id,
     content: q.content,
     options: q.options || [],
@@ -31,48 +37,27 @@ export default async function HomeworkTestPage({ params }: { params: { id: strin
     answer: q.answer,
   }));
 
-  // DEBUG: Kiểm tra dữ liệu
-  console.log("Test Page Debug:", {
-    homeworkId: homework.id,
-    homeworkType: homework.type,
-    questionsFromDB: homework.questions.length,
-    mappedQuestions: questions.length,
-    firstQuestion: questions[0] || null
-  });
-
   const duration = homework.duration || 30;
-  const user = await getCurrentUser();
-  
-  if (!user) {
-      redirect("/login"); // Handle case no user
-  }
-
   const userId = user.id;
   const role = user.role;
 
-  // Biến để xác định đây là lần làm bài thứ mấy
   let currentAttempt = 1;
 
   // 3. Logic kiểm tra quyền làm bài của học sinh
   if (role === 'student') {
-    // Đếm số lần đã làm bài (chỉ đếm các bài đã nộp thành công hoặc đang làm)
-    const submissionCount = await prisma.homeworkSubmission.count({
-      where: {
-        homeworkId: homework.id,
-        studentId: userId as string
-      }
-    });
+    let countData: any = { count: 0 };
+    try {
+      countData = await serverFetch(`/homework/submissions/count?homeworkId=${homework.id}`);
+    } catch (e) {
+      console.error("Error fetching count:", e);
+    }
 
-    // Cập nhật lần làm bài hiện tại (để truyền xuống client reset bộ đếm)
+    const submissionCount = countData?.count || 0;
     currentAttempt = submissionCount + 1;
-
     const maxAttempts = homework.maxAttempts || 1;
-
-    console.log(`CHECK QUYỀN: Đã làm ${submissionCount}/${maxAttempts} lần`);
 
     // A. Kiểm tra hết lượt
     if (submissionCount >= maxAttempts) {
-      // QUAN TRỌNG: Hết lượt thì về trang CHI TIẾT để xem kết quả, không về List
       redirect(`/class/${params.id}/homework/${params.hwId}/detail?msg=max_attempts`);
     }
 
@@ -87,22 +72,6 @@ export default async function HomeworkTestPage({ params }: { params: { id: strin
 
     if (endTime && now > endTime) {
       redirect(`/class/${params.id}/homework/${params.hwId}/detail?msg=expired`);
-    }
-
-    // C. Kiểm tra chặn xem lại (Block View)
-    if (homework.blockViewAfterSubmit) {
-      const completedSubmission = await prisma.homeworkSubmission.findFirst({
-        where: {
-          homeworkId: homework.id,
-          studentId: userId as string,
-          grade: { not: null } // Đã có điểm
-        }
-      });
-      
-      if (completedSubmission) {
-        // Nếu bị chặn xem lại thì mới về trang List
-        redirect(`/class/${params.id}/homework/list?msg=blocked`);
-      }
     }
   }
   

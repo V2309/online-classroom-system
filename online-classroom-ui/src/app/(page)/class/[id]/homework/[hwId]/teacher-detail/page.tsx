@@ -1,7 +1,7 @@
-import { getCurrentUser } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import HomeworkTeacherDetailClient from "@/components/HomeworkTeacherDetailClient";
+import { serverFetch } from "@/lib/server-api";
 
 // Force dynamic rendering để luôn fetch fresh data
 export const dynamic = 'force-dynamic';
@@ -12,67 +12,29 @@ interface PageProps {
 }
 
 export default async function HomeworkTeacherDetail({ params }: PageProps) {
-  const user = await getCurrentUser();
+  const user = getCurrentUser();
   
   if (!user || user.role !== 'teacher') {
     redirect("/404");
   }
 
-  // Lấy thông tin bài tập
-  const homework = await prisma.homework.findUnique({
-    where: { id: Number(params.hwId) },
-    include: {
-      questions: true,
-      attachments: true,
-      class: true,
-      subject: true,
-    },
-  });
-
-  if (!homework) {
+  let data: any = null;
+  try {
+    data = await serverFetch(`/homework/${params.hwId}/teacher-detail`);
+  } catch (error) {
+    console.error("Error fetching teacher detail:", error);
     redirect("/404");
   }
 
-  // Lấy danh sách submissions của học sinh
-  const submissions = await prisma.homeworkSubmission.findMany({
-    where: {
-      homeworkId: Number(params.hwId),
-    },
-    include: {
-      student: true,
-    },
-    orderBy: {
-      submittedAt: 'desc',
-    },
-  });
-
-  // Lấy danh sách tất cả học sinh trong lớp để hiển thị ai chưa làm
-  const classInfo = await prisma.class.findUnique({
-    where: { class_code: params.id },
-    include: {
-      students: true,
-    },
-  });
-  
-  console.log("Teacher Detail Debug:", {
-    classCode: params.id,
-    classInfo: !!classInfo,
-    studentsCount: classInfo?.students?.length || 0,
-    homeworkId: params.hwId
-  });
-  
-  const allStudents = classInfo?.students || [];
-
-  if (!classInfo) {
-    console.error("Class not found:", params.id);
+  if (!data?.homework) {
     redirect("/404");
   }
 
   return (
     <HomeworkTeacherDetailClient 
-      homework={homework} 
-      submissions={submissions} 
-      allStudents={allStudents}
+      homework={data.homework} 
+      submissions={data.submissions || []} 
+      allStudents={data.allStudents || []}
       classId={params.id}
     />
   );

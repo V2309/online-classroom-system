@@ -27,8 +27,8 @@ const ImageEditor = ({
     setSettings((prev) => ({ ...prev, type }));
   };
   return (
-    <div className="fixed w-screen h-screen left-0 top-0 bg-black bg-opacity-75 z-[100] flex items-center justify-center">
-      <div className="bg-black rounded-xl p-12 flex flex-col gap-4">
+    <div className="fixed w-screen h-screen left-0 top-0 bg-black/75 backdrop-blur-sm z-[100] flex items-center justify-center">
+      <div className="bg-slate-900 rounded-xl p-12 flex flex-col gap-4">
         {/* TOP */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">

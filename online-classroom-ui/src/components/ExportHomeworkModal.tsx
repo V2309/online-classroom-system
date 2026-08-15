@@ -1,17 +1,22 @@
 "use client";
 import { useState } from "react";
 import { saveAs } from "file-saver";
+import { homeworkService } from "@/services/homework.service";
 
 export default function ExportHomeworkModal({ homeworkId, open, onClose }: { homeworkId: number, open: boolean, onClose: () => void }) {
   const [loading, setLoading] = useState(false);
 
   const handleExport = async () => {
     setLoading(true);
-    const res = await fetch(`/api/homework/${homeworkId}/export`);
-    const blob = await res.blob();
-    saveAs(blob, `homework_${homeworkId}_export.xlsx`);
-    setLoading(false);
-    onClose();
+    try {
+      const blob = await homeworkService.exportSubmissions(homeworkId);
+      saveAs(blob, `homework_${homeworkId}_export.xlsx`);
+    } catch (error) {
+      console.error("Export error:", error);
+    } finally {
+      setLoading(false);
+      onClose();
+    }
   };
 
   if (!open) return null;

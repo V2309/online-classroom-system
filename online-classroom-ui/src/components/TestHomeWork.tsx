@@ -9,6 +9,7 @@ import "@react-pdf-viewer/core/lib/styles/index.css";
 import { useRouter } from "next/navigation";
 import { useHomeworkSession } from "@/hooks/useHomeworkSession";
 import { ExtractedQuestionsView } from "./ExtractedQuestionsView";
+import { homeworkService } from "@/services/homework.service";
 
 // ... (Giữ nguyên Interfaces) ...
 interface Homework {
@@ -150,40 +151,34 @@ export function TestHomeWork({
       role === "teacher" ? 0 : sessionDataRef.current?.getTimeSpent() || 0;
 
     try {
-      const response = await fetch("/api/homework/submissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          homeworkId: homework.id,
-          studentId: userId,
-          answers: currentAnswers,
-          role,
-          timeSpent,
-          violationCount: role === "student" ? violationCount : 0,
-          file: {
-            name: homework.fileName,
-            type: homework.fileType,
-            url: homework.fileUrl,
-            size: homework.fileSize || 0,
-          },
-        }),
+      const result: any = await homeworkService.submitHomework(homework.id, {
+        answers: currentAnswers,
+        studentId: userId,
+        role,
+        timeSpent,
+        violationCount: role === "student" ? violationCount : 0,
+        file: {
+          name: homework.fileName,
+          type: homework.fileType,
+          url: homework.fileUrl,
+          size: homework.fileSize || 0,
+        },
       });
-      const result = await response.json();
 
-      if (result.success && role === "student") {
+      if (role === "student" && result?.submissionId) {
         toast.success("Đã nộp bài!");
         sessionDataRef.current?.clearSession(); // Xóa trạng thái
         router.push(
-          `/class/${classCode}/homework/${homework.id}/detail?utid=${result.submission.id}`
+          `/class/${classCode}/homework/${homework.id}/detail?utid=${result.submissionId}`
         );
-      } else if (result.success && role === "teacher") {
+      } else if (role === "teacher") {
         toast.success("Đã nộp bài!");
         router.push(`/class/${classCode}/homework/list`);
       } else {
-        toast.error(result.error || "Có lỗi xảy ra khi nộp bài.");
+        toast.error("Có lỗi xảy ra khi nộp bài.");
       }
-    } catch (error) {
-      toast.error("Có lỗi xảy ra khi nộp bài.");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Có lỗi xảy ra khi nộp bài.");
       console.error("Submit error:", error);
     }
   }, [homework, role, answers, userId, classCode, router, violationCount]);
@@ -476,7 +471,7 @@ export function TestHomeWork({
 
       {/* Modal xác nhận nộp bài */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Xác nhận nộp bài

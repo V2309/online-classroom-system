@@ -137,8 +137,8 @@ Trước khi đụng code, phải:
 | 19 | Mail | gửi lại email xác minh | (đã gộp ở #5, tách nếu cần) | ⬜ Chưa làm |
 | 20 | AI Gateway | proxy sang FastAPI | các nơi gọi `NEXT_PUBLIC_FLASK_API_URL` | ⬜ Chưa làm |
 | 21 | Dashboard | thống kê admin | `src/lib/actions/dashboard.action.ts` | ⬜ Chưa làm |
-| 22 | Homework | tạo/sửa homework + câu hỏi | `src/lib/actions/actions.ts` | ⬜ Chưa làm (để sau cùng) |
-| 23 | Homework | nộp/lưu nháp/chấm điểm | `src/app/api/homework/[id]/{save,submit,grade}/route.ts` | ⬜ Chưa làm (để sau cùng) |
+| 22 | Homework | tạo/sửa homework + câu hỏi, bảng điểm scoretable, tổng quan overview | `src/lib/actions/actions.ts`, `src/app/(page)/class/[id]/scoretable/**`, `src/app/(page)/overview/**` | ✅ Đã xác nhận |
+| 23 | Homework | nộp/lưu nháp/chấm điểm, ẩn điểm theo deadline | `src/app/api/homework/[id]/{save,submit,grade}/route.ts` | ✅ Đã xác nhận |
 
 **Chú thích trạng thái:** `⬜ Chưa làm` · `🟡 Đang làm` · `🔵 Chờ bạn kiểm tra` · `✅ Đã xác nhận, xong` · `🔴 Lỗi, cần sửa lại`
 

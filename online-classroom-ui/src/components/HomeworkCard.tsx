@@ -1,6 +1,7 @@
 // components/HomeworkCard.tsx
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { homeworkService } from "@/services/homework.service";
 interface HomeworkCardProps {
   homework: {
     id: number;
@@ -62,9 +63,8 @@ export function HomeworkCard({ homework, role }: HomeworkCardProps) {
     if (role === "student") {
       const fetchGrade = async () => {
         try {
-          const response = await fetch(`/api/homework/submissions/count?homeworkId=${homework.id}`);
-          const data = await response.json();
-          if (data.success) {
+          const data: any = await homeworkService.getSubmissionsCount(homework.id);
+          if (data) {
             setCurrentGrade(data.bestGrade ?? null);
           }
         } catch (error) {

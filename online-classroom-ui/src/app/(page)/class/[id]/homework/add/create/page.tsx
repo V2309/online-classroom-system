@@ -1,7 +1,8 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createHomeworkFromExtractedQuestions, createHomeworkFromEssayQuestions } from "@/lib/actions/actions";
+import { homeworkService } from "@/services/homework.service";
 import Breadcrumb from "@/components/Breadcrumb";
 import HomeworkSettings from "@/components/HomeworkSettings";
 import QuestionCardGrid from "@/components/QuestionCardGrid";
@@ -251,10 +252,11 @@ export default function CreateHomeworkPage({ params }: { params: { id: string } 
           };
         });
 
-        // Gọi function mới cho homework dạng extracted
-        await createHomeworkFromExtractedQuestions({
+        // Gọi homeworkService cho homework dạng extracted
+        await homeworkService.createHomework({
           title: formData.title,
           class_code: classId,
+          type: 'extracted',
           originalFileUrl,
           originalFileName: quizData.originalFile?.name,
           originalFileType: quizData.originalFile?.type,
@@ -287,10 +289,11 @@ export default function CreateHomeworkPage({ params }: { params: { id: string } 
             point: questionsWithPoints[index]?.point || 0,
           }));
 
-        // Gọi function mới cho homework dạng essay
-        await createHomeworkFromEssayQuestions({
+        // Gọi homeworkService cho homework dạng essay
+        await homeworkService.createHomework({
           title: formData.title,
           class_code: classId,
+          type: 'essay',
           originalFileUrl: essayData.originalFile?.url,
           originalFileName: essayData.originalFile?.name,
           originalFileType: essayData.originalFile?.type,

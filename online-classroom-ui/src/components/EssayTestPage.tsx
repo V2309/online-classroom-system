@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Clock, FileText, Save, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { homeworkService } from "@/services/homework.service";
 
 interface Question {
   id: number;
@@ -51,21 +52,13 @@ export function EssayTestPage({
     setIsSubmitting(true);
     
     try {
-      const response = await fetch(`/api/homework/${homework.id}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          answers,
-          userId,
-          timeSpent: (duration * 60) - timeLeft
-        }),
+      const result: any = await homeworkService.submitHomework(homework.id, {
+        answers,
+        userId,
+        timeSpent: (duration * 60) - timeLeft,
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        
+      if (result?.submissionId) {
         // Clear saved answers
         localStorage.removeItem(`homework-${homework.id}-answers`);
         
@@ -140,22 +133,13 @@ export function EssayTestPage({
   const handleSave = async () => {
     try {
       // Save progress to backend
-      const response = await fetch(`/api/homework/${homework.id}/save`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          answers,
-          userId,
-          isPartial: true
-        }),
+      await homeworkService.saveDraft(homework.id, {
+        answers,
+        userId,
+        isPartial: true
       });
 
-      if (response.ok) {
-        // Show success message
-        alert("Đã lưu bài làm thành công!");
-      }
+      alert("Đã lưu bài làm thành công!");
     } catch (error) {
       console.error("Save failed:", error);
       alert("Lưu bài không thành công. Vui lòng thử lại.");

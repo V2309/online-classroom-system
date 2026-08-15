@@ -1,39 +1,33 @@
-
 // join/[classCode]/page.tsx
-import prisma from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { redirect } from "next/navigation";
 import JoinClassConfirm from "@/components/JoinClassConfirm";
-import { Prisma } from "@prisma/client";
+import { serverFetch } from "@/lib/server-api";
 
-// Lấy kiểu dữ liệu chi tiết của Lớp học (bao gồm cả giáo viên)
-export type ClassInfoPayload = Prisma.ClassGetPayload<{
-  include: { 
-    supervisor: { 
-      select: { username: true, img: true } 
-    } 
-  }
-}>;
-
-// Lấy kiểu dữ liệu chi tiết của Học sinh (bao gồm các lớp đã tham gia)
-export type StudentInfoPayload = Prisma.StudentGetPayload<{
-  include: { classes: { select: { id: true } } }
-}>;
-
+export type ClassInfoPayload = {
+  id: number;
+  name: string;
+  class_code: string | null;
+  img?: string | null;
+  supervisor?: {
+    username?: string;
+    img?: string | null;
+    user?: {
+      username?: string;
+      img?: string | null;
+    };
+  } | null;
+};
 
 export default async function JoinByCodePage({ params }: { params: { classCode: string } }) {
   const classCode = params.classCode.toUpperCase();
+  const user = getCurrentUser();
 
-  // 1. Lấy thông tin user hiện tại (chạy song song với lấy thông tin lớp)
-  const user = await getCurrentUser();
-
-  // 2. Nếu chưa đăng nhập, đá về trang sign-in (với ?next=... để quay lại)
   if (!user) {
     const callbackUrl = encodeURIComponent(`/join/${classCode}`);
     redirect(`/sign-in?next=${callbackUrl}`);
   }
 
-  // 3. Nếu không phải là học sinh, không cho tham gia
   if (user.role !== 'student') {
     return (
       <div className="min-h-screen bg-red-100 flex items-center justify-center p-4">
@@ -45,29 +39,18 @@ export default async function JoinByCodePage({ params }: { params: { classCode: 
     );
   }
 
-  // 4. Lấy thông tin lớp và thông tin học sinh CÙNG LÚC (Tối ưu)
-  const [classInfo, student] = await Promise.all([
-    // Lấy thông tin lớp
-    prisma.class.findUnique({
-      where: { class_code: classCode },
-      include: {
-        supervisor: { // Lấy tên và ảnh giáo viên
-          select: { username: true, img: true }
-        }
-      }
-    }),
-    // Lấy thông tin học sinh
-    prisma.student.findUnique({
-      where: { userId: user.id as string },
-      include: {
-        classes: { // Lấy danh sách lớp đã tham gia (chỉ cần ID)
-          select: { id: true }
-        }
-      }
-    })
-  ]);
+  let classInfo: any = null;
+  let myClasses: any = null;
 
-  // 5. Xử lý lỗi
+  try {
+    [classInfo, myClasses] = await Promise.all([
+      serverFetch(`/classes/${classCode}`),
+      serverFetch(`/classes`),
+    ]);
+  } catch (error) {
+    console.error("Error fetching class for join:", error);
+  }
+
   if (!classInfo) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -78,25 +61,26 @@ export default async function JoinByCodePage({ params }: { params: { classCode: 
       </div>
     );
   }
-  
-  if (!student) {
-     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="text-center text-gray-700">
-          <h1 className="text-2xl font-bold">Lỗi Tài khoản</h1>
-          <p>Không tìm thấy thông tin học sinh của bạn.</p>
-        </div>
-      </div>
-    );
-  }
 
-  // 6. Kiểm tra xem học sinh đã ở trong lớp chưa
-  const isAlreadyJoined = student.classes.some(cls => cls.id === classInfo.id);
+  const enrolledClasses = Array.isArray(myClasses) ? myClasses : myClasses?.data || [];
+  const isAlreadyJoined = enrolledClasses.some(
+    (cls: any) => cls.class_code === classCode || cls.id === classInfo.id
+  );
 
-  // 7. Render Client Component với dữ liệu đã lấy
+  // Normalize supervisor info
+  const normalizedClassInfo: ClassInfoPayload = {
+    id: classInfo.id,
+    name: classInfo.name,
+    class_code: classInfo.class_code,
+    supervisor: {
+      username: classInfo.supervisor?.user?.username || classInfo.supervisor?.username || 'Giáo viên',
+      img: classInfo.supervisor?.user?.img || classInfo.supervisor?.img || null,
+    },
+  };
+
   return (
     <JoinClassConfirm 
-      classInfo={classInfo}
+      classInfo={normalizedClassInfo}
       isAlreadyJoined={isAlreadyJoined}
     />
   );

@@ -1,6 +1,8 @@
 import { api } from '@/lib/api';
 import type { NotificationItem } from '@/types/notification';
 
+export type { NotificationItem };
+
 export const notificationService = {
   // Lấy danh sách thông báo chưa đọc
   async getNotifications(): Promise<NotificationItem[]> {

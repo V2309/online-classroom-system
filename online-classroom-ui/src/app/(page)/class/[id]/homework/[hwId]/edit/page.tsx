@@ -1,7 +1,7 @@
 import React from 'react';
-import { getHomeworkById } from '@/lib/actions/actions';
 import { notFound } from 'next/navigation';
 import HomeworkEditClient from '@/components/HomeworkEditClient';
+import { serverFetch } from '@/lib/server-api';
 
 interface PageProps {
   params: {
@@ -11,15 +11,19 @@ interface PageProps {
 }
 
 export default async function EditHomeworkPage({ params }: PageProps) {
-  const homeworkId = parseInt(params.hwId);
+  const homeworkId = parseInt(params.hwId, 10);
   
   if (isNaN(homeworkId)) {
     notFound();
   }
 
   try {
-    const homework = await getHomeworkById(homeworkId);
+    const homework = await serverFetch(`/homework/${homeworkId}`);
     
+    if (!homework) {
+      notFound();
+    }
+
     return (
       <div className="bg-white">
         <HomeworkEditClient homework={homework} classId={params.id} />

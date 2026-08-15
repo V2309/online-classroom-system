@@ -296,11 +296,6 @@ const FileList = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Danh sách tài liệu</h2>
-        <TableSearch />
-      </div>
-
       {loading ? (
         <div className="flex justify-center items-center py-10">
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />

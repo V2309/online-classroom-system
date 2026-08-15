@@ -40,6 +40,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cookie-parser": "^1.4.7",
+    "exceljs": "^4.4.0",
     "imagekit": "^6.0.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
