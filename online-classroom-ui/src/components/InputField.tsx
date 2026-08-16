@@ -23,21 +23,21 @@ const InputField = ({
 }: InputFieldProps) => {
   return (
     <div className={hidden ? "hidden" : "flex flex-col gap-2 w-full"}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-foreground mb-1">
         {label}
       </label>
       <input
         type={type}
         {...register(name)}
-        className="block w-full rounded-lg border border-gray-300 shadow-sm p-3 text-sm
-                   focus:border-blue-500 focus:ring-blue-500 transition duration-200
-                   hover:border-gray-400"
+        className="block w-full rounded-lg border border-input bg-background shadow-sm p-3 text-sm text-foreground
+                   focus:border-primary focus:ring-2 focus:ring-primary/20 transition duration-200
+                   hover:border-border"
         {...inputProps}
         defaultValue={defaultValue}
         placeholder={inputProps?.placeholder}
       />
       {error?.message && (
-        <p className="mt-1 text-xs text-red-500">{error.message.toString()}</p>
+        <p className="mt-1 text-xs text-destructive">{error.message.toString()}</p>
       )}
     </div>
   );

@@ -123,7 +123,7 @@ export const CallList = ({ type }: CallListType) => {
         ))
       ) : (
         <div className="col-span-full text-center py-12">
-          <div className="text-gray-400 text-lg">{noCallsMessage}</div>
+          <div className="text-muted-foreground text-lg">{noCallsMessage}</div>
         </div>
       )}
     </div>

@@ -6,7 +6,7 @@ export default async function SchedulePage() {
   const user = getCurrentUser();
 
   if (!user || (user.role !== "teacher" && user.role !== "student")) {
-    return <div className="p-4 text-red-500">Bạn không có quyền truy cập.</div>;
+    return <div className="p-4 text-destructive bg-background">Bạn không có quyền truy cập.</div>;
   }
 
   let schedules: any[] = [];
@@ -24,14 +24,12 @@ export default async function SchedulePage() {
   }
 
   return (
-    <div className="w-full overflow-hidden">
-      <div>
-        <BigCalendar
-          schedules={schedules}
-          role={user.role as "teacher" | "student"}
-          teacherClasses={teacherClasses}
-        />
-      </div>
+    <div className="h-full w-full overflow-hidden bg-background text-foreground flex flex-col">
+      <BigCalendar
+        schedules={schedules}
+        role={user.role as "teacher" | "student"}
+        teacherClasses={teacherClasses}
+      />
     </div>
   );
 }

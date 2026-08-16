@@ -1,7 +1,7 @@
 "use client";
 
 import moment from "moment";
-import { useState, memo } from "react";
+import { memo } from "react";
 import EventItem from "./EventItem";
 
 // --- ĐỊNH NGHĨA TYPESCRIPT ---
@@ -35,13 +35,13 @@ type DayColumnProps = {
 
 const DayColumn = ({ day, isToday, events, onAdd, onEdit, onDelete, role }: DayColumnProps) => {
   return (
-    <div className="flex flex-col border-r border-t border-gray-200 h-[calc(100vh-200px)] min-h-[600px] bg-white">
+    <div className="flex flex-col border-r border-t border-border h-full min-h-0 bg-white text-foreground min-w-0 flex-1 overflow-hidden">
       {/* Header của Cột */}
-      <div className={` border-b p-3 ${isToday ? "bg-blue-50" : ""}`}>
+      <div className={`border-b border-border p-2.5 sm:p-3 flex-shrink-0 ${isToday ? "bg-accent/40" : "bg-white"}`}>
         <div className="flex justify-between items-center">
           <span
             className={`text-xs font-semibold ${
-              isToday ? "text-gray-900" : "text-gray-500"
+              isToday ? "text-primary font-bold" : "text-muted-foreground"
             }`}
           >
             {day.format("dddd")}
@@ -50,7 +50,7 @@ const DayColumn = ({ day, isToday, events, onAdd, onEdit, onDelete, role }: DayC
           {role === "teacher" && (
             <button
               onClick={onAdd}
-              className="h-6 w-6 rounded-md text-gray-500 hover:bg-gray-200 hover:text-gray-800
+              className="h-6 w-6 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground
                        flex items-center justify-center text-lg font-medium transition-colors"
               aria-label="Thêm lịch học"
             >
@@ -60,7 +60,7 @@ const DayColumn = ({ day, isToday, events, onAdd, onEdit, onDelete, role }: DayC
         </div>
         <div
           className={`text-2xl font-bold mt-0.5 ${
-            isToday ? "text-blue-600" : "text-gray-900"
+            isToday ? "text-primary" : "text-foreground"
           }`}
         >
           {day.format("DD/MM")}
@@ -68,9 +68,9 @@ const DayColumn = ({ day, isToday, events, onAdd, onEdit, onDelete, role }: DayC
       </div>
 
       {/* Body của Cột */}
-      <div className="flex-1 p-2 overflow-y-auto">
+      <div className="flex-1 p-2 overflow-y-auto scrollbar-thin min-h-0">
         {events.length === 0 ? (
-          <div className="text-center text-gray-500 text-sm mt-4">
+          <div className="text-center text-muted-foreground text-sm mt-4">
             Không có lịch học
           </div>
         ) : (

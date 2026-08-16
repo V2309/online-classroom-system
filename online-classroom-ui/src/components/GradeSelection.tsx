@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
 
 interface Grade {
   id: number;
@@ -25,10 +26,8 @@ export default function GradeSelection({
   const [newGradeValue, setNewGradeValue] = useState("");
   const [isClient, setIsClient] = useState(false);
 
-  // Đảm bảo hydration consistency
   useEffect(() => {
     setIsClient(true);
-    // Chỉ set selectedGrade nếu có giá trị hợp lệ
     if (currentGradeId && currentGradeId > 0) {
       setSelectedGrade(currentGradeId.toString());
     }
@@ -39,10 +38,9 @@ export default function GradeSelection({
     if (gradeId === "other") {
       setShowNewGradeInput(true);
       onGradeSelect?.(undefined, newGradeValue);
-      // Focus on the input field - chỉ chạy trên client
       if (typeof window !== "undefined") {
         setTimeout(() => {
-          const input = document.getElementById('newGradeInput') as HTMLInputElement;
+          const input = document.getElementById("newGradeInput") as HTMLInputElement;
           if (input) {
             input.focus();
           }
@@ -60,71 +58,78 @@ export default function GradeSelection({
     onGradeSelect?.(undefined, val);
   };
 
-  // Render placeholder during hydration
   if (!isClient) {
     return (
-      <div className="mb-6">
-        <label className="block text-gray-800 font-bold mb-2">Khối lớp</label>
-        <p className="text-sm text-gray-600 mb-3">
-          Khối hiện tại: <span className="font-semibold text-blue-600">{currentGradeLevel}</span>
+      <div className="space-y-3">
+        <label className="block text-sm font-bold text-foreground">Khối lớp</label>
+        <p className="text-xs text-muted-foreground">
+          Khối hiện tại: <span className="font-bold text-primary">{currentGradeLevel}</span>
         </p>
-        <div className="flex flex-wrap gap-5 mb-2 mt-2  ">
+        <div className="flex flex-wrap gap-2.5">
           {grades.map((g) => (
-            <span key={g.id} className="px-5 py-2 rounded-full font-semibold bg-gray-200 text-gray-800 mt-2 ">
+            <span
+              key={g.id}
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-muted text-foreground"
+            >
               {g.level}
             </span>
           ))}
-          <span className="px-5 py-2 rounded-full font-semibold bg-green-100 text-green-800">
-            ➕ Khác
+          <span className="px-4 py-2 rounded-xl text-xs font-semibold bg-accent text-primary">
+            + Khác
           </span>
         </div>
-        <p className="text-xs text-gray-500 mt-4">
-          Chọn khối lớp phù hợp hoặc chọn Khác để tạo khối mới
-        </p>
       </div>
     );
   }
 
   return (
     <>
-      {/* Hidden inputs để gửi giá trị về server */}
-      <input 
-        type="hidden" 
-        name="gradeId" 
-        value={selectedGrade === "other" ? "" : selectedGrade} 
+      <input
+        type="hidden"
+        name="gradeId"
+        value={selectedGrade === "other" ? "" : selectedGrade}
       />
-      <input 
-        type="hidden" 
-        name="newGradeLevel" 
-        value={selectedGrade === "other" ? newGradeValue : ""} 
+      <input
+        type="hidden"
+        name="newGradeLevel"
+        value={selectedGrade === "other" ? newGradeValue : ""}
       />
-      
-      <div className="mb-6">
-        <label className="block text-gray-800 font-bold mb-2">Khối lớp</label>
-        <p className="text-sm text-gray-600 mb-3">
-          Khối hiện tại: <span className="font-semibold text-blue-600">{currentGradeLevel}</span>
-        </p>
-        <div className="flex flex-wrap gap-5 mb-2" suppressHydrationWarning>
-          {grades.map((g) => (
-            <label key={g.id} className="cursor-pointer">
-              <input
-                type="radio"
-                name="gradeSelection"
-                value={g.id}
-                checked={selectedGrade === g.id.toString()}
-                onChange={(e) => handleGradeChange(e.target.value)}
-                className="hidden peer"
-              />
-              <span className={`px-5 py-2 rounded-full font-semibold select-none transition-all ${
-                selectedGrade === g.id.toString() 
-                  ? "bg-blue-500 text-white" 
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}>
-                {g.level}
-              </span>
-            </label>
-          ))}
-          {/* Nút "Khác" để thêm grade mới */}
+
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm font-bold text-foreground mb-1">Khối lớp</label>
+          <p className="text-xs text-muted-foreground">
+            Khối hiện tại: <span className="font-bold text-primary">{currentGradeLevel}</span>
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-2.5" suppressHydrationWarning>
+          {grades.map((g) => {
+            const isSelected = selectedGrade === g.id.toString();
+            return (
+              <label key={g.id} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="gradeSelection"
+                  value={g.id}
+                  checked={isSelected}
+                  onChange={(e) => handleGradeChange(e.target.value)}
+                  className="hidden peer"
+                />
+                <span
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold select-none transition-all inline-block ${
+                    isSelected
+                      ? "bg-primary text-primary-foreground font-bold shadow-xs scale-105"
+                      : "bg-muted hover:bg-muted/80 text-foreground"
+                  }`}
+                >
+                  {g.level}
+                </span>
+              </label>
+            );
+          })}
+
+          {/* Nút Khác */}
           <label className="cursor-pointer">
             <input
               type="radio"
@@ -134,20 +139,23 @@ export default function GradeSelection({
               onChange={(e) => handleGradeChange(e.target.value)}
               className="hidden peer"
             />
-            <span className={`px-5 py-2 rounded-full font-semibold select-none transition-all ${
-              selectedGrade === "other" 
-                ? "bg-green-500 text-white" 
-                : "bg-green-100 text-green-800 hover:bg-green-200"
-            }`}>
-              ➕ Khác
+            <span
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold select-none transition-all inline-flex items-center gap-1 ${
+                selectedGrade === "other"
+                  ? "bg-primary text-primary-foreground font-bold shadow-xs scale-105"
+                  : "bg-accent text-primary hover:bg-accent/80"
+              }`}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Khác</span>
             </span>
           </label>
         </div>
-        
+
         {/* Ô input hiện ra khi chọn "Khác" */}
         {showNewGradeInput && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <label htmlFor="newGradeInput" className="block text-sm font-medium text-green-800 mb-2">
+          <div className="mt-3 p-4 bg-accent/40 border border-primary/20 rounded-2xl space-y-1.5 animate-in fade-in zoom-in-95 duration-150">
+            <label htmlFor="newGradeInput" className="block text-xs font-bold text-primary">
               Nhập tên khối mới:
             </label>
             <input
@@ -155,19 +163,15 @@ export default function GradeSelection({
               id="newGradeInput"
               value={newGradeValue}
               onChange={(e) => handleNewGradeInputChange(e.target.value)}
-              className="w-full border border-green-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
-              placeholder="Ví dụ: Lớp 11, Khối A1, 12A2..."
+              className="w-full bg-white text-foreground border border-border rounded-xl px-3.5 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none"
+              placeholder="Ví dụ: Khối 11, Lớp chuyên Toán..."
               autoComplete="off"
             />
-            <p className="text-xs text-green-600 mt-1">
-              💡 Khối mới sẽ được tạo tự động khi bạn bấm Lưu lại
+            <p className="text-[11px] text-muted-foreground">
+              💡 Khối mới sẽ được lưu tự động khi bạn bấm Lưu thay đổi.
             </p>
           </div>
         )}
-        
-        <p className="text-xs text-gray-500 mt-2">
-          Chọn khối lớp phù hợp hoặc chọn Khác để tạo khối mới
-        </p>
       </div>
     </>
   );

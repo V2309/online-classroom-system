@@ -43,27 +43,27 @@ function VerifyEmailContent() {
   }, [token, router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="p-8 bg-white shadow-lg rounded-lg text-center max-w-md w-full">
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
+      <div className="p-8 bg-card shadow-lg rounded-2xl border border-border text-center max-w-md w-full">
         {status === 'loading' && (
-          <Loader2 className="w-12 h-12 text-blue-500 mx-auto animate-spin" />
+          <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
         )}
         {status === 'success' && (
-          <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
+          <CheckCircle className="w-12 h-12 text-state-success mx-auto" />
         )}
         {status === 'error' && (
-          <XCircle className="w-12 h-12 text-red-500 mx-auto" />
+          <XCircle className="w-12 h-12 text-destructive mx-auto" />
         )}
         
         <p className={`text-lg font-medium mt-4 ${
-          status === 'success' ? 'text-green-700' :
-          status === 'error' ? 'text-red-700' : 'text-gray-700'
+          status === 'success' ? 'text-state-success' :
+          status === 'error' ? 'text-destructive' : 'text-foreground'
         }`}>
           {message}
         </p>
 
         {(status === 'success' || status === 'error') && (
-          <Link href="/profile" className="inline-block mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          <Link href="/profile" className="inline-block mt-6 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary-hover transition-colors">
             Về trang cá nhân
           </Link>
         )}
@@ -76,8 +76,8 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Loader2 className="w-12 h-12 text-blue-500 mx-auto animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="w-12 h-12 text-primary mx-auto animate-spin" />
       </div>
     }>
       <VerifyEmailContent />

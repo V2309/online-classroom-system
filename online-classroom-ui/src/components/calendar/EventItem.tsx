@@ -35,9 +35,9 @@ type ScheduleEvent = {
 
 // Color classes constant
 const colorClasses: Record<EventColor, string> = {
-  blue: "bg-blue-50 text-blue-700 border-l-4 border-blue-500",
-  green: "bg-green-50 text-green-700 border-l-4 border-green-500",
-  yellow: "bg-yellow-50 text-yellow-700 border-l-4 border-yellow-500",
+  blue: "bg-[#e5eee8] text-[#2b5938] border-l-4 border-[#3f6d4d]",
+  green: "bg-[#eef5ee] text-[#34603e] border-l-4 border-[#4d825c]",
+  yellow: "bg-[#faedea] text-[#a6382a] border-l-4 border-[#c24b3b]",
 };
 
 // --- Component Sự Kiện Nhỏ (Đã cập nhật Tooltip UI) ---
@@ -92,23 +92,23 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
     <div className="relative group">
       {/* Event Item */}
       <div
-        className={`p-2 rounded-r-md cursor-pointer transition-all duration-200 group-hover:shadow-lg group-hover:opacity-90 ${colorClass} mb-1`}
+        className={`p-2 rounded-r-md cursor-pointer transition-all duration-200 group-hover:shadow-md group-hover:opacity-95 ${colorClass} mb-1`}
         onMouseEnter={handleEventMouseEnter}
         onMouseLeave={handleEventMouseLeave}
       >
         <div className="text-sm font-semibold">{event.title}</div>
         {event.startTime && event.endTime && (
-          <div className="text-xs opacity-75 mt-1">
+          <div className="text-xs opacity-80 mt-1 font-medium">
             {moment(event.startTime).format("HH:mm")} - {moment(event.endTime).format("HH:mm")}
           </div>
         )}
         {event.classInfo && (
-          <div className="text-xs opacity-75 mt-1 line-clamp-1">
+          <div className="text-xs opacity-80 mt-1 line-clamp-1">
             {event.classInfo.name} {event.classInfo.class_code && `(${event.classInfo.class_code})`}
           </div>
         )}
         {event.description && (
-          <div className="text-xs opacity-75 mt-1 line-clamp-2">
+          <div className="text-xs opacity-80 mt-1 line-clamp-2">
             {event.description}
           </div>
         )}
@@ -117,7 +117,7 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
       {/* Tooltip (Đã sửa layout) */}
       {showTooltip && (
         <div 
-          className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-xl min-w-[300px] max-w-[350px]"
+          className="fixed z-[9999] bg-white border border-[#ece7de] rounded-xl shadow-xl min-w-[300px] max-w-[350px] text-foreground"
           style={{
             left: `${tooltipPosition.x}px`,
             top: `${tooltipPosition.y}px`
@@ -138,7 +138,7 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
             {/* SỬA LAYOUT: Title và Buttons ngang hàng */}
             <div className="flex items-start justify-between gap-2">
               {/* Title */}
-              <h3 className="font-semibold text-gray-900 text-base leading-tight pr-2">
+              <h3 className="font-semibold text-foreground text-base leading-tight pr-2">
                 {event.title}
               </h3>
               
@@ -180,8 +180,8 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
 
             {/* Time */}
             {event.startTime && event.endTime && (
-              <div className="flex items-center gap-2 text-gray-500">
-                <Clock className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm font-medium">
                   {moment(event.startTime).format("HH:mm")} - {moment(event.endTime).format("HH:mm")}
                 </span>
@@ -189,8 +189,8 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
             )}
 
             {/* Date */}
-            <div className="flex items-center gap-2 text-gray-500">
-              <Calendar className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
               <span className="text-sm">
                 {moment(event.date).format("dddd, DD/MM/YYYY")}
               </span>
@@ -198,12 +198,12 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
 
             {/* Class Info */}
             {event.classInfo && (
-              <div className="flex items-center gap-2 text-gray-500">
-                <Users className="w-4 h-4" />
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm">
                   {event.classInfo.name}
                   {event.classInfo.class_code && (
-                    <span className="text-gray-400 ml-1">({event.classInfo.class_code})</span>
+                    <span className="text-muted-foreground ml-1">({event.classInfo.class_code})</span>
                   )}
                 </span>
               </div>
@@ -211,12 +211,12 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
 
             {/* Description */}
             {event.description && (
-              <div className="border-t border-gray-100 pt-3">
-                <div className="flex items-start gap-2 text-gray-500">
+              <div className="border-t border-border pt-3">
+                <div className="flex items-start gap-2 text-muted-foreground">
                   <AlignLeft className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-1">Mô tả:</p>
-                    <p className="text-sm text-gray-600 leading-relaxed">{event.description}</p>
+                    <p className="text-sm font-medium text-foreground mb-1">Mô tả:</p>
+                    <p className="text-sm text-secondary leading-relaxed">{event.description}</p>
                   </div>
                 </div>
               </div>
@@ -224,11 +224,11 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
 
             {/* Meeting Link */}
             {event.meetingLink && (
-              <div className="border-t border-gray-100 pt-3">
-                <div className="flex items-start gap-2 text-purple-600">
+              <div className="border-t border-border pt-3">
+                <div className="flex items-start gap-2 text-primary">
                   <Video className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Cuộc họp trực tuyến:</p>
+                    <p className="text-sm font-medium text-foreground mb-2">Cuộc họp trực tuyến:</p>
                     {(() => {
                       const now = new Date();
                       const endTime = new Date(event.endTime);
@@ -240,7 +240,7 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             {isMeetingExpired ? (
-                              <div className="flex items-center gap-1 px-3 py-2 bg-gray-400 text-white text-sm rounded-lg cursor-not-allowed">
+                              <div className="flex items-center gap-1 px-3 py-2 bg-muted text-muted-foreground text-sm rounded-lg cursor-not-allowed">
                                 <Video className="w-4 h-4" />
                                 Cuộc họp đã kết thúc
                               </div>
@@ -249,7 +249,7 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
                                 href={event.meetingLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white text-sm rounded-lg hover:from-purple-600 hover:to-blue-700 transition-all duration-200"
+                                className="flex items-center gap-1 px-3 py-2 bg-primary text-primary-foreground text-sm rounded-lg hover:bg-primary-hover transition-all duration-200 shadow-xs"
                                 onClick={() => setShowTooltip(false)}
                               >
                                 <Video className="w-4 h-4" />
@@ -260,15 +260,15 @@ const EventItem = ({ event, onEdit, onDelete, role }: {
                           </div>
                           
                           {isMeetingExpired ? (
-                            <p className="text-xs text-red-500">
+                            <p className="text-xs text-destructive">
                               Cuộc họp đã kết thúc lúc {endTime.toLocaleString('vi-VN')}
                             </p>
                           ) : minutesLeft <= 10 && minutesLeft > 0 ? (
-                            <p className="text-xs text-yellow-600">
+                            <p className="text-xs text-state-warning">
                               ⚠️ Cuộc họp sẽ kết thúc trong {minutesLeft} phút
                             </p>
                           ) : (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                               Click để tham gia cuộc họp trực tuyến
                             </p>
                           )}

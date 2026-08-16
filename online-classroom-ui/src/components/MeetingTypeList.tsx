@@ -96,27 +96,28 @@ const MeetingTypeList = () => {
         img="/icons/add-meeting.svg"
         title="Cuộc họp ngay"
         description="Bắt đầu cuộc họp ngay"
+        className="bg-primary hover:bg-primary-hover transition-colors shadow-md"
         handleClick={() => setMeetingState('isInstantMeeting')}
       />
       <HomeCard
         img="/icons/join-meeting.svg"
         title="Tham gia cuộc họp"
         description="Qua liên kết mời"
-        className="bg-blue-500"
+        className="bg-primary/80 hover:bg-primary transition-colors shadow-md"
         handleClick={() => setMeetingState('isJoiningMeeting')}
       />
       <HomeCard
         img="/icons/schedule.svg"
-        title="Lên lịch "
+        title="Lên lịch"
         description="Đặt lịch cho cuộc họp"
-        className="bg-purple-500"
+        className="bg-terra-amber hover:bg-terra-amber-dark transition-colors shadow-md"
         handleClick={() => setShowMeetingScheduleForm(true)}
       />
       <HomeCard
         img="/icons/recordings.svg"
         title="Xem bản ghi"
         description="Bản ghi cuộc họp"
-        className="bg-yellow-500"
+        className="bg-terra-mid hover:bg-primary transition-colors shadow-md"
         handleClick={() => router.push('/recordings')}
       />
 
@@ -128,18 +129,18 @@ const MeetingTypeList = () => {
           handleClick={createMeeting}
         >
           <div className="flex flex-col gap-2.5">
-            <label className="text-base font-normal leading-[22.4px] text-gray-700">
+            <label className="text-base font-normal leading-[22.4px] text-foreground">
               Thêm mô tả
             </label>
             <Textarea
-              className="border border-gray-300 bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="border border-border bg-background text-foreground focus-visible:ring-1 focus-visible:ring-primary"
               onChange={(e) =>
                 setValues({ ...values, description: e.target.value })
               }
             />
           </div>
           <div className="flex w-full flex-col gap-2.5">
-            <label className="text-base font-normal leading-[22.4px] text-gray-700">
+            <label className="text-base font-normal leading-[22.4px] text-foreground">
               Chọn ngày và giờ
             </label>
             <ReactDatePicker
@@ -150,7 +151,7 @@ const MeetingTypeList = () => {
               timeIntervals={15}
               timeCaption="time"
               dateFormat="MMMM d, yyyy h:mm aa"
-              className="w-full rounded border border-gray-300 bg-gray-50 p-2 focus:outline-none"
+              className="w-full rounded-lg border border-border bg-background text-foreground p-2 focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
         </MeetingModal>
@@ -181,7 +182,7 @@ const MeetingTypeList = () => {
         <Input
           placeholder="Liên kết cuộc họp"
           onChange={(e) => setValues({ ...values, link: e.target.value })}
-          className="border border-gray-300 bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="border border-border bg-background text-foreground focus-visible:ring-1 focus-visible:ring-primary"
         />
       </MeetingModal>
 
@@ -206,10 +207,10 @@ const MeetingTypeList = () => {
           teacherClasses={teacherClasses.map((cls: any) => ({
             id: cls.id.toString(),
             name: cls.name,
-            img: cls.img || '#3B82F6',
+            img: cls.img || '#4a7c59',
             class_code: cls.class_code || '',
             studentCount: cls._count?.students || 0,
-            color: cls.img || '#3B82F6',
+            color: cls.img || '#4a7c59',
           }))}
         />
       )}

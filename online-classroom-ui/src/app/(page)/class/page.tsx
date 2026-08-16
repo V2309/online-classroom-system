@@ -11,21 +11,20 @@ export default async function ClassListPage({
 }: {
   searchParams: { [key: string]: string | undefined };
 }) {
-  // Lấy User tức thì (0ms) từ cookie JWT, không tốn HTTP request
   const user = getCurrentUser();
 
   if (!user || (user.role !== "teacher" && user.role !== "student")) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center p-6">
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-md text-center">
+      <div className="min-h-[60vh] flex items-center justify-center p-6 bg-background">
+        <div className="bg-white border border-border rounded-3xl p-8 max-w-md text-center shadow-sm">
           <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Không có quyền truy cập</h2>
-          <p className="text-sm text-gray-600 mb-6">
+          <h2 className="text-xl font-bold text-foreground mb-2">Không có quyền truy cập</h2>
+          <p className="text-sm text-muted-foreground mb-6">
             Vui lòng đăng nhập tài khoản giáo viên hoặc học sinh để xem trang này.
           </p>
           <Link
             href="/sign-in"
-            className="inline-block px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+            className="inline-block px-5 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary-hover transition-colors shadow-sm"
           >
             Đăng nhập ngay
           </Link>
@@ -62,33 +61,33 @@ export default async function ClassListPage({
   // Header tương ứng theo Role
   const extraHeader =
     user.role === "teacher" ? (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 flex-wrap">
         <Link
           href="/class/trashcan"
-          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+          className="flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-foreground bg-white border border-border rounded-xl hover:bg-muted transition-colors shadow-2xs"
         >
-          <Trash2 className="h-4 w-4 text-gray-500" />
-          Lớp đã xóa
+          <Trash2 className="h-4 w-4 text-muted-foreground" />
+          <span>Lớp đã xóa</span>
         </Link>
         <CreateClassModal />
       </div>
     ) : user.role === "student" ? (
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 flex-wrap">
         {type === "pending" ? (
           <Link
             href="/class"
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-primary bg-accent rounded-xl hover:bg-accent/80 transition-colors"
           >
-            <BookOpen className="h-4 w-4 text-blue-600" />
-            Lớp đã tham gia
+            <BookOpen className="h-4 w-4" />
+            <span>Lớp đã tham gia</span>
           </Link>
         ) : (
           <Link
             href="/class?type=pending"
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-300 rounded-lg hover:bg-orange-100 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-amber-800 bg-amber-500/10 border border-amber-500/20 rounded-xl hover:bg-amber-500/20 transition-colors"
           >
-            <Clock className="h-4 w-4 text-orange-600" />
-            Lớp đang chờ
+            <Clock className="h-4 w-4 text-amber-700" />
+            <span>Lớp đang chờ</span>
           </Link>
         )}
       </div>

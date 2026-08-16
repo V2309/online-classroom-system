@@ -15,12 +15,12 @@ export default function ClassPageHeader({
 }: ClassPageHeaderProps) {
   return (
     <div
-      className={`flex flex-col sm:flex-row sm:items-center justify-between px-4 py-4 border-b border-gray-400 bg-white ${className}`}
+      className={`flex flex-col sm:flex-row sm:items-center justify-between px-4 py-4 border-b border-border bg-card ${className}`}
     >
-      <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+      <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
         <span>{title}</span>
         {count !== undefined && count !== null && (
-          <span className="text-sm font-medium text-gray-500 bg-gray-100 px-2.5 py-0.5 rounded-full border border-gray-200">
+          <span className="text-sm font-medium text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border">
             {count}
           </span>
         )}

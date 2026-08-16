@@ -71,15 +71,15 @@ const InfiniteFeed = ({ userProfileId, classCode }: { userProfileId?: string, cl
 
 
   if (error) return (
-    <div className="text-center py-6 sm:py-8 text-red-500">
-      <div className="text-sm sm:text-base">❌ Có lỗi xảy ra khi tải bài viết!</div>
+    <div className="text-center py-6 sm:py-8 text-destructive">
+      <div className="text-sm sm:text-base font-medium">❌ Có lỗi xảy ra khi tải bài viết!</div>
     </div>
   );
   
   if (status === "pending") return (
     <div className="flex justify-center items-center py-6 sm:py-8">
-      <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
-      <span className="ml-2 text-gray-500 text-sm sm:text-base">Đang tải bài viết...</span>
+      <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary"></div>
+      <span className="ml-2 text-muted-foreground text-sm sm:text-base">Đang tải bài viết...</span>
     </div>
   );
 
@@ -91,7 +91,6 @@ const InfiniteFeed = ({ userProfileId, classCode }: { userProfileId?: string, cl
 
   return (
     <div>
-      
       <InfiniteScroll
         dataLength={allPosts.length}
         next={() => {
@@ -100,13 +99,13 @@ const InfiniteFeed = ({ userProfileId, classCode }: { userProfileId?: string, cl
         hasMore={!!hasNextPage}
         loader={
           <div className="flex justify-center items-center py-6 sm:py-8">
-            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-gray-500 text-sm sm:text-base">Đang tải thêm bài viết...</span>
+            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary"></div>
+            <span className="ml-2 text-muted-foreground text-sm sm:text-base">Đang tải thêm bài viết...</span>
           </div>
         }
         endMessage={
           <div className="text-center py-6 sm:py-8">
-            <p className="text-gray-500 text-sm sm:text-base">Bạn đã xem hết tất cả bài viết!</p>
+            <p className="text-muted-foreground text-sm sm:text-base">Bạn đã xem hết tất cả bài viết!</p>
           </div>
         }
         scrollThreshold={0.8}

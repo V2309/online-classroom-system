@@ -30,10 +30,10 @@ export default async function JoinByCodePage({ params }: { params: { classCode: 
 
   if (user.role !== 'student') {
     return (
-      <div className="min-h-screen bg-red-100 flex items-center justify-center p-4">
-        <div className="text-center text-red-700">
-          <h1 className="text-2xl font-bold">Lỗi truy cập</h1>
-          <p>Chỉ học sinh mới có thể tham gia lớp học.</p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center p-8 bg-card border border-border rounded-xl shadow-sm max-w-md">
+          <h1 className="text-2xl font-bold text-destructive mb-2">Lỗi truy cập</h1>
+          <p className="text-secondary">Chỉ học sinh mới có thể tham gia lớp học.</p>
         </div>
       </div>
     );
@@ -53,10 +53,10 @@ export default async function JoinByCodePage({ params }: { params: { classCode: 
 
   if (!classInfo) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="text-center text-gray-700">
-          <h1 className="text-2xl font-bold">Lớp học không tồn tại</h1>
-          <p>Mã lớp {classCode} không tìm thấy. Vui lòng kiểm tra lại.</p>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center p-8 bg-card border border-border rounded-xl shadow-sm max-w-md">
+          <h1 className="text-2xl font-bold text-foreground mb-2">Lớp học không tồn tại</h1>
+          <p className="text-muted-foreground">Mã lớp {classCode} không tìm thấy. Vui lòng kiểm tra lại.</p>
         </div>
       </div>
     );

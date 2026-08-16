@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import { uploadService } from "@/services/upload.service";
+import { UploadCloud, Camera, Trash2, Loader2 } from "lucide-react";
 
 interface ImageUploadProps {
   currentImage?: string | null;
@@ -20,15 +21,13 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
       setError("Chỉ chấp nhận file ảnh (JPEG, PNG, WebP, GIF)");
       return;
     }
 
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setError("File quá lớn. Kích thước tối đa là 5MB.");
       return;
@@ -38,11 +37,9 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
     setIsUploading(true);
 
     try {
-      // Create preview
       const preview = URL.createObjectURL(file);
       setPreviewUrl(preview);
 
-      // Upload to NestJS server
       const result = await uploadService.uploadClassImage(file);
       const imageUrl = result.url || result.filePath;
 
@@ -54,7 +51,6 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
       setPreviewUrl(currentImage || null);
     } finally {
       setIsUploading(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -66,11 +62,11 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
   };
 
   return (
-    <div className="mb-6">
-      <label className="block text-gray-800 font-bold mb-2">Ảnh bìa</label>
-      
-      <div 
-        className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 h-48 flex items-center justify-center text-center hover:border-blue-400 transition-colors cursor-pointer"
+    <div className="space-y-2">
+      <label className="block text-sm font-bold text-foreground">Ảnh bìa lớp học</label>
+
+      <div
+        className="relative border-2 border-dashed border-border hover:border-primary/40 rounded-2xl p-4 h-48 flex items-center justify-center text-center transition-colors cursor-pointer overflow-hidden bg-muted/30 group"
         onClick={handleClick}
       >
         {previewUrl ? (
@@ -80,87 +76,84 @@ export default function ImageUpload({ currentImage, classCode, onImageUploaded }
               alt="Ảnh bìa lớp học"
               fill
               unoptimized
-              className="object-cover rounded-md"
+              className="object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"
             />
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
-              <span className="text-white font-semibold">
-                {isUploading ? "Đang upload..." : "Thay đổi ảnh"}
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl backdrop-blur-xs">
+              <span className="text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">
+                <Camera className="w-4 h-4" />
+                <span>{isUploading ? "Đang upload..." : "Thay đổi ảnh"}</span>
               </span>
             </div>
           </>
         ) : (
-          <div className="text-gray-500">
+          <div className="text-muted-foreground flex flex-col items-center justify-center p-4">
             {isUploading ? (
               <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-                <p className="text-sm">Đang upload...</p>
+                <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+                <p className="text-xs sm:text-sm font-medium">Đang tải ảnh lên...</p>
               </div>
             ) : (
               <>
-                <svg className="mx-auto h-12 w-12 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <p className="text-sm">Chọn ảnh bìa cho lớp học</p>
-                <p className="text-xs text-gray-400 mt-1">Kéo thả hoặc click để chọn</p>
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                  <UploadCloud className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <p className="text-xs sm:text-sm font-bold text-foreground mb-0.5">Chọn ảnh bìa lớp học</p>
+                <p className="text-[11px] text-muted-foreground">Kéo thả hoặc nhấp chuột để chọn ảnh</p>
               </>
             )}
           </div>
         )}
-        
+
         {isUploading && (
-          <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
+          <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-2xl backdrop-blur-xs">
             <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-2"></div>
-              <p className="text-sm text-gray-600">Đang upload...</p>
+              <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+              <p className="text-xs font-semibold text-foreground">Đang xử lý ảnh...</p>
             </div>
           </div>
         )}
       </div>
 
-      <input 
+      <input
         ref={fileInputRef}
-        type="file" 
-        className="hidden" 
+        type="file"
+        className="hidden"
         accept="image/*"
         onChange={handleFileSelect}
         disabled={isUploading}
       />
-      
-      <div className="mt-2 flex items-center justify-between">
-        <button 
+
+      <div className="flex items-center justify-between pt-1">
+        <button
           type="button"
           onClick={handleClick}
           disabled={isUploading}
-          className="text-sm text-blue-600 hover:text-blue-800 cursor-pointer transition-colors disabled:opacity-50"
+          className="text-xs font-bold text-primary hover:text-primary-hover transition-colors disabled:opacity-50 inline-flex items-center gap-1 cursor-pointer"
         >
-          📷 {previewUrl ? "Thay đổi ảnh" : "Chọn ảnh mới"}
+          <Camera className="w-3.5 h-3.5" />
+          <span>{previewUrl ? "Thay đổi ảnh bìa" : "Tải ảnh lên"}</span>
         </button>
-        
+
         {previewUrl && !isUploading && (
-          <button 
+          <button
             type="button"
             onClick={() => {
               setPreviewUrl(null);
               onImageUploaded("");
             }}
-            className="text-sm text-red-600 hover:text-red-800 cursor-pointer transition-colors"
+            className="text-xs font-semibold text-destructive hover:opacity-80 transition-colors inline-flex items-center gap-1 cursor-pointer"
           >
-            🗑️ Xóa ảnh
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Xóa ảnh bìa</span>
           </button>
         )}
       </div>
 
       {error && (
-        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+        <div className="p-2.5 bg-destructive/10 border border-destructive/20 rounded-xl text-xs font-medium text-destructive">
           {error}
         </div>
       )}
-
-      <div className="mt-2 text-xs text-gray-500">
-        <p>• Định dạng: JPEG, PNG, WebP, GIF</p>
-        <p>• Kích thước tối đa: 5MB</p>
-        <p>• Khuyến nghị: 1200x800px hoặc tỷ lệ 3:2</p>
-      </div>
     </div>
   );
 }

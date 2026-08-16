@@ -28,7 +28,7 @@ const StudentHomeworkChart: React.FC<StudentHomeworkChartProps> = ({ homeworks, 
     { name: "Chưa nộp", value: notSubmittedCount, percentage: 100 - submittedPercentage },
   ];
 
-  const COLORS = ["#1E88E5", "#90CAF9"];
+  const COLORS = ["#4a7c59", "#705c30"];
 
   return (
     <div className="w-full flex flex-col md:flex-row gap-8 items-center justify-center">
@@ -58,9 +58,10 @@ const StudentHomeworkChart: React.FC<StudentHomeworkChartProps> = ({ homeworks, 
                 <Tooltip 
                   formatter={(value, name) => [`${value} bài`, name]}
                   contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px'
+                    backgroundColor: 'var(--bg-surface, #f4ede3)',
+                    border: '1px solid rgba(74, 124, 89, 0.18)',
+                    borderRadius: '8px',
+                    color: '#2e3230',
                   }}
                 />
               </PieChart>
@@ -68,8 +69,8 @@ const StudentHomeworkChart: React.FC<StudentHomeworkChartProps> = ({ homeworks, 
             
             {/* Text ở giữa donut */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <div className="text-2xl font-bold text-blue-600">{submittedPercentage}%</div>
-              <div className="text-xs text-gray-600">Hoàn thành</div>
+              <div className="text-2xl font-bold text-primary">{submittedPercentage}%</div>
+              <div className="text-xs text-muted-foreground">Hoàn thành</div>
             </div>
           </div>
           
@@ -81,7 +82,7 @@ const StudentHomeworkChart: React.FC<StudentHomeworkChartProps> = ({ homeworks, 
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 ></div>
-                <span className="text-xs text-gray-700">
+                <span className="text-xs text-secondary">
                   {entry.name}: {entry.value}
                 </span>
               </div>
@@ -94,11 +95,18 @@ const StudentHomeworkChart: React.FC<StudentHomeworkChartProps> = ({ homeworks, 
       <div className="w-full md:w-2/3">
         <ResponsiveContainer width="100%" height={260}>
           <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="title" tick={{ fontSize: 12 }} />
-            <YAxis domain={[0, 10]} />
-            <Tooltip />
-            <Line type="monotone" dataKey="grade" stroke="#4F8EF7" strokeWidth={3} dot={{ r: 6 }} activeDot={{ r: 8 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(74, 124, 89, 0.15)" />
+            <XAxis dataKey="title" tick={{ fontSize: 12, fill: '#4a5046' }} />
+            <YAxis domain={[0, 10]} tick={{ fill: '#4a5046' }} />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'var(--bg-surface, #f4ede3)',
+                border: '1px solid rgba(74, 124, 89, 0.18)',
+                borderRadius: '8px',
+                color: '#2e3230',
+              }}
+            />
+            <Line type="monotone" dataKey="grade" stroke="#4a7c59" strokeWidth={3} dot={{ r: 6, fill: '#4a7c59' }} activeDot={{ r: 8, fill: '#35603e' }} />
           </LineChart>
         </ResponsiveContainer>
       </div>

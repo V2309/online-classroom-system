@@ -82,6 +82,7 @@ export interface StudentMember {
   img: string | null;
   class_name: string;
   classes: { name: string }[];
+  email?: string | null;
 }
 
 export interface PendingMemberRequest {

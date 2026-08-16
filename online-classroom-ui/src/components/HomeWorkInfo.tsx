@@ -44,7 +44,6 @@ interface Homework {
 export function HomeWorkInfo({
   homework,
   role,
-
 }: {
   homework: Homework;
   role: Role | string;
@@ -101,29 +100,23 @@ export function HomeWorkInfo({
 
   const handleViewDetail = () => {
     const classCode = getClassCode();
-    console.log("DEBUG handleViewDetail:", { role, classCode, homeworkId: homework.id });
     if (!classCode) return toast.error("Không tìm thấy mã lớp!");
     
     if (role === "teacher") {
-      // Giáo viên xem danh sách học sinh và chấm bài
-      const url = `/class/${classCode}/homework/${homework.id}/teacher-detail`;
-      console.log("Navigating to:", url);
-      router.push(url);
+      router.push(`/class/${classCode}/homework/${homework.id}/teacher-detail`);
     } else {
-      // Học sinh xem kết quả bài làm
       if (bestSubmissionId) {
-        // utid = submission ID (ID của bài làm cụ thể)
         router.push(
           `/class/${classCode}/homework/${homework.id}/detail?utid=${bestSubmissionId}`
         );
       } else {
-        // Lấy bài làm có điểm cao nhất của student
         router.push(
           `/class/${classCode}/homework/${homework.id}/detail?homeworkId=${homework.id}&getBest=true`
         );
       }
     }
   };
+
   const handleViewEdit = () => {
     const classCode = getClassCode();
     if (classCode) {
@@ -136,26 +129,18 @@ export function HomeWorkInfo({
   const handleDownload = async () => {
     try {
       toast.info("Đang chuẩn bị file để tải...");
-      
       const data: any = await homeworkService.getDownloadInfo(homework.id);
       
       if (data && data.fileUrl) {
-        // Tạo link download
         const link = document.createElement('a');
         link.href = data.fileUrl;
-        
-        // Tạo tên file từ title homework nếu không có originalFileName
         const fileName = data.fileName || `${homework.title.replace(/[^a-zA-Z0-9\s]/g, '')}.pdf`;
         link.download = fileName;
-        
-        // Mở trong tab mới để đảm bảo download được
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
-        
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
         toast.success(`Đã tải file: ${fileName}`);
       } else {
         toast.error("Không tìm thấy file để tải về");
@@ -166,9 +151,6 @@ export function HomeWorkInfo({
     }
   };
 
-
-
-  // trạng thái bài tập (student)
   const getHomeworkStatus = () => {
     if (role !== "student") return null;
 
@@ -182,8 +164,7 @@ export function HomeWorkInfo({
       const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
       return {
         type: "notStarted" as const,
-        message: `Bài tập chưa bắt đầu còn ${hours > 0 ? `${hours} giờ ` : ""
-          }${minutes} phút nữa mới bắt đầu`,
+        message: `Chưa bắt đầu (còn ${hours > 0 ? `${hours} giờ ` : ""}${minutes} phút)`,
         canTake: false,
       };
     }
@@ -210,33 +191,34 @@ export function HomeWorkInfo({
   const homeworkStatus = getHomeworkStatus();
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold mb-2">{homework.title}</h2>
+    <div className="space-y-4 text-foreground">
+      <div>
+        <h2 className="text-xl font-bold text-foreground leading-tight">{homework.title}</h2>
+        {homework.description && (
+          <p className="mt-1.5 text-sm text-secondary line-clamp-3">{homework.description}</p>
+        )}
+      </div>
 
-      {homework.description && (
-        <div className="mb-2 text-gray-700">{homework.description}</div>
-      )}
-
-      {/* trạng thái (student) */}
+      {/* Trạng thái bài tập (student) */}
       {role === "student" && homeworkStatus && (
         <div
-          className={`p-3 rounded-lg border ${homeworkStatus.type === "available"
-              ? "bg-green-50 border-green-200 text-green-800"
-              : "bg-yellow-50 border-yellow-200 text-yellow-800"
-            }`}
+          className={`p-3 rounded-xl border text-xs sm:text-sm font-semibold flex items-center gap-2 ${
+            homeworkStatus.type === "available"
+              ? "bg-accent/60 border-primary/30 text-primary"
+              : "bg-amber-500/10 border-amber-500/30 text-amber-800"
+          }`}
         >
-          <div className="flex items-center gap-2">
-            {homeworkStatus.type === "available" ? (
-              <Clock size={16} />
-            ) : (
-              <AlertCircle size={16} />
-            )}
-            <span className="font-medium">{homeworkStatus.message}</span>
-          </div>
+          {homeworkStatus.type === "available" ? (
+            <Clock size={16} className="text-primary flex-shrink-0" />
+          ) : (
+            <AlertCircle size={16} className="text-amber-800 flex-shrink-0" />
+          )}
+          <span>{homeworkStatus.message}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Grid thông tin chi tiết */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 py-3 border-y border-border">
         <InfoItem label="Tổng điểm" value={homework.points ? (Math.round(homework.points * 100) / 100).toString() : "Không"} />
         <InfoItem label="Thời gian bắt đầu" value={formatDateTime(homework.startTime)} />
         <InfoItem label="Hạn chót nộp bài" value={formatDateTime(homework.endTime)} />
@@ -245,39 +227,31 @@ export function HomeWorkInfo({
           value={homework.duration ? `${homework.duration} phút` : "Không"}
         />
         <InfoItem
-          label="Số lần làm bài tối đa"
+          label="Số lần làm tối đa"
           value={homework.maxAttempts?.toString() || "Không"}
         />
         <InfoItem label="Ngày tạo" value={formatDateTime(homework.createdAt)} />
 
-
         <InfoItem
-          label="Điểm"
+          label="Cách tính điểm"
           value={
-            homework.gradingMethod === 'FIRST_ATTEMPT' ? 'Lấy điểm lần đầu tiên' :
-              homework.gradingMethod === 'LATEST_ATTEMPT' ? 'Lấy điểm lần mới nhất' :
-                homework.gradingMethod === 'HIGHEST_ATTEMPT' ? 'Lấy điểm cao nhất' :
-                  'Lấy điểm lần đầu tiên'
+            homework.gradingMethod === 'FIRST_ATTEMPT' ? 'Lần đầu tiên' :
+              homework.gradingMethod === 'LATEST_ATTEMPT' ? 'Lần mới nhất' :
+                homework.gradingMethod === 'HIGHEST_ATTEMPT' ? 'Điểm cao nhất' :
+                  'Lần đầu tiên'
           }
         />
         <InfoItem
-          label="Cho phép"
+          label="Xem kết quả"
           value={
-            homework.studentViewPermission === 'NO_VIEW' ? 'Không được xem điểm' :
-              homework.studentViewPermission === 'SCORE_ONLY' ? 'Chỉ xem điểm tổng' :
-                homework.studentViewPermission === 'SCORE_AND_RESULT' ? 'Xem điểm và chi tiết' :
+            homework.studentViewPermission === 'NO_VIEW' ? 'Không xem điểm' :
+              homework.studentViewPermission === 'SCORE_ONLY' ? 'Chỉ xem điểm' :
+                homework.studentViewPermission === 'SCORE_AND_RESULT' ? 'Xem đầy đủ' :
                   'Không xác định'
           }
         />
-        <InfoItem
-          label="Chặn xem lại đề"
-          value={homework.blockViewAfterSubmit ? 'Có' : 'Không'}
-        />
-
-
 
         {role === "student" && (() => {
-          // Kiểm tra xem bài tập đã hết hạn chưa
           const isExpired = homework.endTime ? new Date() > new Date(homework.endTime) : false;
           const canViewScore = homework.studentViewPermission !== 'NO_VIEW';
           const shouldShowScore = canViewScore || isExpired;
@@ -285,26 +259,19 @@ export function HomeWorkInfo({
           return (
             <>
               <InfoItem
-                label="Số lần đã làm"
-                value={`${submissionCount}/${homework.maxAttempts || 1}`}
+                label="Đã làm"
+                value={`${submissionCount}/${homework.maxAttempts || 1} lần`}
               />
-              {/* Hiển thị điểm theo phương pháp đã cấu hình khi có quyền xem hoặc đã hết hạn */}
               {shouldShowScore && currentGrade !== null && (
                 <InfoItem
-                  label={
-                    homework.gradingMethod === 'FIRST_ATTEMPT' ? 'Điểm lần đầu tiên' :
-                      homework.gradingMethod === 'LATEST_ATTEMPT' ? 'Điểm lần mới nhất' :
-                        homework.gradingMethod === 'HIGHEST_ATTEMPT' ? 'Điểm cao nhất' :
-                          'Điểm hiện tại'
-                  }
-                  value={`${Math.round(currentGrade * 100) / 100}/${Math.round((homework.points || 10) * 100) / 100} điểm`}
+                  label="Điểm của bạn"
+                  value={`${Math.round(currentGrade * 100) / 100}/${Math.round((homework.points || 10) * 100) / 100}`}
                 />
               )}
-              {/* Hiển thị thông báo khi không có quyền xem điểm và chưa hết hạn */}
               {!shouldShowScore && (
                 <InfoItem
                   label="Điểm"
-                  value={isExpired ? "Đang được chấm" : "Sẽ có sau hết hạn làm bài"}
+                  value={isExpired ? "Đang chấm" : "Sau hết hạn"}
                 />
               )}
             </>
@@ -312,23 +279,22 @@ export function HomeWorkInfo({
         })()}
       </div>
 
-      {/* menu chức năng */}
-      <div className="mt-6 border-t pt-4">
-        <ul className="space-y-2">
+      {/* Menu thao tác */}
+      <div className="pt-2">
+        <ul className="space-y-1.5">
           {role === "teacher" ? (
             <>
-              <MenuItem icon={<MonitorPlay size={18} />} onClick={handlePractice} label="Làm thử" />
-              <MenuItem icon={<Info size={18} />} onClick={handleViewDetail} label="Chi tiết" active />
-
-              <MenuItem icon={<Pencil size={18} />} onClick={handleViewEdit} label="Chỉnh sửa" />
+              <MenuItem icon={<MonitorPlay size={17} />} onClick={handlePractice} label="Làm thử" />
+              <MenuItem icon={<Info size={17} />} onClick={handleViewDetail} label="Chi tiết nộp bài" active />
+              <MenuItem icon={<Pencil size={17} />} onClick={handleViewEdit} label="Chỉnh sửa bài tập" />
               <MenuItem
-                icon={<Printer size={18} />}
+                icon={<Printer size={17} />}
                 label="Xuất dữ liệu"
                 onClick={() => setShowExport(true)}
               />
               <MenuItem 
-                icon={<Download size={18} />} 
-                label="Tải về" 
+                icon={<Download size={17} />} 
+                label="Tải về file đề" 
                 onClick={handleDownload}
               />
               <DeleteButton homeworkId={homework.id} homeworkData={homework} />
@@ -336,20 +302,21 @@ export function HomeWorkInfo({
           ) : role === "student" ? (
             <>
               <MenuItem
-                icon={<Eye size={18} />}
+                icon={<Eye size={17} />}
                 onClick={homeworkStatus?.canTake ? handlePractice : undefined}
-                label="Làm bài"
+                label="Làm bài tập"
+                active={homeworkStatus?.canTake}
                 disabled={!homeworkStatus?.canTake}
               />
               {submissionCount > 0 && (
-                <MenuItem icon={<Info size={18} />} onClick={handleViewDetail} label="Chi tiết" active />
+                <MenuItem icon={<Info size={17} />} onClick={handleViewDetail} label="Xem kết quả bài làm" />
               )}
             </>
           ) : null}
         </ul>
       </div>
 
-      {/* modal export */}
+      {/* Modal export */}
       <ExportHomeworkModal
         homeworkId={homework.id}
         open={showExport}
@@ -363,8 +330,8 @@ export function HomeWorkInfo({
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-gray-500 text-sm">{label}</div>
-      <div className="font-medium">{value}</div>
+      <div className="text-muted-foreground text-xs font-medium">{label}</div>
+      <div className="font-semibold text-foreground text-xs sm:text-sm mt-0.5">{value}</div>
     </div>
   );
 }
@@ -381,10 +348,11 @@ type MenuItemProps = {
 function MenuItem({ icon, label, active, danger, onClick, disabled }: MenuItemProps) {
   return (
     <li
-      className={`flex items-center gap-2 px-2 py-1 rounded cursor-pointer
-        ${active ? "bg-blue-50 text-blue-600 font-semibold" : ""}
-        ${danger ? "text-red-600 hover:bg-red-50" : "hover:bg-gray-100"}
-        ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl cursor-pointer text-xs sm:text-sm font-semibold transition-all select-none
+        ${active ? "bg-primary text-primary-foreground shadow-xs" : ""}
+        ${!active && !danger ? "hover:bg-muted text-foreground" : ""}
+        ${danger ? "text-destructive hover:bg-destructive/10" : ""}
+        ${disabled ? "opacity-40 cursor-not-allowed pointer-events-none" : ""}`}
       onClick={disabled ? undefined : onClick}
     >
       {icon}
@@ -393,7 +361,6 @@ function MenuItem({ icon, label, active, danger, onClick, disabled }: MenuItemPr
   );
 }
 
-// Component DeleteButton được memoized để tránh re-render liên tục  
 const DeleteButton = memo(function DeleteButton({ 
   homeworkId, 
   homeworkData 
@@ -422,13 +389,13 @@ const DeleteButton = memo(function DeleteButton({
   };
 
   return (
-    <div 
+    <li 
       onClick={handleDelete}
-      className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
+      className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-destructive hover:bg-destructive/10 rounded-xl cursor-pointer transition-colors"
     >
       <Trash2 className="w-4 h-4" />
       <span>{isDeleting ? "Đang xóa..." : "Xóa bài tập"}</span>
-    </div>
+    </li>
   );
 });
 

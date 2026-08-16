@@ -48,14 +48,16 @@ export default function CreateClassModal({ onSuccess }: CreateClassModalProps) {
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+        className="flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-hover rounded-xl transition-all shadow-sm active:scale-95"
       >
         <Plus className="h-4 w-4" />
-        Tạo lớp mới
+        <span>Tạo lớp mới</span>
       </button>
 
-      {open && mounted &&
+      {open &&
+        mounted &&
         createPortal(
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm !z-[9999] flex items-center justify-center p-4"
@@ -64,20 +66,21 @@ export default function CreateClassModal({ onSuccess }: CreateClassModalProps) {
             }}
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl relative w-full max-w-lg mx-auto overflow-hidden p-2"
+              className="bg-white rounded-3xl shadow-2xl relative w-full max-w-lg mx-auto overflow-hidden p-3 border border-border"
               onClick={(e) => e.stopPropagation()}
             >
               <button
+                type="button"
                 onClick={() => setOpen(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition-colors z-10"
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-muted transition-colors z-10"
                 aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
 
               {loadingGrades ? (
-                <div className="p-12 text-center text-gray-500">
-                  <div className="animate-spin inline-block w-6 h-6 border-2 border-current border-t-transparent text-blue-600 rounded-full mb-2" />
+                <div className="p-12 text-center text-muted-foreground">
+                  <div className="animate-spin inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full mb-2" />
                   <p className="text-sm">Đang tải dữ liệu khối lớp...</p>
                 </div>
               ) : (

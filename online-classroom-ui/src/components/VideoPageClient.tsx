@@ -192,11 +192,11 @@ export default function VideoList({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                 {course.title}
               </h3>
-              <p className="text-sm text-slate-500 mt-1">
-                <span className="font-medium text-blue-600">
+              <p className="text-sm text-muted-foreground mt-1">
+                <span className="font-medium text-primary">
                   {course._count?.videos || 0} videos
                 </span>
                 {course.folder && <span className="mx-2">•</span>}
@@ -210,8 +210,8 @@ export default function VideoList({
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
               course.isActive
-                ? "bg-green-100 text-green-800"
-                : "bg-gray-100 text-gray-800"
+                ? "bg-state-success/15 text-state-success"
+                : "bg-muted text-muted-foreground"
             }`}
           >
             {course.isActive ? "Hoạt động" : "Đã tắt"}
@@ -221,7 +221,7 @@ export default function VideoList({
         <td className="hidden lg:table-cell p-4">
           <time
             dateTime={new Date(course.createdAt).toISOString()}
-            className="text-sm text-slate-500"
+            className="text-sm text-muted-foreground"
           >
             {formatDate(new Date(course.createdAt))}
           </time>
@@ -231,17 +231,17 @@ export default function VideoList({
           <div className="relative">
             <button
               type="button"
-              onClick={() => handleOpenMenu(course.id)} // Dùng handler
-              className="p-1 rounded-full hover:bg-slate-200"
+              onClick={() => handleOpenMenu(course.id)}
+              className="p-1 rounded-full hover:bg-accent"
             >
-              <MoreVertical className="w-4 h-4 text-slate-500" />
+              <MoreVertical className="w-4 h-4 text-muted-foreground" />
             </button>
             {openMenuId === course.id && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-card rounded-xl shadow-lg border border-border z-10">
                 <div className="px-1 py-2">
                   <Link
                     href={`/class/${classCode}/video/${course.id}`}
-                    className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-slate-700 hover:bg-slate-100"
+                    className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-secondary hover:bg-accent hover:text-foreground rounded-lg transition-colors"
                   >
                     <Eye className="w-4 h-4" />
                     <span>Xem chi tiết</span>
@@ -250,21 +250,21 @@ export default function VideoList({
                     <>
                       <Link
                         href={`/class/${classCode}/video/${course.id}/edit`}
-                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-slate-700 hover:bg-slate-100"
+                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-secondary hover:bg-accent hover:text-foreground rounded-lg transition-colors"
                       >
                         <Pencil className="w-4 h-4" />
                         <span>Chỉnh sửa</span>
                       </Link>
                       <button 
                         onClick={() => handleOpenMoveModal(course)}
-                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-slate-700 hover:bg-slate-100"
+                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-secondary hover:bg-accent hover:text-foreground rounded-lg transition-colors"
                       >
                         <Folder className="w-4 h-4" />
                         <span>Di chuyển</span>
                       </button>
                       <button
                         onClick={() => handleDeleteCourse(course.id)}
-                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-red-600 hover:bg-red-50"
+                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                         <span>Xóa</span>
@@ -283,50 +283,45 @@ export default function VideoList({
 
 
   return (
-    // RESPONSIVE: flex-col trên di động, flex-row trên desktop
-    <div className="flex flex-col md:flex-row bg-white font-sans min-h-screen">
+    <div className="flex flex-col md:flex-row bg-background text-foreground font-sans min-h-screen">
       {/* Sidebar */}
-      {/* RESPONSIVE: w-full trên di động, md:w-64 trên desktop */}
-      <aside className="w-full md:w-64 border-b md:border-r border-slate-200 p-4 shrink-0">
-        {/* RESPONSIVE: flex-row + cuộn ngang trên di động, md:flex-col trên desktop */}
+      <aside className="w-full md:w-64 border-b md:border-r border-border p-4 shrink-0 bg-card">
         <nav className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:space-y-1">
           <Link
             href={`/class/${classCode}/video`}
-            // RESPONSIVE: Thêm shrink-0 để không bị co lại khi cuộn ngang
-            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium shrink-0 relative transition-colors ${
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium shrink-0 relative transition-colors ${
               !activeFolderId
-                ? "text-blue-700 before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-blue-600 before:rounded-r-full"
-                : "text-slate-700 hover:bg-slate-200"
+                ? "text-primary bg-accent font-semibold before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-primary before:rounded-r-full"
+                : "text-secondary hover:bg-accent/50 hover:text-foreground"
             }`}
           >
             <FolderOpen className="w-5 h-5" />
             <span>Tất cả bài giảng</span>
-            <span className="ml-auto text-xs bg-slate-200 px-2 py-1 rounded-full">
+            <span className="ml-auto text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
               {allCoursesCount}
             </span>
           </Link>
           {folders.map((folder) => (
             <div
               key={folder.id}
-              // RESPONSIVE: Thêm shrink-0
               className="relative group flex items-center justify-between shrink-0"
             >
               <Link
                 href={`/class/${classCode}/video?folderId=${folder.id}`}
-                className={`flex-1 relative overflow-hidden flex items-center gap-3 pl-3 pr-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 relative overflow-hidden flex items-center gap-3 pl-3 pr-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeFolderId === folder.id
-                    ? "text-blue-700 before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-blue-600 before:rounded-r-full"
-                    : "text-slate-700 hover:bg-slate-200"
+                    ? "text-primary bg-accent font-semibold before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-primary before:rounded-r-full"
+                    : "text-secondary hover:bg-accent/50 hover:text-foreground"
                 }`}
               >
                 <div className="relative flex items-center">
                   <Folder
                     className="w-5 h-5"
-                    style={{ color: folder.color || "#64748b" }}
+                    style={{ color: folder.color || "var(--accent-primary)" }}
                   />
                 </div>
                 <span className="truncate flex-1">{folder.name}</span>
-                <span className="text-xs bg-slate-200 px-2 py-1 rounded-full">
+                <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
                   {folder._count?.courses || 0}
                 </span>
               </Link>
@@ -334,25 +329,25 @@ export default function VideoList({
               {role === "teacher" && (
                 <div className="relative">
                   <button
-                    onClick={() => handleOpenFolderMenu(folder.id)} // Dùng handler
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-slate-300 mr-2"
+                    onClick={() => handleOpenFolderMenu(folder.id)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-accent mr-2"
                   >
-                    <MoreVertical className="w-4 h-4 text-slate-600" />
+                    <MoreVertical className="w-4 h-4 text-muted-foreground" />
                   </button>
                   {/* Menu con của folder */}
                   {openFolderMenuId === folder.id && (
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-md shadow-lg border border-slate-200 z-20">
+                    <div className="absolute right-0 top-full mt-1 w-40 bg-card rounded-xl shadow-lg border border-border z-20">
                       <div className="p-1">
                         <button
-                          onClick={() => handleEditFolder(folder)} // Dùng handler
-                          className="w-full px-2 py-1.5 text-xs text-left text-slate-700 hover:bg-slate-100 rounded flex items-center gap-2"
+                          onClick={() => handleEditFolder(folder)}
+                          className="w-full px-2 py-1.5 text-xs text-left text-secondary hover:bg-accent hover:text-foreground rounded-lg flex items-center gap-2"
                         >
                           <Pencil className="w-3 h-3" />
                           Chỉnh sửa
                         </button>
                         <button
                           onClick={() => handleDeleteFolder(folder.id)}
-                          className="w-full px-2 py-1.5 text-xs text-left text-red-600 hover:bg-red-50 rounded flex items-center gap-2"
+                          className="w-full px-2 py-1.5 text-xs text-left text-destructive hover:bg-destructive/10 rounded-lg flex items-center gap-2"
                         >
                           <Trash2 className="w-3 h-3" />
                           Xóa
@@ -368,7 +363,7 @@ export default function VideoList({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-white rounded-md flex flex-col">
+      <main className="flex-1 bg-background rounded-md flex flex-col">
         {/* Top */}
         <ClassPageHeader title="Danh sách bài giảng" count={count}>
           <div className="flex items-center gap-2 w-full md:w-auto">
@@ -377,13 +372,13 @@ export default function VideoList({
               <>
                 <button
                   onClick={handleCreateFolder}
-                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 whitespace-nowrap transition-colors"
+                  className="px-3.5 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-accent whitespace-nowrap transition-colors shadow-sm"
                 >
                   Tạo thư mục
                 </button>
                 <Link
                   href={`/class/${classCode}/video/add`}
-                  className="px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 whitespace-nowrap"
+                  className="px-3.5 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary-hover whitespace-nowrap transition-colors shadow-sm"
                 >
                   Tạo khóa học
                 </Link>
@@ -397,15 +392,14 @@ export default function VideoList({
           {data.length > 0 ? (
             <Table columns={columns} renderRow={renderRow} data={data} />
           ) : (
-            // Trạng thái trống (đã responsive)
-            <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 py-10">
-              <FolderOpen className="w-16 h-16 mb-4 text-slate-300" />
-              <h3 className="text-xl font-semibold text-slate-700">
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-10">
+              <FolderOpen className="w-16 h-16 mb-4 text-muted-foreground/40" />
+              <h3 className="text-xl font-semibold text-foreground">
                 {activeFolderId
                   ? "Thư mục này trống"
                   : "Chưa có bài giảng nào"}
               </h3>
-              <p className="mt-2 text-slate-500">
+              <p className="mt-2 text-muted-foreground">
                 {role === "teacher"
                   ? "Hãy bắt đầu bằng cách tạo một khóa học mới."
                   : "Nội dung sẽ sớm được cập nhật."}
@@ -413,7 +407,7 @@ export default function VideoList({
               {role === "teacher" && (
                 <Link
                   href={`/class/${classCode}/video/add`}
-                  className="mt-6 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="mt-6 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
                 >
                   Tạo khóa học mới
                 </Link>

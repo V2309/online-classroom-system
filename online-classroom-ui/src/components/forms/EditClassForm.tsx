@@ -7,6 +7,8 @@ import { classService } from "@/services/class.service";
 import GradeSelection from "@/components/GradeSelection";
 import ImageUpload from "@/components/ImageUpload";
 import ClassDeleteActions from "@/components/ClassDeleteActions";
+import { Settings, Shield, Lock, UserCheck, LogOut, FileText, CheckCircle2, ArrowLeft, Save } from "lucide-react";
+import Link from "next/link";
 
 interface Grade {
   id: number;
@@ -36,57 +38,42 @@ const ToggleSwitch = ({
   description,
   checked,
   onChange,
+  icon: Icon,
 }: {
   label: string;
   description?: string;
   checked: boolean;
   onChange: (val: boolean) => void;
+  icon?: React.ComponentType<{ className?: string }>;
 }) => (
-  <div className="flex items-center justify-between py-4 border-b last:border-b-0">
-    <div className="flex flex-col">
-      <span className="font-semibold text-gray-800 cursor-pointer">
-        {label}
-      </span>
-      {description && (
-        <p className="text-sm text-gray-500 max-w-md">{description}</p>
+  <div className="flex items-center justify-between py-4 border-b border-border/60 last:border-b-0 gap-4">
+    <div className="flex items-start gap-3">
+      {Icon && (
+        <div className="w-8 h-8 rounded-xl bg-muted/60 flex items-center justify-center flex-shrink-0 mt-0.5 text-muted-foreground">
+          <Icon className="w-4 h-4" />
+        </div>
       )}
+      <div className="flex flex-col">
+        <span className="font-bold text-foreground text-sm sm:text-base cursor-pointer">
+          {label}
+        </span>
+        {description && (
+          <p className="text-xs sm:text-sm text-secondary max-w-lg mt-0.5 leading-relaxed">
+            {description}
+          </p>
+        )}
+      </div>
     </div>
-    <label className="relative inline-flex items-center cursor-pointer">
+    <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 select-none">
       <input
         type="checkbox"
         className="sr-only peer"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+      <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-2xs"></div>
     </label>
   </div>
-);
-
-// Component cho các mục trong hộp trạng thái
-const StatusStep = ({ text, linkText }: { text: string; linkText: string }) => (
-  <li className="flex justify-between items-center mb-3">
-    <div>
-      <p className="font-medium text-gray-800">{text}</p>
-      <p className="text-sm text-gray-500">
-        Bắt buộc - <span className="text-blue-500">{linkText}</span>
-      </p>
-    </div>
-    <svg
-      className="w-6 h-6 text-green-500"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-        d="M5 13l4 4L19 7"
-      ></path>
-    </svg>
-  </li>
 );
 
 export default function EditClassForm({ classEdit, grades, classCode }: EditClassFormProps) {
@@ -138,120 +125,176 @@ export default function EditClassForm({ classEdit, grades, classCode }: EditClas
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Cột chính (bên trái) */}
-      <div className="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm">
-        <form onSubmit={handleSubmit}>
-          {/* Tên lớp học */}
-          <div className="mb-6">
-            <label htmlFor="name" className="block text-gray-800 font-bold mb-2">
-              Tên lớp học
-            </label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              placeholder="Ví dụ: Lớp 10A1 - Toán"
-              required
-            />
+    <div className="space-y-6">
+      {/* Top Breadcrumb & Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap pb-2 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/class/${classCode}/newsfeed`}
+            className="w-9 h-9 rounded-2xl bg-white border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-2xs"
+            title="Quay lại lớp học"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-heading font-bold text-foreground flex items-center gap-2">
+              <Settings className="w-6 h-6 text-primary" />
+              <span>Cài đặt & Chỉnh sửa lớp học</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-secondary">
+              Mã lớp: <span className="font-mono font-bold text-foreground">{classCode}</span>
+            </p>
           </div>
-
-          {/* Ảnh bìa */}
-          <ImageUpload
-            currentImage={img}
-            classCode={classCode}
-            onImageUploaded={setImg}
-          />
-
-          {/* Các tùy chọn cài đặt */}
-          <ToggleSwitch
-            label="Mã bảo vệ"
-            checked={isProtected}
-            onChange={setIsProtected}
-          />
-          <ToggleSwitch
-            label="Khóa lớp học"
-            checked={isLocked}
-            onChange={setIsLocked}
-          />
-          <ToggleSwitch
-            label="Phê duyệt học sinh"
-            description="Phê duyệt học sinh tránh tình trạng người lạ vào lớp học mà không có sự cho phép của bạn"
-            checked={requiresApproval}
-            onChange={setRequiresApproval}
-          />
-          <ToggleSwitch
-            label="Chặn học sinh tự rời lớp học"
-            description="Tính năng này giúp giáo viên quản lý số lượng thành viên trong lớp tốt hơn tránh tình trạng học sinh tự ý thoát khỏi lớp"
-            checked={blockLeave}
-            onChange={setBlockLeave}
-          />
-          <ToggleSwitch
-            label="Cho phép học sinh xem bảng điểm"
-            checked={allowGradesView}
-            onChange={setAllowGradesView}
-          />
-
-          {/* Khối lớp */}
-          <GradeSelection
-            grades={grades}
-            currentGradeId={classEdit.gradeId || 0}
-            currentGradeLevel={classEdit.grade?.level || "Chưa cập nhật"}
-            onGradeSelect={(selectedGId, newGLevel) => {
-              setGradeId(selectedGId);
-              setNewGradeLevel(newGLevel);
-            }}
-          />
-
-          {/* Nút submit */}
-          <div className="mt-6">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Đang lưu...</span>
-                </>
-              ) : (
-                <span>💾 Lưu lại</span>
-              )}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
 
-      {/* Cột phụ (bên phải) */}
-      <div className="lg:col-span-1 space-y-6">
-        <div className="space-y-3">
-          <ClassDeleteActions
-            classId={classEdit.id}
-            isDeleted={false}
-            className="w-full border-2 border-red-200 text-red-500 bg-white font-bold py-3 px-4 rounded-lg hover:bg-red-50 hover:border-red-500 transition-colors flex items-center justify-center gap-2"
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 items-start">
+        {/* Cột chính (bên trái) */}
+        <div className="lg:col-span-2 bg-white p-6 sm:p-8 rounded-3xl border border-border shadow-sm text-foreground">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Tên lớp học */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-bold text-foreground mb-2">
+                Tên lớp học <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-card text-foreground border border-border rounded-2xl px-4 py-3 text-sm sm:text-base focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none"
+                placeholder="Ví dụ: Lớp 10A1 - Toán"
+                required
+              />
+            </div>
+
+            {/* Ảnh bìa */}
+            <div className="pt-2">
+              <ImageUpload
+                currentImage={img}
+                classCode={classCode}
+                onImageUploaded={setImg}
+              />
+            </div>
+
+            {/* Khối lớp */}
+            <div className="pt-2 border-t border-border/60">
+              <GradeSelection
+                grades={grades}
+                currentGradeId={classEdit.gradeId || 0}
+                currentGradeLevel={classEdit.grade?.level || "Chưa cập nhật"}
+                onGradeSelect={(selectedGId, newGLevel) => {
+                  setGradeId(selectedGId);
+                  setNewGradeLevel(newGLevel);
+                }}
+              />
+            </div>
+
+            {/* Các tùy chọn cài đặt bảo mật & quyền hạn */}
+            <div className="pt-4 border-t border-border/60 space-y-1">
+              <h3 className="font-heading font-bold text-base text-foreground mb-3">
+                Quyền hạn & Bảo mật lớp học
+              </h3>
+              
+              <ToggleSwitch
+                label="Mã bảo vệ lớp học"
+                description="Yêu cầu nhập mật mã khi học sinh tham gia lớp"
+                icon={Shield}
+                checked={isProtected}
+                onChange={setIsProtected}
+              />
+              <ToggleSwitch
+                label="Khóa lớp học"
+                description="Không cho phép học sinh mới tham gia qua mã lớp hoặc link"
+                icon={Lock}
+                checked={isLocked}
+                onChange={setIsLocked}
+              />
+              <ToggleSwitch
+                label="Phê duyệt học sinh"
+                description="Yêu cầu giáo viên xét duyệt học sinh trước khi được vào lớp học"
+                icon={UserCheck}
+                checked={requiresApproval}
+                onChange={setRequiresApproval}
+              />
+              <ToggleSwitch
+                label="Chặn học sinh tự rời lớp học"
+                description="Học sinh không thể tự bấm rời lớp mà phải do giáo viên xóa khỏi danh sách"
+                icon={LogOut}
+                checked={blockLeave}
+                onChange={setBlockLeave}
+              />
+              <ToggleSwitch
+                label="Cho phép học sinh xem bảng điểm"
+                description="Hiển thị bảng điểm tổng kết và xếp hạng cho toàn thể học sinh trong lớp"
+                icon={FileText}
+                checked={allowGradesView}
+                onChange={setAllowGradesView}
+              />
+            </div>
+
+            {/* Nút submit */}
+            <div className="pt-6 border-t border-border/60">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto px-8 py-3.5 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-2xl transition-all shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 active:scale-95 text-sm sm:text-base cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Đang lưu thay đổi...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Lưu thay đổi</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h4 className="font-semibold text-blue-800 mb-2">Hướng dẫn sử dụng</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>Chọn Khác để tạo khối mới</li>
-            <li>Nhập tên khối và bấm Lưu lại</li>
-            <li>Khối mới sẽ được tự động tạo</li>
-          </ul>
-        </div>
+        {/* Cột phụ (bên phải) */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Hướng dẫn sử dụng */}
+          <div className="bg-white rounded-3xl border border-border shadow-sm p-6 text-foreground space-y-3">
+            <h4 className="font-heading font-bold text-base text-foreground flex items-center gap-2">
+              <span className="text-primary">💡</span> Hướng dẫn sử dụng
+            </h4>
+            <ul className="text-xs sm:text-sm text-secondary space-y-2 leading-relaxed">
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                <span>Chọn <b>Khác</b> trong danh mục khối để tạo khối lớp mới tự động.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                <span>Bật <b>Phê duyệt học sinh</b> để kiểm soát danh sách thành viên an toàn.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                <span>Bấm <b>Lưu thay đổi</b> sau khi hoàn tất chỉnh sửa.</span>
+              </li>
+            </ul>
+          </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h3 className="font-bold text-lg mb-4">Các bước đã thực hiện</h3>
-          <ul>
-            <StatusStep text="Đặt tên lớp học" linkText="Thêm ngay" />
-            <StatusStep text="Thêm ảnh bìa lớp học" linkText="Thêm ngay" />
-            <StatusStep text="Chọn môn học" linkText="Thêm ngay" />
-            <StatusStep text="Chọn khối lớp" linkText="Thêm ngay" />
-          </ul>
+          {/* Vùng nguy hiểm: Xóa lớp học */}
+          <div className="bg-white rounded-3xl border border-destructive/20 shadow-sm p-6 text-foreground space-y-3">
+            <h4 className="font-heading font-bold text-base text-destructive flex items-center gap-2">
+              ⚠️ Vùng nguy hiểm
+            </h4>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Khi xóa lớp học, lớp sẽ được chuyển vào thùng rác và có thể khôi phục lại sau nếu cần.
+            </p>
+            <div className="pt-2">
+              <ClassDeleteActions
+                classId={classEdit.id}
+                isDeleted={false}
+                className="w-full border border-destructive/30 text-destructive bg-destructive/5 hover:bg-destructive/10 font-semibold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer shadow-2xs"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

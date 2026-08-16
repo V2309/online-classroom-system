@@ -33,21 +33,23 @@ export default async function ScoreTablePage({ params }: { params: { id: string 
   }
 
   if (!data?.classInfo) {
-    return <div className="p-8 text-center text-red-500">Không tìm thấy lớp học...</div>;
+    return <div className="p-8 text-center text-destructive bg-background">Không tìm thấy lớp học...</div>;
   }
 
   const { classInfo, homeworks = [], studentScores = [], chartData = [], currentStudentId } = data;
 
   return (
-    <ScorePageClient
-      classInfo={classInfo}
-      chartData={chartData}
-      studentScores={studentScores}
-      homeworks={homeworks}
-      studentCount={studentScores.length}
-      homeworkCount={homeworks.length}
-      currentUserId={currentStudentId}
-      userRole={user.role?.toString()}
-    />
+    <div className="bg-background text-foreground min-h-screen">
+      <ScorePageClient
+        classInfo={classInfo}
+        chartData={chartData}
+        studentScores={studentScores}
+        homeworks={homeworks}
+        studentCount={studentScores.length}
+        homeworkCount={homeworks.length}
+        currentUserId={currentStudentId}
+        userRole={user.role?.toString()}
+      />
+    </div>
   );
 }

@@ -41,18 +41,18 @@ export default function ScorePageClient({
     : studentScores;
 
   return (
-    <div className="bg-white rounded-lg shadow-md flex flex-col h-full">
+    <div className="bg-card rounded-xl border border-border shadow-sm flex flex-col h-full">
       {/* Header chung chuẩn class */}
       <ClassPageHeader title={`Bảng điểm Chi tiết Lớp: ${classInfo.name}`}>
         <div className="flex items-center gap-3">
-          <div className="flex items-center space-x-1.5 text-sm text-slate-500">
+          <div className="flex items-center space-x-1.5 text-sm text-muted-foreground">
             <BookOpen size={16} />
             <span>{homeworkCount} bài tập</span>
           </div>
 
           {userRole === "teacher" && (
             <>
-              <div className="flex items-center space-x-1.5 text-sm text-slate-500">
+              <div className="flex items-center space-x-1.5 text-sm text-muted-foreground">
                 <Users size={16} />
                 <span>{studentCount} học sinh</span>
               </div>
@@ -63,8 +63,8 @@ export default function ScorePageClient({
                   onClick={() => setShowChart(!showChart)}
                   className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                     showChart
-                      ? "bg-blue-50 text-blue-700 border-blue-200"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                      ? "bg-accent text-primary border-border font-semibold"
+                      : "bg-card text-foreground border-border hover:bg-accent"
                   }`}
                 >
                   <BarChart3 size={14} />
@@ -83,8 +83,8 @@ export default function ScorePageClient({
 
       {/* Biểu đồ nếu bật (cho giáo viên) */}
       {userRole === 'teacher' && showChart && chartData.length > 0 && (
-        <div className="p-4 border-b border-gray-200 bg-slate-50">
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">
+        <div className="p-4 border-b border-border bg-background">
+          <h3 className="text-sm font-semibold text-foreground mb-2">
             Biểu đồ Điểm trung bình Lớp
           </h3>
           <ScoreLineChart data={chartData} />
@@ -94,26 +94,26 @@ export default function ScorePageClient({
       {/* Bảng điểm chi tiết */}
       <div className="overflow-x-auto overflow-y-auto flex-1">
         <table className="w-full text-sm relative">
-          <thead className="bg-gray-50 sticky top-0 z-20">
+          <thead className="bg-muted sticky top-0 z-20">
             <tr>
-              <th className="sticky left-0 bg-gray-50 px-4 py-3 text-left font-semibold text-slate-600 w-16 z-30">
+              <th className="sticky left-0 bg-muted px-4 py-3 text-left font-semibold text-foreground w-16 z-30">
                 STT
               </th>
-              <th className="left-16 bg-gray-50 px-4 py-3 text-left font-semibold text-slate-600 min-w-[200px] z-30">
+              <th className="left-16 bg-muted px-4 py-3 text-left font-semibold text-foreground min-w-[200px] z-30">
                 Họ và tên
               </th>
-              <th className="px-4 py-3 text-center font-semibold text-blue-600 bg-blue-50 min-w-[120px]">
+              <th className="px-4 py-3 text-center font-semibold text-primary bg-accent/50 min-w-[120px]">
                 Trung Bình
               </th>
 
               {homeworks.map((homework) => (
                 <th
                   key={homework.id}
-                  className="px-3 py-3 text-center font-semibold text-slate-600 min-w-[100px]"
+                  className="px-3 py-3 text-center font-semibold text-foreground min-w-[100px]"
                   title={homework.title}
                 >
                   <div className="truncate max-w-[150px]">{homework.title}</div>
-                  <div className="text-xs text-slate-400 font-normal">
+                  <div className="text-xs text-muted-foreground font-normal">
                     ({homework.points || "N/A"}đ)
                   </div>
                 </th>
@@ -123,7 +123,7 @@ export default function ScorePageClient({
           <tbody>
             {filteredStudentScores.length === 0 ? (
               <tr>
-                <td colSpan={3 + homeworks.length} className="text-center py-10 text-slate-400">
+                <td colSpan={3 + homeworks.length} className="text-center py-10 text-muted-foreground">
                   Chưa có dữ liệu học sinh
                 </td>
               </tr>
@@ -132,23 +132,23 @@ export default function ScorePageClient({
                 const avg = student.average;
                 const scoreColor =
                   avg >= 8
-                    ? "text-green-600"
+                    ? "text-state-success font-bold"
                     : avg >= 5
-                    ? "text-yellow-600"
-                    : "text-red-600";
+                    ? "text-state-warning font-bold"
+                    : "text-destructive font-bold";
 
                 return (
                   <tr
                     key={student.id}
-                    className="border-t border-gray-200 hover:bg-gray-50 transition-colors"
+                    className="border-t border-border hover:bg-accent/30 transition-colors"
                   >
-                    <td className="sticky left-0 bg-white hover:bg-gray-50 px-4 py-3 text-center text-slate-500 z-10">
+                    <td className="sticky left-0 bg-card hover:bg-accent/30 px-4 py-3 text-center text-muted-foreground z-10">
                       {index + 1}
                     </td>
-                    <td className="left-16 bg-white hover:bg-gray-50 px-4 py-3 font-medium text-slate-800 z-10">
+                    <td className="left-16 bg-card hover:bg-accent/30 px-4 py-3 font-medium text-foreground z-10">
                       {student.username}
                     </td>
-                    <td className="px-4 py-3 text-center font-bold bg-blue-50">
+                    <td className="px-4 py-3 text-center font-bold bg-accent/20">
                       <span className={scoreColor}>
                         {Object.values(student.homeworkScores).some((s) => s !== null)
                           ? avg.toFixed(1)
@@ -160,12 +160,12 @@ export default function ScorePageClient({
                         student.homeworkScores[homework.id.toString()];
                       const cellColor =
                         score === null
-                          ? "text-slate-400"
+                          ? "text-muted-foreground/60"
                           : score >= 8
-                          ? "text-green-600"
+                          ? "text-state-success"
                           : score >= 5
-                          ? "text-yellow-600"
-                          : "text-red-600";
+                          ? "text-state-warning"
+                          : "text-destructive";
                       return (
                         <td key={homework.id} className="px-3 py-3 text-center">
                           <span className={`font-semibold ${cellColor}`}>

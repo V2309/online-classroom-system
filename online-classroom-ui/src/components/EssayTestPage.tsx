@@ -173,20 +173,18 @@ export function EssayTestPage({
   const currentQ = questions[currentQuestion];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-card shadow-sm border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              
-              <h1 className="text-2xl font-bold text-gray-900">{homework.title}</h1>
-            
+              <h1 className="text-2xl font-bold text-foreground">{homework.title}</h1>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-lg font-mono">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <span className={`${timeLeft < 300 ? 'text-red-600' : 'text-gray-900'}`}>
+                <Clock className="h-5 w-5 text-primary" />
+                <span className={`${timeLeft < 300 ? 'text-destructive font-bold' : 'text-foreground'}`}>
                   {formatTime(timeLeft)}
                 </span>
               </div>
@@ -205,10 +203,10 @@ export function EssayTestPage({
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-3xl font-mono font-bold text-blue-600 mb-2">
+                  <div className="text-3xl font-mono font-bold text-primary mb-2">
                     {formatTime(timeLeft)}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     ngày {new Date().toLocaleDateString('vi-VN')}
                   </div>
                 </div>
@@ -220,27 +218,27 @@ export function EssayTestPage({
                 <CardTitle className="text-lg">Yêu cầu chung</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   Trả lời các câu hỏi dưới đây để hoàn thành bài tập.
                 </p>
                 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span>Thời hạn nộp bài lần</span>
-                    <span className="font-medium">{formatTime(timeLeft)}</span>
+                    <span className="text-secondary">Thời hạn nộp bài lần</span>
+                    <span className="font-medium text-foreground">{formatTime(timeLeft)}</span>
                   </div>
                 </div>
 
                 {homework.fileUrl && (
-                  <div className="mt-4 pt-4 border-t">
-                    <h4 className="font-medium text-sm mb-2">Tài liệu tham khảo</h4>
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded">
-                      <FileText className="h-4 w-4 text-blue-600" />
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <h4 className="font-medium text-sm mb-2 text-foreground">Tài liệu tham khảo</h4>
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                      <FileText className="h-4 w-4 text-primary" />
                       <a 
                         href={homework.fileUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline flex-1"
+                        className="text-sm text-primary hover:underline flex-1"
                       >
                         {homework.fileName || "Tài liệu.pdf"}
                       </a>
@@ -261,12 +259,12 @@ export function EssayTestPage({
                       key={index}
                       onClick={() => setCurrentQuestion(index)}
                       className={`
-                        w-10 h-10 rounded text-sm font-medium transition-colors
+                        w-10 h-10 rounded-lg text-sm font-semibold transition-colors
                         ${currentQuestion === index 
-                          ? 'bg-blue-600 text-white' 
+                          ? 'bg-primary text-primary-foreground shadow-sm' 
                           : answers[questions[index].id]
-                            ? 'bg-green-100 text-green-700 border border-green-300'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            ? 'bg-state-success/15 text-state-success border border-state-success/30'
+                            : 'bg-muted text-foreground hover:bg-accent border border-border'
                         }
                       `}
                     >
@@ -286,14 +284,14 @@ export function EssayTestPage({
                   <CardTitle className="text-lg">
                     Câu hỏi {currentQuestion + 1}
                   </CardTitle>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground font-medium">
                     {currentQ.point} điểm
                   </span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="prose max-w-none">
-                  <p className="text-gray-900 leading-relaxed">
+                  <p className="text-foreground leading-relaxed">
                     {currentQ.content}
                   </p>
                 </div>
@@ -306,13 +304,13 @@ export function EssayTestPage({
                     className="min-h-[200px] resize-none"
                     maxLength={5000}
                   />
-                  <div className="text-xs text-gray-500 text-right">
+                  <div className="text-xs text-muted-foreground text-right">
                     {(answers[currentQ.id] || "").length}/5000 ký tự
                   </div>
                 </div>
 
                 {/* Navigation Buttons */}
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-between pt-4 border-t border-border">
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -349,24 +347,22 @@ export function EssayTestPage({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium text-foreground">
                       Tập đình kèm (cho toàn bộ bài tập)
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Nhấn để tải lên tệp và tệp
                     </p>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="text-gray-600"
                     >
                       Lưu bản nháp
                     </Button>
                     <Button
                       onClick={handleSubmit}
                       disabled={isSubmitting}
-                      className="bg-blue-600 hover:bg-blue-700"
                     >
                       <Send className="h-4 w-4 mr-2" />
                       {isSubmitting ? "Đang nộp..." : "Nộp bài"}
@@ -380,9 +376,9 @@ export function EssayTestPage({
       </div>
 
       {/* Bottom Progress Info */}
-      <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-3 text-sm">
+      <div className="fixed bottom-4 right-4 bg-card border border-border rounded-xl shadow-lg p-3 text-sm text-foreground">
         <div className="flex items-center gap-4">
-          <span>Đã lưu bản nháp lúc {new Date().toLocaleTimeString('vi-VN')}</span>
+          <span className="text-muted-foreground">Đã lưu bản nháp lúc {new Date().toLocaleTimeString('vi-VN')}</span>
         </div>
       </div>
     </div>

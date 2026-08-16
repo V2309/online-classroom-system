@@ -38,33 +38,27 @@ export default function ScoreLineChart({ data }: ScoreLineChartProps) {
             bottom: 5,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(74, 124, 89, 0.15)" />
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 12 }}
-            // TỐI ƯU RESPONSIVE:
-            // Xóa interval={0} để Recharts tự động ẩn bớt nhãn
-            // khi không đủ không gian (trên di động)
-            // interval={0} 
-            
-            // angle={-15} // Giữ lại comment này, hữu ích nếu nhãn vẫn dài
-            // textAnchor="end"
+            tick={{ fontSize: 12, fill: '#4a5046' }}
           />
-          <YAxis domain={[0, 10]} tick={{ fontSize: 12 }} />
+          <YAxis domain={[0, 10]} tick={{ fontSize: 12, fill: '#4a5046' }} />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#ffffff",
-              border: "1px solid #cccccc",
+              backgroundColor: "var(--bg-surface, #f4ede3)",
+              border: "1px solid rgba(74, 124, 89, 0.18)",
               borderRadius: "8px",
+              color: "#2e3230",
             }}
           />
           <Legend />
           <Line
             type="monotone"
-            dataKey="Điểm TB" // Khớp với key trong `chartData`
-            stroke="#3b82f6" // Màu xanh blue
+            dataKey="Điểm TB"
+            stroke="#4a7c59"
             strokeWidth={2}
-            activeDot={{ r: 8 }}
+            activeDot={{ r: 8, fill: '#35603e' }}
           />
         </LineChart>
       </ResponsiveContainer>

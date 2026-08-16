@@ -337,18 +337,18 @@ export function TestHomeWork({
       )}
 
       {/* Phiếu trả lời bên phải */}
-      <div className="w-[350px] bg-white rounded shadow p-6 flex flex-col gap-4 h-full">
+      <div className="w-[350px] bg-card rounded-2xl border border-border shadow-sm p-6 flex flex-col gap-4 h-full text-foreground">
         {role === "teacher" && (
-          <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
-            <div className="text-blue-700 font-semibold text-sm">
+          <div className="bg-accent/40 border border-border rounded-xl p-3 mb-2">
+            <div className="text-primary font-semibold text-sm">
               🎓 Chế độ xem trước (Giáo viên)
             </div>
-            <div className="text-blue-600 text-xs mt-1">
+            <div className="text-muted-foreground text-xs mt-1">
               Không giới hạn thời gian • Kết quả không ảnh hưởng đến học sinh
             </div>
           </div>
         )}
-        <div className="font-bold text-blue-700 text-lg mb-2">
+        <div className="font-bold text-primary text-lg mb-2">
           {role === "teacher"
             ? `Thời gian gốc: ${duration} phút`
             : `Thời gian còn lại: ${sessionData?.minutes || 0}:${(
@@ -357,10 +357,10 @@ export function TestHomeWork({
                 .toString()
                 .padStart(2, "0")}`}
         </div>
-        {/* --- THÊM ĐOẠN NÀY: Hiển thị cảnh báo nếu có vi phạm --- */}
+        {/* Cảnh báo vi phạm */}
         {role === "student" && violationCount > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded p-3 animation-pulse">
-            <div className="flex items-center gap-2 text-red-700 font-bold text-sm mb-1">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-destructive font-bold text-sm mb-1">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -375,24 +375,24 @@ export function TestHomeWork({
               </svg>
               CẢNH BÁO GIAN LẬN
             </div>
-            <div className="text-red-600 text-xs">
+            <div className="text-destructive text-xs">
               Hệ thống phát hiện bạn đã rời khỏi bài thi <b>{violationCount}</b>{" "}
               lần. Giáo viên sẽ nhận được thông báo này.
             </div>
           </div>
         )}
         <div className="mb-2">
-          <div className="font-semibold mb-1">Phiếu trả lời</div>
+          <div className="font-semibold mb-1 text-foreground">Phiếu trả lời</div>
           <div className="grid grid-cols-5 gap-2 mb-2">
             {questions.map((q, idx) => (
               <button
                 key={q.id}
-                className={`w-12 h-12 rounded border ${
+                className={`w-12 h-12 rounded-lg border text-sm font-semibold transition-colors ${
                   current === idx
-                    ? "bg-blue-500 text-white"
+                    ? "bg-primary text-primary-foreground border-primary"
                     : getAnswers()[q.id]
-                    ? "bg-green-200"
-                    : ""
+                    ? "bg-state-success/20 text-state-success border-state-success/40"
+                    : "border-border bg-background text-foreground hover:bg-accent"
                 }`}
                 onClick={() => scrollToQuestion(idx)}
                 type="button"
@@ -402,32 +402,27 @@ export function TestHomeWork({
             ))}
           </div>
           <div>
-            <div className="mb-1">Đáp án câu {current + 1}:</div>
+            <div className="mb-1 text-sm font-medium text-foreground">Đáp án câu {current + 1}:</div>
             <div className="flex gap-2 mb-2 flex-wrap">
               {(() => {
-                // Lấy options từ câu hỏi hiện tại
                 const currentOptions = questions[current]?.options;
-
-                // Kiểm tra: Nếu options tồn tại VÀ có dữ liệu (>0) thì dùng độ dài đó
-                // Nếu không (null, undefined, hoặc mảng rỗng []) -> Mặc định là 4
                 const count =
                   currentOptions && currentOptions.length > 0
                     ? currentOptions.length
                     : 4;
 
-                // Tạo danh sách nút dựa trên count
                 return Array.from({ length: count }).map((_, index) => {
-                  const label = String.fromCharCode(65 + index); // 0->A, 1->B, 2->C...
+                  const label = String.fromCharCode(65 + index);
                   const isSelected =
                     getAnswers()[questions[current].id] === label;
 
                   return (
                     <button
                       key={label}
-                      className={`w-10 h-10 border rounded font-bold transition-all ${
+                      className={`w-10 h-10 border rounded-lg font-bold transition-all ${
                         isSelected
-                          ? "bg-blue-600 text-white border-blue-600 shadow-md scale-105" // Style khi chọn
-                          : "bg-white text-gray-700 hover:bg-gray-50" // Style mặc định
+                          ? "bg-primary text-primary-foreground border-primary shadow-sm scale-105"
+                          : "bg-background text-foreground border-border hover:bg-accent"
                       }`}
                       onClick={() => handleSelect(questions[current].id, label)}
                       type="button"
@@ -439,7 +434,7 @@ export function TestHomeWork({
               })()}
             </div>
             <input
-              className="border px-2 py-1 rounded w-full"
+              className="border border-input bg-background text-foreground px-3 py-2 rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="Nhập đáp án..."
               value={getAnswers()[questions[current].id] || ""}
               onChange={(e) =>
@@ -451,7 +446,7 @@ export function TestHomeWork({
         </div>
         <div className="flex gap-2 mt-auto">
           <button
-            className="bg-gray-200 px-4 py-2 rounded"
+            className="bg-muted hover:bg-accent text-foreground px-4 py-2 rounded-lg transition-colors font-medium text-sm"
             onClick={() =>
               window.confirm("Bạn có chắc muốn rời khỏi?") &&
               window.history.back()
@@ -460,7 +455,7 @@ export function TestHomeWork({
             Rời khỏi
           </button>
           <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
+            className="bg-primary hover:bg-primary-hover text-primary-foreground px-4 py-2 rounded-lg transition-colors font-medium text-sm shadow-sm flex-1"
             onClick={handleSubmitClick}
           >
             Nộp bài
@@ -471,22 +466,22 @@ export function TestHomeWork({
 
       {/* Modal xác nhận nộp bài */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl p-6 max-w-md w-full border border-border shadow-xl text-foreground">
+            <h3 className="text-lg font-semibold text-foreground mb-4">
               Xác nhận nộp bài
             </h3>
 
             <div className="mb-6">
-              <p className="text-gray-600 mb-3">
+              <p className="text-secondary mb-3 text-sm">
                 {role === "student"
                   ? "Bạn có chắc chắn muốn nộp bài? Sau khi nộp bài, bạn sẽ không thể chỉnh sửa lại."
                   : "Xác nhận hoàn thành xem trước bài tập này?"}
               </p>
 
               {role === "student" && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-                  <div className="text-sm text-yellow-800">
+                <div className="bg-terra-amber/10 border border-terra-amber/20 rounded-xl p-3">
+                  <div className="text-sm text-terra-amber">
                     <div className="font-medium mb-1">Thông tin bài làm:</div>
                     <div>
                       • Số câu đã trả lời: {Object.keys(getAnswers()).length}/
@@ -503,13 +498,13 @@ export function TestHomeWork({
 
             <div className="flex gap-3 justify-end">
               <button
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 text-foreground bg-muted rounded-lg hover:bg-accent transition-colors text-sm font-medium"
                 onClick={() => setShowConfirmModal(false)}
               >
                 Hủy bỏ
               </button>
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover transition-colors text-sm font-medium shadow-sm"
                 onClick={handleConfirmSubmit}
               >
                 {role === "student" ? "Nộp bài" : "Hoàn thành"}

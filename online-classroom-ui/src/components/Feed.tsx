@@ -29,8 +29,8 @@ const Feed = async ({
   // Nếu không có posts nào cả
   if (initialPosts.length === 0) {
     return (
-      <div className="text-center py-8 bg-white rounded-lg border border-gray-100 shadow-sm">
-        <p className="text-gray-500">Chưa có bài viết nào trong lớp này</p>
+      <div className="text-center py-10 bg-white rounded-2xl sm:rounded-3xl border border-[#ece7de] shadow-sm">
+        <p className="text-muted-foreground text-sm font-medium">Chưa có bài viết nào trong lớp này</p>
       </div>
     );
   }

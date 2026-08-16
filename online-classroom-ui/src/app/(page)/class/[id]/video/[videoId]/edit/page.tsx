@@ -36,18 +36,18 @@ export default async function EditCoursePage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background text-foreground py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-foreground">
             Chỉnh sửa khóa học
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-secondary">
             Chỉnh sửa khóa học {course.title} trong lớp {classCode}
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-card rounded-xl shadow-sm border border-border">
           <CourseForm
             classCode={classCode}
             folders={folders as any}

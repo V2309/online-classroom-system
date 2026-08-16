@@ -71,8 +71,8 @@ const UserList = ({
   const renderRow = (item: UserForList) => (
     <tr
       key={item.id}
-      className={`border-b border-gray-200 text-sm hover:bg-gray-50 ${
-        item.isBanned ? "bg-red-50 hover:bg-red-100" : "even:bg-slate-50" // 4. Đổi màu nền nếu bị khóa
+      className={`border-b border-border text-sm transition-colors ${
+        item.isBanned ? "bg-state-error/10 hover:bg-state-error/15" : "even:bg-muted/30 hover:bg-accent/30"
       }`}
     >
       {/* Cột Họ và tên */}
@@ -85,24 +85,24 @@ const UserList = ({
           className="rounded-full object-cover"
         />
         <div className="flex flex-col">
-          <h3 className="font-semibold">{item.username}</h3>
+          <h3 className="font-semibold text-foreground">{item.username}</h3>
         </div>
       </td>
       {/* Cột Email */}
-      <td className="hidden md:table-cell p-4">{item.email}</td>
+      <td className="hidden md:table-cell p-4 text-muted-foreground">{item.email}</td>
       
       {/* 5. Cột Vai trò & Trạng thái (Cập nhật) */}
       <td className="hidden sm:table-cell p-4">
          <div className="flex flex-col gap-1">
-            <span className={`w-fit px-2 py-1 rounded-full text-xs font-medium ${
+            <span className={`w-fit px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 item.role === UserRole.teacher 
-                ? 'bg-blue-100 text-blue-800' 
-                : 'bg-green-100 text-green-800'
+                ? 'bg-accent text-primary' 
+                : 'bg-state-success/15 text-state-success'
             }`}>
                {item.role === UserRole.teacher ? 'Giáo viên' : 'Học sinh'}
             </span>
             {item.isBanned && (
-                <span className="w-fit px-2 py-0.5 rounded text-[10px] bg-red-500 text-white font-bold">
+                <span className="w-fit px-2 py-0.5 rounded text-[10px] bg-destructive text-destructive-foreground font-bold">
                     ĐÃ KHÓA
                 </span>
             )}
@@ -110,37 +110,32 @@ const UserList = ({
       </td>
 
       {/* Cột Trường */}
-      <td className="hidden lg:table-cell p-4">{item.schoolname}</td>
+      <td className="hidden lg:table-cell p-4 text-secondary">{item.schoolname}</td>
       {/* Cột Ngày tham gia */}
-      <td className="hidden lg:table-cell p-4">
+      <td className="hidden lg:table-cell p-4 text-muted-foreground">
         {new Date(item.createdAt).toLocaleDateString("vi-VN")}
       </td>
 
       {/* 6. Cột Actions (Cập nhật) */}
       <td className="p-4">
         <div className="flex items-center gap-2">
-          
           {/* Nút KHÓA / MỞ KHÓA */}
           <button 
             onClick={() => handleToggleBlock(item.id, item.isBanned)}
             disabled={isPending}
             className={`w-7 h-7 flex items-center justify-center rounded-full transition-colors ${
                 item.isBanned 
-                ? "bg-green-100 hover:bg-green-200 text-green-600" // Nút mở khóa
-                : "bg-orange-100 hover:bg-orange-200 text-orange-600" // Nút khóa
+                ? "bg-state-success/15 hover:bg-state-success/25 text-state-success" 
+                : "bg-terra-amber/15 hover:bg-terra-amber/25 text-terra-amber" 
             } disabled:opacity-50 disabled:cursor-not-allowed`}
             title={item.isBanned ? "Mở khóa tài khoản" : "Khóa tài khoản"}
           >
             {item.isBanned ? (
-                // Icon Unlocked (Mở khóa)
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
             ) : (
-                // Icon Locked (Khóa)
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             )}
           </button>
-          
-      
         </div>
       </td>
     </tr>
@@ -148,15 +143,14 @@ const UserList = ({
 
   // Layout 1 cột
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm h-full flex flex-col">
+    <div className="bg-card p-4 rounded-xl border border-border shadow-sm text-foreground h-full flex flex-col">
       {/* Top */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <h1 className="text-lg font-semibold">
+        <h1 className="text-lg font-semibold text-foreground">
           Quản lý Người dùng ({count})
         </h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
-        
         </div>
       </div>
       

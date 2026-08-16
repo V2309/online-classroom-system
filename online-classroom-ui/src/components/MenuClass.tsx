@@ -117,24 +117,23 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
     <div className="flex flex-col h-full p-2 md:p-4">
       {/* Thông tin lớp học (không co lại) */}
       <div className="mb-6 flex-shrink-0">
-        <h2 className="text-lg md:text-xl font-bold text-gray-900 truncate" title={classDetail.name}>
+        <h2 className="text-lg md:text-xl font-bold text-foreground truncate" title={classDetail.name}>
           {classDetail.name}
         </h2>
         
         {/* Ẩn thông tin phụ trên mobile */}
         <div className="hidden md:block">
-          <p className="text-sm md:text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Mã lớp: {classDetail.class_code}
           </p>
-          <p className="text-xs md:text-sm text-gray-500 mt-2">
+          <p className="text-xs md:text-sm text-muted-foreground mt-2">
             Giáo viên: {classDetail.supervisor?.user?.username || classDetail.supervisor?.username || "Chưa phân công"}
           </p>
-     
         </div>
 
-        {/* SỬA LỖI CSS: Chia sẻ lớp học */}
+        {/* Chia sẻ lớp học */}
         <div className="mt-4">
-          <h3 className="hidden md:block text-sm font-semibold mb-1 text-gray-700">
+          <h3 className="hidden md:block text-sm font-semibold mb-1 text-foreground">
             Chia sẻ lớp học
           </h3>
           
@@ -144,8 +143,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
               type="text"
               readOnly 
               value={joinLink}
-              // Thêm pr-24 (padding-right) để text không bị đè
-              className="w-full p-2 pr-24 text-sm border border-gray-300 rounded-lg bg-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full p-2 pr-24 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               placeholder="Đang tải link..."
             />
             {/* Container cho các nút */}
@@ -153,7 +151,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
               {/* Nút Copy */}
               <button
                 onClick={handleCopy}
-                className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                className="p-2 bg-accent text-primary rounded-lg hover:bg-primary/20 transition-colors"
                 title="Sao chép link tham gia"
               > 
                 <Copy className="w-5 h-5" />
@@ -162,7 +160,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
               {/* Nút mở QR Code */}
               <button
                 onClick={() => setShowQRModal(true)}
-                className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                className="p-2 bg-muted text-foreground rounded-lg hover:bg-accent transition-colors"
                 title="Hiển thị mã QR"
               > 
                 <QrCode className="w-5 h-5" />
@@ -175,7 +173,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
             {/* Nút Copy */}
             <button
               onClick={handleCopy}
-              className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+              className="p-2 bg-accent text-primary rounded-lg hover:bg-primary/20 transition-colors"
               title="Sao chép link tham gia"
             > 
               <Copy className="w-5 h-5" />
@@ -184,7 +182,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
             {/* Nút mở QR Code */}
             <button
               onClick={() => setShowQRModal(true)}
-              className="p-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-2 bg-muted text-foreground rounded-lg hover:bg-accent transition-colors"
               title="Hiển thị mã QR"
             > 
               <QrCode className="w-5 h-5" />
@@ -194,8 +192,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
       </div>
 
       {/* Danh mục (co giãn và cuộn) */}
-      {/* SỬA LỖI LAYOUT: Thêm flex-grow và custom scroll */}
-      <nav className="flex flex-col scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400 overflow-y-auto">
+      <nav className="flex flex-col scrollbar-thin overflow-y-auto">
         {links.map((link) => {
           const isActive = pathname.startsWith(link.href);
           const IconComponent = link.icon;
@@ -204,23 +201,23 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
             <Link
               key={link.href}
               href={link.href}
-              title={link.label} // Tooltip cho mobile
-              className={` relative flex items-center gap-3 p-2 md:p-3 justify-center md:justify-start rounded-lg transition-colors duration-200 ${
+              title={link.label}
+              className={`relative flex items-center gap-3 p-2 md:p-3 justify-center md:justify-start rounded-lg transition-colors duration-200 ${
                 isActive
-                  ? "bg-blue-50 text-blue-700 font-bold"
-                  : "text-gray-600 hover:text-blue-700 hover:bg-gray-50"
+                  ? "bg-accent text-primary font-bold"
+                  : "text-secondary hover:text-primary hover:bg-accent/50"
               }`}
             >
               <IconComponent 
                 className={`w-6 h-6 flex-shrink-0 ${
-                  isActive ? "text-blue-700" : "text-gray-500 group-hover:text-blue-700"
+                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
                 }`} 
               />
               {/* Responsive: Ẩn chữ trên mobile */}
               <span className="hidden md:inline text-sm md:text-sm">{link.label}</span>
-               {/* 5. LOGIC HIỂN THỊ CHẤM ĐỎ */}
+              {/* LOGIC HIỂN THỊ CHẤM ĐỎ */}
               {link.badge > 0 && (
-                <span className="absolute top-1 right-1 md:top-1/2 md:-translate-y-1/2 md:right-3 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1 md:top-1/2 md:-translate-y-1/2 md:right-3 w-5 h-5 bg-destructive text-destructive-foreground text-xs font-bold rounded-full flex items-center justify-center">
                   {link.badge > 9 ? '9+' : link.badge}
                 </span>
               )}
@@ -230,12 +227,12 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
       </nav>
 
       {/* Nút Cài đặt / Rời lớp (không co lại) */}
-      <div className="mt-2 pt-1 border-t border-gray-200 flex-shrink-0">
+      <div className="mt-2 pt-1 border-t border-border flex-shrink-0">
         {role === "student" ? (
           <button 
             onClick={() => setShowLeaveDialog(true)}
             title="Rời khỏi lớp học"
-            className="flex items-center gap-3 p-2 md:p-3 w-full text-sm md:text-base text-red-500 hover:bg-red-50 rounded-lg transition-colors justify-center md:justify-start"
+            className="flex items-center gap-3 p-2 md:p-3 w-full text-sm md:text-base text-destructive hover:bg-destructive/10 rounded-lg transition-colors justify-center md:justify-start"
           >
             <LogOut className="w-6 h-6" />
             <span className="hidden md:inline">Rời khỏi lớp học</span>
@@ -244,7 +241,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
           <Link 
             href={`/class/${class_code}/edit`}
             title="Cài đặt lớp"
-            className="flex items-center gap-3 p-2 md:p-3 w-full text-sm md:text-base text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors justify-center md:justify-start"
+            className="flex items-center gap-3 p-2 md:p-3 w-full text-sm md:text-base text-secondary hover:bg-accent hover:text-foreground rounded-lg transition-colors justify-center md:justify-start"
           >
             <Settings className="w-6 h-6" />
             <span className="hidden md:inline">Cài đặt lớp</span>

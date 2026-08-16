@@ -80,28 +80,28 @@ export default function JoinClass() {
   };
 
   return (
-    // Nền gradient
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    // Nền gradient Terra
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       
       {/* Nút quay lại ở góc trên bên trái */}
       <button
         onClick={handleGoBack}
-        className="absolute top-6 left-6 flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+        className="absolute top-6 left-6 flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-hover transition-colors"
       >
         <ArrowLeft size={16} />
         Quay lại
       </button>
       
-      <div className="bg-white rounded-2xl shadow-xl p-8 pt-10 w-full max-w-md">
+      <div className="bg-card rounded-2xl shadow-xl p-8 pt-10 w-full max-w-md border border-border">
         
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            {/* CẬP NHẬT ICON: Dùng icon UserPlus */}
-            <UserPlus className="w-8 h-8 text-blue-600" />
+          <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* Icon UserPlus */}
+            <UserPlus className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Tham gia lớp học</h1>
-          <p className="text-gray-600">Nhập mã lớp 5 ký tự do giáo viên cung cấp</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Tham gia lớp học</h1>
+          <p className="text-secondary">Nhập mã lớp 5 ký tự do giáo viên cung cấp</p>
         </div>
 
         {/* Form */}
@@ -118,9 +118,8 @@ export default function JoinClass() {
                 value={codeArr[idx]}
                 onChange={e => handleInputChange(idx, e.target.value)}
                 onKeyDown={e => handleKeyDown(idx, e)}
-                onPaste={handlePaste} // THÊM TÍNH NĂNG PASTE
-                // CẬP NHẬT UI: Input to hơn
-                className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-50 border-2 border-gray-300 rounded-lg text-center text-3xl font-bold text-gray-900 uppercase focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all duration-200"
+                onPaste={handlePaste}
+                className="w-14 h-14 sm:w-16 sm:h-16 bg-background border-2 border-border rounded-lg text-center text-3xl font-bold text-foreground uppercase focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all duration-200"
                 disabled={isLoading}
               />
             ))}
@@ -128,11 +127,10 @@ export default function JoinClass() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="bg-state-error/10 border border-state-error/20 rounded-lg p-3">
               <div className="flex items-center">
-                {/* CẬP NHẬT ICON */}
-                <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0" />
-                <span className="text-red-700 text-sm">{error}</span>
+                <AlertCircle className="w-5 h-5 text-destructive mr-2 flex-shrink-0" />
+                <span className="text-destructive text-sm font-medium">{error}</span>
               </div>
             </div>
           )}
@@ -141,11 +139,11 @@ export default function JoinClass() {
           <button
             type="submit"
             disabled={isLoading || codeArr.some(c => c === "")}
-            className="w-full bg-blue-600 text-white py-3.5 px-4 rounded-lg font-semibold text-base hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center shadow-lg hover:shadow-blue-500/30"
+            className="w-full bg-primary text-primary-foreground py-3.5 px-4 rounded-lg font-semibold text-base hover:bg-primary-hover disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-colors flex items-center justify-center shadow-lg hover:shadow-primary/20"
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-foreground" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -159,7 +157,7 @@ export default function JoinClass() {
 
         {/* Help Text */}
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Mã lớp gồm 5 ký tự chữ cái và số.
           </p>
         </div>

@@ -8,7 +8,7 @@ export default function Authpage({
 
   return (
    
-    <div className="bg-gray-100">
+    <div className="min-h-screen bg-background">
           {children}
     </div>
  

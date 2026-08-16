@@ -10,9 +10,9 @@ const Table = ({
   return (
     <table className="w-full mt-4">
       <thead>
-        <tr className="text-left text-gray-500 text-sm text-blue-1">
+        <tr className="text-left text-muted-foreground text-sm border-b border-border">
           {columns.map((col) => (
-            <th key={col.accessor} className={col.className}>{col.header}</th>
+            <th key={col.accessor} className={`py-3 px-4 ${col.className || ''}`}>{col.header}</th>
           ))}
         </tr>
       </thead>

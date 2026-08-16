@@ -4,6 +4,8 @@ import { useUser } from "@/hooks/useUser";
 import { useOptimistic, useState, useEffect, useCallback } from "react";
 import SimpleComments from "./SimpleComments";
 import { postService } from "@/services/post.service";
+import { ThumbsUp, MessageSquare, Share2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const PostInteractions = ({
   username,
@@ -62,6 +64,18 @@ const PostInteractions = ({
     }
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: `Bài viết từ ${username}`,
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Đã sao chép liên kết bài viết!");
+    }
+  };
+
   const addComment = useCallback(
     async (postId: number, commentText: string) => {
       try {
@@ -111,64 +125,59 @@ const PostInteractions = ({
   );
 
   return (
-    <div>
+    <div className="pt-3.5 mt-3.5 border-t border-[#f0ebe3]">
       {/* INTERACTION BUTTONS */}
-      <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-16 my-2 text-gray-500">
-        <div className="flex items-center flex-1 gap-4 sm:gap-8 lg:gap-16">
-          {/* COMMENTS */}
+      <div className="flex items-center justify-between gap-4 text-[#554e42] select-none">
+        <div className="flex items-center gap-6 sm:gap-8">
+          {/* LIKE BUTTON */}
           <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group"
+            onClick={likeAction}
+            className="flex items-center gap-2 cursor-pointer group py-1 text-sm font-medium hover:text-[#2e3230] transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 sm:w-5 sm:h-5"
-              viewBox="0 0 24 24"
-            >
-              <path
-                className={`${
-                  showComments ? "fill-blue-500" : "fill-gray-500"
-                } group-hover:fill-blue-500`}
-                d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"
-              />
-            </svg>
-
+            <ThumbsUp
+              className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-active:scale-125 ${
+                optimisticCount.isLiked
+                  ? "fill-[#3f6d4d] text-[#3f6d4d]"
+                  : "text-[#554e42] group-hover:text-[#2e3230]"
+              }`}
+            />
             <span
               className={`${
-                showComments ? "text-blue-500" : "text-gray-500"
-              } group-hover:text-blue-500 text-xs sm:text-sm`}
+                optimisticCount.isLiked ? "text-[#3f6d4d] font-semibold" : "text-[#554e42] group-hover:text-[#2e3230]"
+              }`}
             >
-              {state.comments}
+              {optimisticCount.likes} Thích
             </span>
           </button>
 
-          {/* LIKE */}
+          {/* COMMENTS BUTTON */}
           <button
-            onClick={likeAction}
-            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group"
+            onClick={() => setShowComments(!showComments)}
+            className="flex items-center gap-2 cursor-pointer group py-1 text-sm font-medium hover:text-[#2e3230] transition-colors"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 sm:w-5 sm:h-5"
-              viewBox="0 0 24 24"
-            >
-              <path
-                className={`${
-                  optimisticCount.isLiked ? "fill-red-500" : "fill-gray-500"
-                } group-hover:fill-red-500`}
-                d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"
-              />
-            </svg>
-
+            <MessageSquare
+              className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-active:scale-125 ${
+                showComments ? "fill-[#3f6d4d] text-[#3f6d4d]" : "text-[#554e42] group-hover:text-[#2e3230]"
+              }`}
+            />
             <span
               className={`${
-                optimisticCount.isLiked ? "text-red-500" : "text-gray-500"
-              } group-hover:text-red-500 text-xs sm:text-sm`}
+                showComments ? "text-[#3f6d4d] font-semibold" : "text-[#554e42] group-hover:text-[#2e3230]"
+              }`}
             >
-              {optimisticCount.likes}
+              {state.comments} Bình luận
             </span>
           </button>
         </div>
+
+        {/* SHARE BUTTON */}
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-2 cursor-pointer group py-1 text-sm font-medium text-[#554e42] hover:text-[#2e3230] transition-colors"
+        >
+          <Share2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#554e42] group-hover:text-[#2e3230] transition-transform group-active:scale-125" />
+          <span>Chia sẻ</span>
+        </button>
       </div>
 
       {/* COMMENTS SECTION */}

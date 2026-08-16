@@ -1,284 +1,224 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 /* ============================================================
-   DESIGN SYSTEM TOKENS — Docus Learning System
-   Tất cả màu sắc được khai báo tại đây, KHÔNG dùng giá trị
-   màu trực tiếp trong component code.
-   Nguồn: DESIGN (1).md
+   TERRA DESIGN SYSTEM — "Rooted Warmth"
+   Earthy tones · Soft shapes · Natural textures
    ============================================================ */
 
-@theme {
-  /* ---------- PRIMARY ---------- */
-  --color-ds-primary: #005bbf;
-  --color-ds-on-primary: #ffffff;
-  --color-ds-primary-container: #1a73e8;
-  --color-ds-on-primary-container: #ffffff;
-  --color-ds-inverse-primary: #adc7ff;
-  --color-ds-surface-tint: #005bc0;
+@theme inline {
+  /* Fonts */
+  --font-heading: var(--font-heading), "Literata", Georgia, serif;
+  --font-sans: var(--font-sans), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", monospace;
 
-  /* Primary fixed */
-  --color-ds-primary-fixed: #d8e2ff;
-  --color-ds-primary-fixed-dim: #adc7ff;
-  --color-ds-on-primary-fixed: #001a41;
-  --color-ds-on-primary-fixed-variant: #004493;
-
-  /* ---------- SECONDARY ---------- */
-  --color-ds-secondary: #006a64;
-  --color-ds-on-secondary: #ffffff;
-  --color-ds-secondary-container: #6ef4ea;
-  --color-ds-on-secondary-container: #006f69;
-
-  /* Secondary fixed */
-  --color-ds-secondary-fixed: #72f7ed;
-  --color-ds-secondary-fixed-dim: #50dad1;
-  --color-ds-on-secondary-fixed: #00201e;
-  --color-ds-on-secondary-fixed-variant: #00504b;
-
-  /* ---------- TERTIARY ---------- */
-  --color-ds-tertiary: #5c5e60;
-  --color-ds-on-tertiary: #ffffff;
-  --color-ds-tertiary-container: #757778;
-  --color-ds-on-tertiary-container: #ffffff;
-
-  /* Tertiary fixed */
-  --color-ds-tertiary-fixed: #e1e3e4;
-  --color-ds-tertiary-fixed-dim: #c5c7c8;
-  --color-ds-on-tertiary-fixed: #191c1d;
-  --color-ds-on-tertiary-fixed-variant: #454748;
-
-  /* ---------- ERROR ---------- */
-  --color-ds-error: #ba1a1a;
-  --color-ds-on-error: #ffffff;
-  --color-ds-error-container: #ffdad6;
-  --color-ds-on-error-container: #93000a;
-
-  /* ---------- SURFACE ---------- */
-  --color-ds-surface: #faf9fd;
-  --color-ds-surface-dim: #dbd9dd;
-  --color-ds-surface-bright: #faf9fd;
-  --color-ds-surface-container-lowest: #ffffff;
-  --color-ds-surface-container-low: #f4f3f7;
-  --color-ds-surface-container: #efedf1;
-  --color-ds-surface-container-high: #e9e7eb;
-  --color-ds-surface-container-highest: #e3e2e6;
-  --color-ds-surface-variant: #e3e2e6;
-
-  /* ---------- ON-SURFACE ---------- */
-  --color-ds-on-surface: #1a1b1e;
-  --color-ds-on-surface-variant: #414754;
-  --color-ds-inverse-surface: #2f3033;
-  --color-ds-inverse-on-surface: #f1f0f4;
-
-  /* ---------- BACKGROUND ---------- */
-  --color-ds-background: #faf9fd;
-  --color-ds-on-background: #1a1b1e;
-
-  /* ---------- OUTLINE ---------- */
-  --color-ds-outline: #727785;
-  --color-ds-outline-variant: #c1c6d6;
-
-  /* ---------- STREAM/MEETING (preserved) ---------- */
-  --color-stream-dark-1: #1C1F2E;
-  --color-stream-dark-2: #161925;
-  --color-stream-dark-3: #252A41;
-  --color-stream-dark-4: #1E2757;
-  --color-stream-blue-1: #0E78F9;
-  --color-stream-sky-1: #C9DDFF;
-  --color-stream-sky-2: #ECF0FF;
-  --color-stream-sky-3: #F5FCFF;
-  --color-stream-orange-1: #FF742E;
-  --color-stream-purple-1: #830EF9;
-  --color-stream-yellow-1: #F9A90E;
-
-  /* ============================================================
-     LEGACY COLORS — khôi phục từ tailwind.config.ts cũ
-     Giữ nguyên để các component hiện tại không bị vỡ giao diện.
-     (lama*, dark-*, sky-*, textGray*, icon*, appbg, v.v.)
-     ============================================================ */
-
-  /* Stream Meeting room - tên gốc (dùng trong StreamSDK components) */
-  --color-dark-1: #1C1F2E;
-  --color-dark-2: #161925;
-  --color-dark-3: #252A41;
-  --color-dark-4: #1E2757;
-  --color-blue-1: #0E78F9;
-  --color-sky-1: #C9DDFF;
-  --color-sky-2: #ECF0FF;
-  --color-sky-3: #F5FCFF;
-  --color-orange-1: #FF742E;
-  --color-purple-1: #830EF9;
-  --color-yellow-1: #F9A90E;
-
-  /* Social/Twitter UI (Feed, Post, Share components) */
-  --color-textGray: #71767b;
-  --color-textGrayLight: #e7e9ea;
-  --color-borderGray: #2f3336;
-  --color-inputGray: #202327;
-  --color-iconBlue: #1d9bf0;
-  --color-iconGreen: #00ba7c;
-  --color-iconPink: #f91880;
-
-  /* Dashboard Lama colors (Calendar, BigCalendar, MenuClass) */
-  --color-lamaSky: #C3EBFA;
-  --color-lamaSkyLight: #EDF9FD;
-  --color-lamaPurple: #CFCEFF;
-  --color-lamaPurpleLight: #F1F0FF;
-  --color-lamaYellow: #FAE27C;
-  --color-lamaYellowLight: #FEFCE8;
-
-  /* App background (dùng trong layout dashboard) */
-  --color-appbg: #f0f2f5;
-
-  /* Primary variants cũ (ClassListPageCommon, HomeworkCard, v.v.) */
-  --color-primary-light: #6366F1;
-
-  /* ============================================================
-     SEMANTIC ALIASES — maps tên shadcn/ui → DS tokens
-     Dùng trong page.tsx và các component với class:
-       bg-primary, text-foreground, bg-muted, text-muted-foreground,
-       bg-card, border-border, text-secondary, bg-background, v.v.
-     ============================================================ */
-
-  /* primary */
-  --color-primary: #005bbf;
-  --color-primary-dark: #004493;
+  /* shadcn/ui semantic aliases → Terra tokens */
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-surface);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--bg-elevated);
+  --color-popover-foreground: var(--text-primary);
+  --color-primary: var(--accent-primary);
+  --color-primary-hover: var(--accent-primary-dark);
   --color-primary-foreground: #ffffff;
+  --color-secondary: var(--text-secondary);
+  --color-secondary-foreground: var(--bg-base);
+  --color-muted: var(--bg-elevated);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--accent-primary-dim);
+  --color-accent-foreground: var(--accent-primary);
+  --color-destructive: var(--state-error);
+  --color-destructive-foreground: #ffffff;
+  --color-border: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--border-subtle);
+  --color-ring: var(--accent-primary);
 
-  /* secondary */
-  --color-secondary: #006a64;
-  --color-secondary-foreground: #ffffff;
+  /* Direct Terra Palette Tokens */
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-subtle: var(--bg-subtle);
 
-  /* background & surface */
-  --color-background: #faf9fd;
-  --color-foreground: #1a1b1e;
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
 
-  /* card */
-  --color-card: #ffffff;
-  --color-card-foreground: #1a1b1e;
+  --color-terra-primary: var(--accent-primary);
+  --color-terra-dark: var(--accent-primary-dark);
+  --color-terra-mid: var(--accent-primary-mid);
+  --color-terra-dim: var(--accent-primary-dim);
 
-  /* muted */
-  --color-muted: #efedf1;
-  --color-muted-foreground: #414754;
+  --color-terra-amber: var(--accent-amber);
+  --color-terra-amber-dark: var(--accent-amber-dark);
+  --color-terra-amber-dim: var(--accent-amber-dim);
 
-  /* copy (used in visual showcase) */
-  --color-copy-base: #1a1b1e;
-  --color-copy-light: #414754;
+  --color-state-error: var(--state-error);
+  --color-state-success: var(--state-success);
+  --color-state-warning: var(--state-warning);
 
-  /* border */
-  --color-border: #c1c6d6;
+  /* Sidebar */
+  --color-sidebar: var(--bg-surface);
+  --color-sidebar-foreground: var(--text-primary);
+  --color-sidebar-primary: var(--accent-primary);
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: var(--accent-primary-dim);
+  --color-sidebar-accent-foreground: var(--accent-primary);
+  --color-sidebar-border: var(--border-default);
+  --color-sidebar-ring: var(--accent-primary);
 
-  /* ---------- TYPOGRAPHY ---------- */
-  --font-family-sans: Inter, ui-sans-serif, system-ui, sans-serif;
-
-  --text-display-lg: 3rem;
-  /* 48px */
-  --text-headline-lg: 2rem;
-  /* 32px */
-  --text-headline-lg-mobile: 1.5rem;
-  /* 24px */
-  --text-title-md: 1.25rem;
-  /* 20px */
-  --text-body-lg: 1.125rem;
-  /* 18px */
-  --text-body-md: 1rem;
-  /* 16px */
-  --text-label-md: 0.875rem;
-  /* 14px */
-  --text-caption: 0.75rem;
-  /* 12px */
-
-  /* ---------- BORDER RADIUS ---------- */
-  --radius-sm: 0.25rem;
-  --radius: 0.5rem;
+  /* Radius */
+  --radius-sm: 0.375rem;
   --radius-md: 0.75rem;
   --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
-  --radius-full: 9999px;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
 
-  /* ---------- SPACING ---------- */
-  --spacing-ds-xs: 0.25rem;
-  /* 4px  */
-  --spacing-ds-sm: 0.75rem;
-  /* 12px */
-  --spacing-ds-md: 1.5rem;
-  /* 24px */
-  --spacing-ds-lg: 2.5rem;
-  /* 40px */
-  --spacing-ds-xl: 4rem;
-  /* 64px */
-
-  /* ---------- BREAKPOINTS ---------- */
+  /* Breakpoints */
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1400px;
-
-  /* ---------- BACKGROUND IMAGES ---------- */
-  --background-image-hero: url('/images/hero-background.png');
 }
 
-.bg-hero {
-  background-image: url('/images/hero-background.png');
-}
-
-/* ============================================================
-   Elevation / Shadow tokens (dùng CSS var thay hardcode)
-   ============================================================ */
+/* ─── Terra palette ───────────────────────────────────────────── */
 :root {
-  --shadow-level-1: 0px 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-level-2: 0px 12px 24px rgba(0, 0, 0, 0.08);
-  --shadow-level-3: 0px 24px 48px rgba(0, 0, 0, 0.12);
+  color-scheme: light;
+
+  /* Backgrounds — warm cream layers */
+  --bg-base: #faf6f0;
+  --bg-surface: #f4ede3;
+  --bg-elevated: #ede1d0;
+  --bg-subtle: #e6d8c4;
+
+  /* Borders */
+  --border-default: rgba(74, 124, 89, 0.18);
+  --border-subtle: rgba(74, 124, 89, 0.32);
+
+  /* Text — warm-gray undertones (tăng đậm tương phản rõ ràng) */
+  --text-primary: #1f2421;
+  --text-secondary: #333a35;
+  --text-muted: #575246;
+  --text-faint: #8a847b;
+
+  /* Accent — Forest Green */
+  --accent-primary: #4a7c59;
+  --accent-primary-dark: #35603e;
+  --accent-primary-mid: #5d9470;
+  --accent-primary-dim: rgba(74, 124, 89, 0.12);
+
+  /* Accent — Warm Amber */
+  --accent-amber: #705c30;
+  --accent-amber-dark: #5a4922;
+  --accent-amber-dim: rgba(112, 92, 48, 0.12);
+
+  /* State */
+  --state-error: #c0392b;
+  --state-success: #27ae60;
+  --state-warning: #e67e22;
+
+  /* Shadows */
+  --shadow-level-1: 0 4px 20px rgba(46, 50, 48, 0.06);
+  --shadow-level-2: 0 8px 32px rgba(46, 50, 48, 0.10);
+  --shadow-level-3: 0 16px 48px rgba(46, 50, 48, 0.14);
 }
 
-/* ============================================================
-   Base styles
-   ============================================================ */
+/* ─── Base ────────────────────────────────────────────────────── */
 @layer base {
-  body {
-    font-family: var(--font-family-sans);
-    background-color: var(--color-ds-background);
-    color: var(--color-ds-on-background);
+  * {
+    @apply border-border outline-ring/50;
   }
 
-  * {
-    border-color: var(--color-ds-outline-variant);
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    line-height: 1.3;
   }
 }
 
-/* ============================================================
-   Utility helpers dùng trong page.tsx
-   ============================================================ */
+/* ─── Utilities ───────────────────────────────────────────────── */
+@layer utilities {
+  .flex-center {
+    @apply flex justify-center items-center;
+  }
 
-/* Glassmorphism surface */
+  .flex-between {
+    @apply flex justify-between items-center;
+  }
+}
+
+/* Glassmorphism */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(250, 246, 240, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-ds-outline-variant);
+  border: 1px solid var(--border-default);
 }
 
-/* Gradient text — Primary → Secondary (DS) */
+/* Glass nav */
+.glass-nav {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(250, 246, 240, 0.92);
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* Gradient text */
 .text-gradient {
-  background: linear-gradient(135deg,
-      var(--color-ds-primary) 0%,
-      var(--color-ds-primary-container) 50%,
-      var(--color-ds-secondary) 100%);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-mid) 50%, var(--accent-amber) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Mesh gradient background for hero/CTA sections */
-.gradient-mesh {
-  background: linear-gradient(135deg,
-      var(--color-ds-primary) 0%,
-      var(--color-ds-primary-container) 50%,
-      var(--color-ds-secondary) 100%);
+/* Hero gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, var(--bg-base) 0%, var(--bg-surface) 60%, #ede0c8 100%);
 }
 
-/* Float animation for feature icons */
+/* Card hover */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-level-2);
+}
+
+/* Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* ─── Animations ──────────────────────────────────────────────── */
 @keyframes float {
 
   0%,
@@ -295,47 +235,6 @@
   animation: float 3s ease-in-out infinite;
 }
 
-/* copy-base / copy-light dùng trong visual showcase */
-.text-copy-base {
-  color: var(--color-ds-on-surface);
-}
-
-.text-copy-light {
-  color: var(--color-ds-on-surface-variant);
-}
-
-/* ============================================================
-   Lumina-style page utilities — màu từ DS tokens
-   ============================================================ */
-
-/* Glass navigation bar */
-.glass-nav {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background-color: color-mix(in srgb, var(--color-ds-background) 85%, transparent);
-  border-bottom: 1px solid var(--color-ds-outline-variant);
-}
-
-/* Hero gradient: ds-surface-bright → ds-primary-fixed */
-.hero-gradient {
-  background: linear-gradient(135deg,
-      var(--color-ds-surface-bright) 0%,
-      var(--color-ds-primary-fixed) 100%);
-}
-
-/* Card hover lift */
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-level-2);
-}
-
-/* ============================================================
-   Animation for comments
-   ============================================================ */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -352,443 +251,6 @@
   animation: fade-in 0.2s ease-out;
 }
 
-/* ============================================================
-   Custom Scrollbar
-   ============================================================ */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: var(--color-ds-surface-container-low);
-  border-radius: 10px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-ds-outline-variant);
-  border-radius: 10px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ds-outline);
-}
-
-/* ============================================================
-   React Calendar
-   ============================================================ */
-.react-calendar {
-  width: 100% !important;
-  border: none !important;
-  font-family: var(--font-family-sans) !important;
-}
-
-.react-calendar__navigation__label__labelText {
-  font-weight: 600;
-}
-
-.react-calendar__tile--active {
-  background-color: var(--color-ds-primary-fixed) !important;
-  color: var(--color-ds-on-primary-fixed) !important;
-}
-
-/* ============================================================
-   React DatePicker
-   ============================================================ */
-.react-datepicker {
-  border: 1px solid var(--color-ds-outline-variant) !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-level-2) !important;
-  font-family: var(--font-family-sans) !important;
-}
-
-.react-datepicker__header {
-  background-color: var(--color-ds-surface-container-low) !important;
-  border-bottom: 1px solid var(--color-ds-outline-variant) !important;
-}
-
-.react-datepicker__current-month {
-  color: var(--color-ds-on-surface) !important;
-  font-weight: 600 !important;
-}
-
-.react-datepicker__day--selected {
-  background-color: var(--color-ds-primary-container) !important;
-  color: var(--color-ds-on-primary-container) !important;
-}
-
-.react-datepicker__day:hover {
-  background-color: var(--color-ds-primary-container) !important;
-  color: var(--color-ds-on-primary-container) !important;
-}
-
-.react-datepicker__time-list-item:hover {
-  background-color: var(--color-ds-primary-container) !important;
-  color: var(--color-ds-on-primary-container) !important;
-}
-
-.react-datepicker__time-list-item--selected {
-  background-color: var(--color-ds-primary-container) !important;
-  color: var(--color-ds-on-primary-container) !important;
-}
-
-/* ============================================================
-   Big Calendar (react-big-calendar)
-   ============================================================ */
-.rbc-calendar {
-  background-color: var(--color-ds-surface-container-lowest) !important;
-  border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-level-1) !important;
-  overflow: hidden !important;
-  border: 1px solid var(--color-ds-outline-variant) !important;
-}
-
-/* Toolbar */
-.rbc-toolbar {
-  background: linear-gradient(135deg,
-      var(--color-ds-primary) 0%,
-      var(--color-ds-primary-container) 100%) !important;
-  padding: 20px 24px !important;
-  margin-bottom: 0 !important;
-  border-bottom: 1px solid var(--color-ds-outline-variant) !important;
-}
-
-.rbc-btn-group:first-child {
-  display: none !important;
-}
-
-.rbc-toolbar-label {
-  text-align: center !important;
-  color: var(--color-ds-on-primary) !important;
-  font-weight: 700 !important;
-  font-size: 20px !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
-  flex: 1 !important;
-  margin: 0 20px !important;
-}
-
-.rbc-btn-group:last-child {
-  font-size: 13px !important;
-}
-
-.rbc-btn-group:last-child button {
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
-  color: var(--color-ds-on-primary) !important;
-  margin-left: 4px !important;
-  padding: 8px 16px !important;
-  border-radius: var(--radius) !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
-  backdrop-filter: blur(10px) !important;
-}
-
-.rbc-btn-group:last-child button:hover {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: var(--shadow-level-1) !important;
-}
-
-.rbc-toolbar button.rbc-active {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  color: var(--color-ds-primary) !important;
-  box-shadow: var(--shadow-level-1) !important;
-  transform: translateY(-2px) !important;
-}
-
-/* Time View */
-.rbc-time-view {
-  border-color: var(--color-ds-outline-variant) !important;
-  background-color: var(--color-ds-surface-container-low) !important;
-}
-
-.rbc-time-header {
-  display: none !important;
-}
-
-.rbc-time-content {
-  border: none !important;
-  background-color: var(--color-ds-surface-container-lowest) !important;
-}
-
-.rbc-time-gutter.rbc-time-column {
-  font-size: 12px !important;
-  background-color: var(--color-ds-surface-container-low) !important;
-  border-right: 2px solid var(--color-ds-outline-variant) !important;
-}
-
-.rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
-  padding: 0px 16px !important;
-  color: var(--color-ds-on-surface-variant) !important;
-  font-weight: 500 !important;
-}
-
-.rbc-timeslot-group {
-  background-color: var(--color-ds-surface-container-lowest) !important;
-  border-bottom: 1px solid var(--color-ds-surface-container-low) !important;
-}
-
-.rbc-day-slot {
-  font-size: 14px !important;
-  background-color: var(--color-ds-surface-container-lowest) !important;
-}
-
-.rbc-day-slot:hover {
-  background-color: var(--color-ds-surface-container-low) !important;
-}
-
-/* Header */
-.rbc-header {
-  background: linear-gradient(135deg,
-      var(--color-ds-surface-container-low) 0%,
-      var(--color-ds-surface-container) 100%) !important;
-  color: var(--color-ds-on-surface) !important;
-  font-weight: 600 !important;
-  padding: 12px 8px !important;
-  border-bottom: 2px solid var(--color-ds-outline-variant) !important;
-  text-align: center !important;
-  text-transform: uppercase !important;
-  font-size: 12px !important;
-  letter-spacing: 0.5px !important;
-}
-
-/* Current Time Indicator */
-.rbc-current-time-indicator {
-  background-color: var(--color-ds-error) !important;
-  height: 3px !important;
-  border-radius: 2px !important;
-  box-shadow: 0 2px 4px rgba(186, 26, 26, 0.3) !important;
-}
-
-.rbc-current-time-indicator::before {
-  content: '' !important;
-  position: absolute !important;
-  left: -6px !important;
-  top: -3px !important;
-  width: 12px !important;
-  height: 12px !important;
-  border-radius: 50% !important;
-  background-color: var(--color-ds-error) !important;
-  box-shadow: 0 2px 8px rgba(186, 26, 26, 0.4) !important;
-}
-
-/* Events */
-.rbc-event {
-  border: none !important;
-  color: var(--color-ds-on-surface) !important;
-  padding: 8px 12px !important;
-  margin: 2px 4px !important;
-  width: calc(100% - 8px) !important;
-  border-radius: var(--radius) !important;
-  font-weight: 500 !important;
-  font-size: 13px !important;
-  box-shadow: var(--shadow-level-1) !important;
-  backdrop-filter: blur(10px) !important;
-  border-left: 4px solid rgba(0, 0, 0, 0.2) !important;
-  transition: all 0.2s ease !important;
-}
-
-.rbc-event:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: var(--shadow-level-2) !important;
-}
-
-/* Event colour variations */
-.rbc-event:nth-child(1) {
-  background: linear-gradient(135deg, var(--color-ds-primary-fixed) 0%, var(--color-ds-primary-fixed-dim) 100%) !important;
-  border-left-color: var(--color-ds-primary) !important;
-}
-
-.rbc-event:nth-child(2) {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
-  border-left-color: #f59e0b !important;
-}
-
-.rbc-event:nth-child(3) {
-  background: linear-gradient(135deg, var(--color-ds-surface-container-high) 0%, var(--color-ds-surface-container-highest) 100%) !important;
-  border-left-color: var(--color-ds-on-surface-variant) !important;
-}
-
-.rbc-event:nth-child(4) {
-  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%) !important;
-  border-left-color: #ec4899 !important;
-}
-
-.rbc-event:nth-child(5) {
-  background: linear-gradient(135deg, var(--color-ds-secondary-fixed) 0%, var(--color-ds-secondary-fixed-dim) 100%) !important;
-  border-left-color: var(--color-ds-secondary) !important;
-}
-
-.rbc-event:nth-child(6) {
-  background: linear-gradient(135deg, var(--color-ds-error-container) 0%, #ffb4ab 100%) !important;
-  border-left-color: var(--color-ds-error) !important;
-}
-
-.rbc-event:nth-child(7) {
-  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
-  border-left-color: #8b5cf6 !important;
-}
-
-.rbc-event:nth-child(8) {
-  background: linear-gradient(135deg, #fef7ff 0%, #fae8ff 100%) !important;
-  border-left-color: #a855f7 !important;
-}
-
-.rbc-event-label {
-  color: var(--color-ds-on-surface-variant) !important;
-  margin-bottom: 4px !important;
-  font-size: 11px !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  font-weight: 600 !important;
-}
-
-.rbc-event-content {
-  color: var(--color-ds-on-surface) !important;
-  font-weight: 600 !important;
-}
-
-/* Today Highlighting */
-.rbc-today {
-  background-color: color-mix(in srgb, var(--color-ds-primary) 5%, transparent) !important;
-  border-left: 4px solid var(--color-ds-primary) !important;
-}
-
-/* Off-range */
-.rbc-off-range-bg {
-  background-color: var(--color-ds-surface-container-low) !important;
-}
-
-/* Selected cell */
-.rbc-selected {
-  background-color: color-mix(in srgb, var(--color-ds-primary) 10%, transparent) !important;
-  border: 2px solid var(--color-ds-primary) !important;
-}
-
-/* Time slot */
-.rbc-time-slot {
-  border-top: 1px solid var(--color-ds-surface-container-low) !important;
-}
-
-.rbc-time-slot:hover {
-  background-color: var(--color-ds-surface-container-low) !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .rbc-toolbar {
-    padding: 12px 16px !important;
-  }
-
-  .rbc-toolbar-label {
-    font-size: 16px !important;
-    margin: 0 8px !important;
-  }
-
-  .rbc-btn-group:last-child button {
-    padding: 6px 10px !important;
-    font-size: 12px !important;
-  }
-
-  .rbc-event {
-    font-size: 12px !important;
-    padding: 6px 8px !important;
-  }
-}
-
-/* ============================================================
-   Stream Video SDK overrides
-   ============================================================ */
-.str-video {
-  background-color: var(--color-stream-dark-2);
-}
-
-.str-video__call-stats {
-  max-width: 500px;
-  position: relative;
-}
-
-.str-video__speaker-layout__wrapper {
-  max-height: 700px;
-}
-
-.str-video__participant-details,
-.str-video__menu-container,
-.str-video__notification {
-  color: white;
-}
-
-.str-video__participant-list {
-  background-color: var(--color-stream-dark-1);
-  padding: 10px;
-  border-radius: 10px;
-  color: white;
-  height: 100%;
-}
-
-.str-video__call-controls__button {
-  height: 40px;
-}
-
-.glassmorphism {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.glassmorphism2 {
-  background: rgba(18, 17, 17, 0.25);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-/* ============================================================
-   Clerk overrides
-   ============================================================ */
-.cl-userButtonPopoverActionButtonIcon {
-  color: white;
-}
-
-.cl-logoBox {
-  height: 40px;
-}
-
-.cl-dividerLine {
-  background: var(--color-stream-dark-3);
-  height: 2px;
-}
-
-.cl-socialButtonsIconButton {
-  border: 3px solid #565761;
-}
-
-.cl-internal-wkkub3,
-.cl-userButtonPopoverActionButton {
-  color: white;
-}
-
-/* ============================================================
-   Utility classes
-   ============================================================ */
-@layer utilities {
-  .flex-center {
-    @apply flex justify-center items-center;
-  }
-
-  .flex-between {
-    @apply flex justify-between items-center;
-  }
-}
-
-/* ============================================================
-   Animation: show
-   ============================================================ */
-.show-block {
-  width: 100%;
-  max-width: 350px;
-  display: block;
-  animation: show 0.7s forwards linear;
-}
-
 @keyframes show {
   0% {
     animation-timing-function: ease-in;
@@ -801,9 +263,13 @@
   }
 }
 
-/* ============================================================
-   Accordion keyframes (for tailwindcss-animate compat)
-   ============================================================ */
+.show-block {
+  width: 100%;
+  max-width: 350px;
+  display: block;
+  animation: show 0.7s forwards linear;
+}
+
 @keyframes accordion-down {
   from {
     height: 0;
@@ -830,4 +296,17 @@
 
 .animate-accordion-up {
   animation: accordion-up 0.2s ease-out;
+}
+
+/* Stream Video SDK glassmorphism */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.glassmorphism2 {
+  background: rgba(18, 17, 17, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }

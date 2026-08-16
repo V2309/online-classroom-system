@@ -257,62 +257,59 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
   };
 
   return (
-    <div className="bg-white overflow-hidden print:border-0 print:shadow-none">
+    <div className="h-full w-full overflow-hidden print:border-0 print:shadow-none text-foreground flex flex-col bg-white">
       {/* 1. Header Điều Hướng */}
-      <div className="px-4 py-3 border-b border-gray-400 print:hidden">
+      <div className="px-4 py-3.5 border-b border-border bg-white print:hidden flex-shrink-0">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-
 
           <div className="flex items-center gap-2">
             {/* Nút Tuần */}
-            <div className="flex bg-gray-100 p-1 rounded-lg">
+            <div className="flex bg-muted p-1 rounded-xl">
               <button
                 onClick={() => handleViewChange("week")}
-                className={`px-4 py-1.5 text-sm font-semibold rounded-md ${activeView === "week"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
+                className={`px-4 py-1.5 text-sm font-semibold rounded-lg ${activeView === "week"
+                    ? "bg-white text-primary shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
                   } transition-all`}
               >
                 Tuần
               </button>
-              {/* (Nếu bạn muốn thêm lại nút Tháng, chỉ cần copy nút Tuần) */}
             </div>
 
-            {/* 6. THÊM NÚT "HÔM NAY" */}
+            {/* 6. NÚT "HÔM NAY" */}
             <button
               onClick={handleGoToToday}
-              disabled={isCurrentWeek} // Vô hiệu hóa nếu đang ở tuần này
-              className="px-4 py-1.5 text-sm font-semibold rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={isCurrentWeek}
+              className="px-4 py-1.5 text-sm font-semibold rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Hôm nay
             </button>
           </div>
 
-
           <div className="flex items-center gap-2">
             <button
-              className="h-8 w-8 rounded-md hover:bg-gray-100 transition-colors"
+              className="h-8 w-8 rounded-lg hover:bg-accent text-foreground flex items-center justify-center text-lg transition-colors font-bold"
               onClick={handlePrevWeek}
               aria-label="Tuần trước"
             >
               ‹
             </button>
-            <div className="text-sm sm:text-base font-semibold text-gray-800">
+            <div className="text-sm sm:text-base font-semibold text-foreground">
               {formatWeekRangeVi(currentDate)}
             </div>
             <button
-              className="h-8 w-8 rounded-md hover:bg-gray-100 transition-colors"
+              className="h-8 w-8 rounded-lg hover:bg-accent text-foreground flex items-center justify-center text-lg transition-colors font-bold"
               onClick={handleNextWeek}
               aria-label="Tuần kế tiếp"
             >
               ›
             </button>
           </div>
-          {/* 7. THÊM NÚT IN, ẨN TRÊN MOBILE */}
+          {/* 7. NÚT IN */}
           <div className="hidden md:flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-accent transition-colors"
             >
               <Printer size={16} />
               In lịch
@@ -322,7 +319,7 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
       </div>
 
       {/* 2. Lưới Lịch 7 Cột */}
-     <div className="md:grid md:grid-cols-7 flex overflow-x-auto md:overflow-x-visible border-gray-200 md:border-l print:grid print:grid-cols-7 print:overflow-visible">
+     <div className="grid grid-cols-7 flex-1 w-full overflow-hidden border-border md:border-l print:grid print:grid-cols-7 print:overflow-visible min-h-0">
         {weekDays.map((day) => {
           const isToday = day.isSame(new Date(), "day");
           const eventsForDay = allDayEvents.filter((event) =>

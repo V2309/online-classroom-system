@@ -566,45 +566,47 @@ export function ChatBox({
 
 
   return (
-    <div className="flex h-full w-full bg-gray-50 overflow-hidden">
+    <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
       {/* Cột chính (Chat) */}
-      <div className="flex-1 flex flex-col bg-white border-r border-gray-200 min-h-0">
+      <div className="flex-1 flex flex-col bg-card border-r border-border min-h-0">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 bg-white">
-          <h2 className="text-lg font-semibold text-gray-800">Chat nhóm</h2>
-          <p className="text-sm text-gray-500">Lớp {classCode}</p>
+        <div className="p-4 border-b border-border bg-card">
+          <h2 className="text-lg font-semibold text-foreground">Chat nhóm</h2>
+          <p className="text-sm text-muted-foreground">Lớp {classCode}</p>
         </div>
         
         {/* Pinned Messages Section */}
         {messages.filter(msg => !("type" in msg) && (msg as ChatGroupMessage).isPinned).length > 0 && (
-          <div className="bg-yellow-50 border-b border-yellow-200 p-3">
+          <div className="bg-terra-amber/10 border-b border-terra-amber/20 p-3">
             <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-terra-amber" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8 2a1 1 0 000 2h4a1 1 0 100-2H8zM3 7a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM4 10a1 1 0 011-1h8a1 1 0 110 2H5a1 1 0 01-1-1zm0 3a1 1 0 011-1h4a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm font-medium text-yellow-800">Tin nhắn đã ghim</span>
+              <span className="text-sm font-medium text-terra-amber">Tin nhắn đã ghim</span>
             </div>
             <div className="space-y-2 max-h-32 overflow-y-auto">
               {messages.filter(msg => !("type" in msg) && (msg as ChatGroupMessage).isPinned).map(msg => {
                 const pinnedMsg = msg as ChatGroupMessage;
                 return (
-                  <div key={`pinned-${pinnedMsg.id}`} className="bg-white rounded-lg p-2 shadow-sm border border-yellow-200">
+                  <div key={`pinned-${pinnedMsg.id}`} className="bg-card rounded-lg p-2 shadow-sm border border-terra-amber/30">
                     <div className="flex items-start gap-2">
-                      <Image
-                        path={pinnedMsg.user.img || "/avatar.png"}
-                        alt={pinnedMsg.user.username}
-                        w={24}
-                        h={24}
-                        className="rounded-full flex-shrink-0 object-cover"
-                      />
+                      <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 aspect-square">
+                        <Image
+                          path={pinnedMsg.user.img || "/avatar.png"}
+                          alt={pinnedMsg.user.username}
+                          w={48}
+                          h={48}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-700">{pinnedMsg.user.username}</span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs font-medium text-foreground">{pinnedMsg.user.username}</span>
+                          <span className="text-xs text-muted-foreground">
                             {formatTime(new Date(pinnedMsg.createdAt))}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1 break-words">
+                        <p className="text-xs text-secondary mt-1 break-words">
                           {pinnedMsg.content.length > 100 
                             ? pinnedMsg.content.substring(0, 100) + '...' 
                             : pinnedMsg.content
@@ -613,7 +615,7 @@ export function ChatBox({
                       </div>
                       <button
                         onClick={() => handleUnpinMessage(pinnedMsg.id)}
-                        className="p-1 text-yellow-600 hover:text-yellow-800 transition-colors flex-shrink-0"
+                        className="p-1 text-terra-amber hover:text-terra-amber-dark transition-colors flex-shrink-0"
                         title="Bỏ ghim"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -629,7 +631,7 @@ export function ChatBox({
         )}
         
         {/* Khung chat (cuộn) */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background min-h-0">
           {messages.map((msg, index) => {
             const elements = [];
             
@@ -640,10 +642,10 @@ export function ChatBox({
                 <div key={`date-${msg.id}`} className="flex justify-center my-6">
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-300"></div>
+                      <div className="w-full border-t border-border"></div>
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="bg-gray-50 px-4 py-1 text-gray-500 font-medium rounded-full shadow-sm border border-gray-200">
+                      <span className="bg-muted px-4 py-1 text-muted-foreground font-medium rounded-full shadow-sm border border-border">
                         {formatDateSeparator(new Date(msg.createdAt))}
                       </span>
                     </div>
@@ -656,7 +658,7 @@ export function ChatBox({
             if ("type" in msg && msg.type === "system") {
               elements.push(
                 <div key={msg.id} className="flex justify-center my-4">
-                  <div className="bg-blue-100 text-blue-600 text-xs px-4 py-2 rounded-full border border-blue-200">
+                  <div className="bg-accent text-primary text-xs px-4 py-2 rounded-full border border-border">
                     <span className="font-medium">{msg.content}</span>
                   </div>
                 </div>
@@ -678,15 +680,14 @@ export function ChatBox({
                 {/* Avatar cho tin nhắn của người khác */}
                 {!isMyMessage && (
                   <div className="flex-shrink-0">
-                    <div className="relative">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 aspect-square ring-2 ring-card shadow-sm">
                       <Image
                         path={chatMsg.user.img || "/avatar.png"}
                         alt={chatMsg.user.username}
-                        w={40}
-                        h={40}
-                        className="rounded-full ring-2 ring-white shadow-sm object-cover"
+                        w={80}
+                        h={80}
+                        className="w-full h-full rounded-full object-cover"
                       />
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
                     </div>
                   </div>
                 )}
@@ -695,9 +696,9 @@ export function ChatBox({
                 <div className={`flex flex-col max-w-xs lg:max-w-md ${
                   isMyMessage ? "items-end" : "items-start"
                 }`}>
-                  {/* Tên người gửi (chỉ hiện với tin nhắn của người khác) */}
+                  {/* Tên người gửi */}
                   {!isMyMessage && (
-                    <span className="text-xs text-gray-500 mb-1 ml-3 font-medium">
+                    <span className="text-xs text-muted-foreground mb-1 ml-3 font-medium">
                       {chatMsg.user.username}
                     </span>
                   )}
@@ -707,24 +708,24 @@ export function ChatBox({
                     <div
                       className={`px-4 py-3 rounded-2xl shadow-sm ${
                         isMyMessage
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md"
-                          : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
+                          : "bg-card text-foreground border border-border rounded-bl-md"
                       }`}
                     >
                       {/* Reply preview */}
                       {chatMsg.replyTo && (
                         <div className={`mb-2 p-2 rounded-lg border-l-2 ${
                           isMyMessage 
-                            ? "bg-blue-400/20 border-blue-200" 
-                            : "bg-gray-100 border-gray-300"
+                            ? "bg-black/20 border-primary-foreground/40" 
+                            : "bg-muted border-border"
                         }`}>
                           <p className={`text-xs font-medium ${
-                            isMyMessage ? "text-blue-100" : "text-gray-600"
+                            isMyMessage ? "text-primary-foreground/90" : "text-foreground"
                           }`}>
                             {chatMsg.replyTo.user.username}
                           </p>
                           <p className={`text-xs ${
-                            isMyMessage ? "text-blue-100" : "text-gray-500"
+                            isMyMessage ? "text-primary-foreground/70" : "text-muted-foreground"
                           }`}>
                             {chatMsg.replyTo.content.length > 50 
                               ? chatMsg.replyTo.content.substring(0, 50) + '...' 
@@ -736,7 +737,7 @@ export function ChatBox({
                       
                       <p className="text-sm leading-relaxed">{chatMsg.content}</p>
                       <p className={`text-xs mt-2 ${
-                        isMyMessage ? "text-blue-100" : "text-gray-400"
+                        isMyMessage ? "text-primary-foreground/70" : "text-muted-foreground"
                       }`}>
                         {new Date(chatMsg.createdAt).toLocaleTimeString('vi-VN', {
                           hour: '2-digit',
@@ -751,10 +752,10 @@ export function ChatBox({
                     }`}>
                       <button
                         onClick={() => setReplyTo(chatMsg)}
-                        className="p-1.5 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 transition-colors"
+                        className="p-1.5 bg-card border border-border rounded-full shadow-sm hover:bg-accent text-foreground transition-colors"
                         title="Trả lời"
                       >
-                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
                       </button>
@@ -762,17 +763,17 @@ export function ChatBox({
                       <div className="relative">
                         <button
                           onClick={() => setShowMenuFor(showMenuFor === chatMsg.id ? null : chatMsg.id)}
-                          className="p-1.5 bg-white border border-gray-200 rounded-full shadow-sm hover:bg-gray-50 transition-colors"
+                          className="p-1.5 bg-card border border-border rounded-full shadow-sm hover:bg-accent text-foreground transition-colors"
                           title="Tùy chọn"
                         >
-                          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                           </svg>
                         </button>
                         
                         {/* Menu dropdown */}
                         {showMenuFor === chatMsg.id && (
-                          <div className={`absolute top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-10 min-w-32 ${
+                          <div className={`absolute top-full mt-1 bg-card border border-border rounded-xl shadow-lg py-1 z-10 min-w-32 ${
                             isMyMessage ? "right-0" : "left-0"
                           }`}>
                             {isMyMessage && (
@@ -782,7 +783,7 @@ export function ChatBox({
                                     handleDeleteMessage(chatMsg.id);
                                     setShowMenuFor(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                  className="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10 transition-colors"
                                 >
                                   Xóa tin nhắn
                                 </button>
@@ -791,11 +792,11 @@ export function ChatBox({
                                     handleRecallMessage(chatMsg.id);
                                     setShowMenuFor(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                  className="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10 transition-colors"
                                 >
                                   Thu hồi
                                 </button>
-                                <hr className="my-1" />
+                                <hr className="my-1 border-border" />
                                 <button
                                   onClick={() => {
                                     if (chatMsg.isPinned) {
@@ -805,7 +806,7 @@ export function ChatBox({
                                     }
                                     setShowMenuFor(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                                  className="w-full px-3 py-2 text-left text-sm text-primary hover:bg-accent transition-colors"
                                 >
                                   {chatMsg.isPinned ? 'Bỏ ghim tin nhắn' : 'Ghim tin nhắn'}
                                 </button>
@@ -818,11 +819,11 @@ export function ChatBox({
                                     setReplyTo(chatMsg);
                                     setShowMenuFor(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                  className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-accent transition-colors"
                                 >
                                   Trả lời
                                 </button>
-                                <hr className="my-1" />
+                                <hr className="my-1 border-border" />
                                 <button
                                   onClick={() => {
                                     if (chatMsg.isPinned) {
@@ -832,7 +833,7 @@ export function ChatBox({
                                     }
                                     setShowMenuFor(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                                  className="w-full px-3 py-2 text-left text-sm text-primary hover:bg-accent transition-colors"
                                 >
                                   {chatMsg.isPinned ? 'Bỏ ghim tin nhắn' : 'Ghim tin nhắn'}
                                 </button>
@@ -848,13 +849,13 @@ export function ChatBox({
                 {/* Avatar cho tin nhắn của mình */}
                 {isMyMessage && (
                   <div className="flex-shrink-0">
-                    <div className="relative">
+                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 aspect-square ring-2 ring-primary/20 shadow-sm">
                       <Image
                         path={user?.img || "/avatar.png"}
                         alt={user?.username || 'You'}
-                        w={40}
-                        h={40}
-                        className="rounded-full ring-2 ring-blue-100 shadow-sm object-cover"
+                        w={80}
+                        h={80}
+                        className="w-full h-full rounded-full object-cover"
                       />
                     </div>
                   </div>
@@ -870,13 +871,13 @@ export function ChatBox({
 
         {/* Reply preview */}
         {replyTo && (
-          <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
+          <div className="px-4 py-2 bg-accent/40 border-t border-border">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs text-blue-600 font-medium mb-1">
+                <p className="text-xs text-primary font-medium mb-1">
                   Trả lời {replyTo.user.username}
                 </p>
-                <p className="text-xs text-blue-500 truncate">
+                <p className="text-xs text-muted-foreground truncate">
                   {replyTo.content.length > 100 
                     ? replyTo.content.substring(0, 100) + '...' 
                     : replyTo.content
@@ -885,7 +886,7 @@ export function ChatBox({
               </div>
               <button
                 onClick={() => setReplyTo(null)}
-                className="ml-2 p-1 text-blue-600 hover:text-blue-800 transition-colors"
+                className="ml-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -896,7 +897,7 @@ export function ChatBox({
         )}
         
         {/* Khung nhập liệu */}
-        <div className="p-4 bg-white border-t border-gray-200">
+        <div className="p-4 bg-card border-t border-border">
           <form onSubmit={handleSubmit} className="flex items-end gap-3">
             <div className="flex-1 relative">
               <input
@@ -910,7 +911,7 @@ export function ChatBox({
                   }
                 }}
                 placeholder="Nhập tin nhắn..."
-                className="w-full border border-gray-300 rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full border border-input bg-background text-foreground rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                 disabled={!user || isSubmitting}
               />
             </div>
@@ -918,8 +919,8 @@ export function ChatBox({
               type="submit"
               className={`p-3 rounded-full transition-all duration-200 ${
                 !user || isSubmitting || !newMessage.trim()
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105'
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-md hover:shadow-lg transform hover:scale-105'
               }`}
               disabled={!user || isSubmitting || !newMessage.trim()}
             >
@@ -936,15 +937,15 @@ export function ChatBox({
       </div>
 
       {/* Cột phụ (All members) */}
-      <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+      <div className="w-80 bg-card border-l border-border flex flex-col">
         {/* Header thành viên */}
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-800 text-lg">
+        <div className="p-4 border-b border-border">
+          <h3 className="font-semibold text-foreground text-lg">
             Thành viên
           </h3>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="w-2 h-2 bg-state-success rounded-full"></div>
               {onlineMembers.length} đang hoạt động
             </span>
             <span>•</span>
@@ -959,39 +960,41 @@ export function ChatBox({
               const isOnline = onlineMembers.some((om) => String(om.id) === String(member.id));
               return (
                 <div key={member.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-                  isOnline ? 'bg-green-50 border border-green-100' : 'bg-gray-50 hover:bg-gray-100'
+                  isOnline ? 'bg-state-success/10 border border-state-success/20' : 'bg-muted/40 hover:bg-accent/40'
                 }`}>
-                  <div className="relative flex-shrink-0">
-                    <Image
-                      path={member.img || "/avatar.png"}
-                      alt={member.username}
-                      w={44}
-                      h={44}
-                      className="rounded-full ring-2 ring-white shadow-sm object-cover"
-                    />
+                  <div className="relative flex-shrink-0 w-11 h-11">
+                    <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 aspect-square ring-2 ring-card shadow-sm">
+                      <Image
+                        path={member.img || "/avatar.png"}
+                        alt={member.username}
+                        w={88}
+                        h={88}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    </div>
                     {/* Status indicator */}
                     <div
-                      className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-sm ${
-                        isOnline ? "bg-green-500" : "bg-gray-400"
+                      className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card shadow-sm z-10 ${
+                        isOnline ? "bg-state-success" : "bg-muted-foreground"
                       }`}
                     ></div>
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate text-sm">
+                    <p className="font-medium text-foreground truncate text-sm">
                       {member.username}
                     </p>
                     {isOnline ? (
                       <div className="flex items-center gap-1 mt-0.5">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <p className="text-xs text-green-600 font-medium">Đang hoạt động</p>
+                        <div className="w-2 h-2 bg-state-success rounded-full animate-pulse"></div>
+                        <p className="text-xs text-state-success font-medium">Đang hoạt động</p>
                       </div>
                     ) : member.lastSeen ? (
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {formatLastSeen(member.lastSeen)}
                       </p>
                     ) : (
-                      <p className="text-xs text-gray-500 mt-0.5">Ngoại tuyến</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Ngoại tuyến</p>
                     )}
                   </div>
                 </div>
