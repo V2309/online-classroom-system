@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import moment from "moment";
-import "moment/locale/vi"; // Import Tiếng Việt
+import "moment/locale/vi";
 import ScheduleForm from "@/components/forms/ScheduleForm";
 import DayColumn from "@/components/calendar/DayColumn";
 import RecurrenceUpdateDialog from "@/components/calendar/RecurrenceUpdateDialog";
@@ -11,16 +11,13 @@ import RecurrenceDeleteDialog from "@/components/calendar/RecurrenceDeleteDialog
 import type { ScheduleEvent } from "@/components/calendar/EventItem";
 import { scheduleService } from "@/services/schedule.service";
 import { toast } from "react-toastify";
-// 1. IMPORT ICON MỚI
-import { Printer, CalendarDays } from "lucide-react";
-// Cấu hình moment: Locale VI + tuần bắt đầu từ Thứ 2
+import { Printer, CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+
 moment.locale("vi");
 moment.updateLocale("vi", { week: { dow: 1, doy: 4 } });
 
-// --- 1. ĐỊNH NGHĨA TYPESCRIPT ---
 type EventColor = "blue" | "green" | "yellow";
 
-// Interface cho props component
 interface BigCalendarProps {
   schedules?: Array<{
     id: number;
@@ -36,13 +33,11 @@ interface BigCalendarProps {
     } | null;
   }>;
   role?: string;
-  classId?: number; // ID lớp học hiện tại (nếu đang ở trang lớp cụ thể)
-  teacherClasses?: any[]; // Danh sách lớp học của giáo viên
+  classId?: number;
+  className?: string;
+  teacherClasses?: any[];
 }
 
-
-
-// --- Helper Functions ---
 const buildSevenDayRangeFrom = (anyDate: Date) => {
   const start = moment(anyDate).startOf("week");
   return Array.from({ length: 7 }, (_, i) => start.clone().add(i, "day"));
@@ -52,16 +47,18 @@ const formatWeekRangeVi = (date: Date) => {
   const start = moment(date).startOf("week");
   const end = start.clone().add(6, "day");
   const startFormat = start.isSame(end, "month") ? "D" : "D/M";
-  return `Tuần ${start.format(startFormat)} - ${end.format("D/M")}, ${end.format(
-    "YYYY"
-  )}`;
+  return `Tuần ${start.format(startFormat)} - ${end.format("D/M")}, ${end.format("YYYY")}`;
 };
 
-// --- Main Component ---
-const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: BigCalendarProps) => {
+const BigCalendar = ({
+  schedules = [],
+  role,
+  classId,
+  className,
+  teacherClasses = [],
+}: BigCalendarProps) => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [activeView, setActiveView] = useState<"week" | "month">("week");
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [selectedDateForForm, setSelectedDateForForm] = useState<Date | undefined>();
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
@@ -84,81 +81,66 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
     return schedules.map((schedule, index) => ({
       id: schedule.id,
       title: schedule.title,
-      description: schedule.description || "", // Handle null case
+      description: schedule.description || "",
       date: new Date(schedule.startTime),
       startTime: new Date(schedule.startTime),
       endTime: new Date(schedule.endTime),
       meetingLink: schedule.meetingLink || null,
       color: (["blue", "green", "yellow"][index % 3]) as EventColor,
-      classInfo: schedule.class ? {
-        id: schedule.class.id,
-        name: schedule.class.name,
-        class_code: schedule.class.class_code || null,
-      } : undefined,
+      classInfo: schedule.class
+        ? {
+            id: schedule.class.id,
+            name: schedule.class.name,
+            class_code: schedule.class.class_code || null,
+          }
+        : undefined,
     }));
   }, [schedules]);
 
-  // Tính toán 7 ngày trong tuần
-  const weekDays = useMemo(
-    () => buildSevenDayRangeFrom(currentDate),
-    [currentDate]
-  );
-  // Biến kiểm tra xem có đang ở tuần hiện tại không
-  const isCurrentWeek = useMemo(
-    () => moment(currentDate).isSame(new Date(), "week"),
+  const weekDays = useMemo(() => buildSevenDayRangeFrom(currentDate), [currentDate]);
+  const isCurrentWeek = useMemo(() => moment(currentDate).isSame(new Date(), "week"), [currentDate]);
+
+  const handlePrevWeek = useCallback(
+    () => setCurrentDate(moment(currentDate).subtract(1, "week").toDate()),
     [currentDate]
   );
 
-  // --- Handlers (Optimized with useCallback) ---
-  const handlePrevWeek = useCallback(() =>
-    setCurrentDate(moment(currentDate).subtract(1, "week").toDate()),
+  const handleNextWeek = useCallback(
+    () => setCurrentDate(moment(currentDate).add(1, "week").toDate()),
     [currentDate]
   );
 
-  const handleNextWeek = useCallback(() =>
-    setCurrentDate(moment(currentDate).add(1, "week").toDate()),
-    [currentDate]
-  );
-  // 2. THÊM HANDLER CHO NÚT "HÔM NAY"
   const handleGoToToday = useCallback(() => {
     setCurrentDate(new Date());
   }, []);
 
-  // 3. THÊM HANDLER CHO NÚT IN
   const handlePrint = () => {
     window.print();
   };
-  const handleViewChange = useCallback((view: "week" | "month") => {
-    setActiveView(view);
-  }, []);
 
   const handleAddEvent = useCallback((date: moment.Moment) => {
     setSelectedDateForForm(date.toDate());
-    setEditingEvent(null); // Reset editing event
+    setEditingEvent(null);
     setShowScheduleForm(true);
   }, []);
 
   const handleEditEvent = useCallback((event: ScheduleEvent) => {
-    // Luôn mở ScheduleForm trước, sẽ handle recurrence logic trong form submit
     setEditingEvent(event);
     setSelectedDateForForm(event.date);
     setShowScheduleForm(true);
   }, []);
 
   const handleDeleteEvent = useCallback(async (event: ScheduleEvent) => {
-    // Kiểm tra recurrence trước khi hiển thị dialog
     const recurrenceGroup = await scheduleService.checkRecurrenceGroup(event.id);
-
     setDeleteData({
       eventId: event.id,
       title: event.title,
-      totalEvents: recurrenceGroup ? recurrenceGroup.totalEvents : 1
+      totalEvents: recurrenceGroup ? recurrenceGroup.totalEvents : 1,
     });
     setShowDeleteDialog(true);
   }, []);
 
   const handleScheduleSuccess = useCallback(() => {
-    // TỐI ƯU: Dùng router.refresh() để lấy lại dữ liệu mới (từ Server)
     router.refresh();
   }, [router]);
 
@@ -174,16 +156,11 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
 
   const handleEditSingleEvent = async () => {
     if (!recurrenceData) return;
-
     try {
-      const result = await scheduleService.updateSingleEvent(
-        recurrenceData.eventId,
-        {
-          title: recurrenceData.title,
-          description: recurrenceData.description || ""
-        }
-      );
-
+      const result = await scheduleService.updateSingleEvent(recurrenceData.eventId, {
+        title: recurrenceData.title,
+        description: recurrenceData.description || "",
+      });
       if (result.success) {
         setShowRecurrenceDialog(false);
         setRecurrenceData(null);
@@ -196,16 +173,11 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
 
   const handleEditAllEvents = async () => {
     if (!recurrenceData) return;
-
     try {
-      const result = await scheduleService.updateAllRecurrenceEvents(
-        recurrenceData.eventId,
-        {
-          title: recurrenceData.title,
-          description: recurrenceData.description || ""
-        }
-      );
-
+      const result = await scheduleService.updateAllRecurrenceEvents(recurrenceData.eventId, {
+        title: recurrenceData.title,
+        description: recurrenceData.description || "",
+      });
       if (result.success) {
         setShowRecurrenceDialog(false);
         setRecurrenceData(null);
@@ -218,108 +190,117 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
 
   const handleDeleteSingleEvent = async () => {
     if (!deleteData) return;
-
     try {
       const result = await scheduleService.deleteSingleEvent(deleteData.eventId);
-
       if (result.success) {
-        toast.success('Xóa lịch học thành công!');
+        toast.success("Xóa lịch học thành công!");
         setShowDeleteDialog(false);
         setDeleteData(null);
         router.refresh();
       } else {
-        toast.error(result.message || 'Có lỗi xảy ra khi xóa lịch học');
+        toast.error(result.message || "Có lỗi xảy ra khi xóa lịch học");
       }
     } catch (error) {
       console.error("Error deleting single event:", error);
-      toast.error('Có lỗi xảy ra khi xóa lịch học');
+      toast.error("Có lỗi xảy ra khi xóa lịch học");
     }
   };
 
   const handleDeleteAllEvents = async () => {
     if (!deleteData) return;
-
     try {
       const result = await scheduleService.deleteAllRecurrenceEvents(deleteData.eventId);
-
       if (result.success) {
-        toast.success(result.message || 'Xóa lịch học thành công!');
+        toast.success(result.message || "Xóa lịch học thành công!");
         setShowDeleteDialog(false);
         setDeleteData(null);
         router.refresh();
       } else {
-        toast.error(result.message || 'Có lỗi xảy ra khi xóa lịch học');
+        toast.error(result.message || "Có lỗi xảy ra khi xóa lịch học");
       }
     } catch (error) {
       console.error("Error deleting all events:", error);
-      toast.error('Có lỗi xảy ra khi xóa lịch học');
+      toast.error("Có lỗi xảy ra khi xóa lịch học");
     }
   };
 
   return (
-    <div className="h-full w-full overflow-hidden print:border-0 print:shadow-none text-foreground flex flex-col bg-white">
-      {/* 1. Header Điều Hướng */}
-      <div className="px-4 py-3.5 border-b border-border bg-white print:hidden flex-shrink-0">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-
-          <div className="flex items-center gap-2">
-            {/* Nút Tuần */}
-            <div className="flex bg-muted p-1 rounded-xl">
-              <button
-                onClick={() => handleViewChange("week")}
-                className={`px-4 py-1.5 text-sm font-semibold rounded-lg ${activeView === "week"
-                    ? "bg-white text-primary shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                  } transition-all`}
-              >
-                Tuần
-              </button>
-            </div>
-
-            {/* 6. NÚT "HÔM NAY" */}
-            <button
-              onClick={handleGoToToday}
-              disabled={isCurrentWeek}
-              className="px-4 py-1.5 text-sm font-semibold rounded-lg border border-border text-foreground hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Hôm nay
-            </button>
+    <div className="h-full w-full bg-white rounded-3xl border border-border shadow-sm flex flex-col overflow-hidden">
+      {/* ── 1. HEADER ĐIỀU HƯỚNG TÍCH HỢP TRONG CARD ── */}
+      <div className="px-4 sm:px-6 py-3 sm:py-3.5 border-b border-border/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 flex-shrink-0 bg-white">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-accent text-primary flex items-center justify-center shadow-2xs flex-shrink-0">
+            <CalendarDays className="w-4 h-4" />
           </div>
+          <div>
+            <h1 className="text-base sm:text-lg font-heading font-bold text-foreground leading-tight">
+              {className ? `Lịch học: ${className}` : "Thời khóa biểu"}
+            </h1>
+            <p className="text-[11px] text-secondary hidden sm:block">Theo dõi lịch học và các buổi học trực tuyến</p>
+          </div>
+        </div>
 
-          <div className="flex items-center gap-2">
+        {/* Cụm điều hướng tuần & Thao tác */}
+        <div className="flex items-center gap-2 flex-wrap self-stretch sm:self-auto justify-between sm:justify-end">
+          {/* Cụm điều hướng tuần */}
+          <div className="flex items-center bg-card rounded-2xl border border-border p-0.5 shadow-2xs">
             <button
-              className="h-8 w-8 rounded-lg hover:bg-accent text-foreground flex items-center justify-center text-lg transition-colors font-bold"
+              type="button"
+              className="h-7 w-7 rounded-xl hover:bg-muted text-foreground flex items-center justify-center transition-colors cursor-pointer"
               onClick={handlePrevWeek}
               aria-label="Tuần trước"
             >
-              ‹
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
-            <div className="text-sm sm:text-base font-semibold text-foreground">
+            <div className="px-2.5 text-xs font-bold text-foreground select-none">
               {formatWeekRangeVi(currentDate)}
             </div>
             <button
-              className="h-8 w-8 rounded-lg hover:bg-accent text-foreground flex items-center justify-center text-lg transition-colors font-bold"
+              type="button"
+              className="h-7 w-7 rounded-xl hover:bg-muted text-foreground flex items-center justify-center transition-colors cursor-pointer"
               onClick={handleNextWeek}
               aria-label="Tuần kế tiếp"
             >
-              ›
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          {/* 7. NÚT IN */}
-          <div className="hidden md:flex items-center gap-2">
+
+          {/* Nút Hôm nay */}
+          <button
+            type="button"
+            onClick={handleGoToToday}
+            disabled={isCurrentWeek}
+            className="px-3 py-1.5 text-xs font-semibold rounded-2xl border border-border bg-white text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs cursor-pointer"
+          >
+            Hôm nay
+          </button>
+
+          {/* Nút In lịch */}
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="hidden md:flex items-center gap-1 px-3 py-1.5 rounded-2xl border border-border text-xs font-semibold text-foreground hover:bg-muted transition-all shadow-2xs cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>In lịch</span>
+          </button>
+
+          {/* Nút Thêm lịch (Cho giáo viên) */}
+          {role === "teacher" && (
             <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-border text-sm font-medium text-foreground hover:bg-accent transition-colors"
+              type="button"
+              onClick={() => handleAddEvent(moment(currentDate))}
+              className="flex items-center gap-1 px-3.5 py-1.5 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-2xl text-xs shadow-xs transition-all active:scale-95 cursor-pointer"
             >
-              <Printer size={16} />
-              In lịch
+              <Plus className="w-3.5 h-3.5" />
+              <span>Thêm lịch</span>
             </button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* 2. Lưới Lịch 7 Cột */}
-     <div className="grid grid-cols-7 flex-1 w-full overflow-hidden border-border md:border-l print:grid print:grid-cols-7 print:overflow-visible min-h-0">
+      {/* ── 2. LƯỚI 7 CỘT CHIẾM TRỌN CHIỀU CAO CÒN LẠI ── */}
+      <div className="flex-1 grid grid-cols-7 w-full overflow-x-auto overflow-y-hidden min-h-0 divide-x divide-border/60 bg-white">
         {weekDays.map((day) => {
           const isToday = day.isSame(new Date(), "day");
           const eventsForDay = allDayEvents.filter((event) =>
@@ -345,46 +326,45 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
       {showScheduleForm && role === "teacher" && (
         <ScheduleForm
           type={editingEvent ? "update" : "create"}
-          data={editingEvent ? {
-            id: editingEvent.id,
-            title: editingEvent.title,
-            description: editingEvent.description || "",
-            classId: editingEvent.classInfo?.id || classId || 0,
-            date: moment(editingEvent.date).format("YYYY-MM-DD"),
-            startTime: moment(editingEvent.startTime).format("HH:mm"),
-            endTime: moment(editingEvent.endTime).format("HH:mm"),
-          } : undefined}
+          data={
+            editingEvent
+              ? {
+                  id: editingEvent.id,
+                  title: editingEvent.title,
+                  description: editingEvent.description || "",
+                  classId: editingEvent.classInfo?.id || classId || 0,
+                  date: moment(editingEvent.date).format("YYYY-MM-DD"),
+                  startTime: moment(editingEvent.startTime).format("HH:mm"),
+                  endTime: moment(editingEvent.endTime).format("HH:mm"),
+                }
+              : undefined
+          }
           selectedDate={selectedDateForForm}
           classId={classId}
           setOpen={(open) => {
             setShowScheduleForm(open);
-            if (!open) setEditingEvent(null); // Reset editing event when closing
+            if (!open) setEditingEvent(null);
           }}
           onSuccess={handleScheduleSuccess}
-          // Callback đặc biệt cho update với recurrence check
           onUpdateSubmit={async (formData): Promise<boolean> => {
             if (!editingEvent) return false;
-
-            // Kiểm tra recurrence trước khi submit
             const recurrenceGroup = await scheduleService.checkRecurrenceGroup(editingEvent.id);
 
-            // Luôn hiển thị dialog bước 2, bất kể có recurrence hay không
             setRecurrenceData({
               eventId: editingEvent.id,
               title: formData.title,
               description: formData.description,
-              totalEvents: recurrenceGroup ? recurrenceGroup.totalEvents : 1
+              totalEvents: recurrenceGroup ? recurrenceGroup.totalEvents : 1,
             });
             setShowRecurrenceDialog(true);
-            setShowScheduleForm(false); // Đóng form chính
-            return false; // Ngăn submit thông thường, chờ user chọn trong dialog
+            setShowScheduleForm(false);
+            return false;
           }}
-          // TỐI ƯU: Truyền danh sách lớp đã tải sẵn xuống form
           teacherClasses={teacherClasses}
         />
       )}
 
-      {/* Recurrence Update Dialog */}
+      {/* Recurrence Dialogs */}
       {showRecurrenceDialog && recurrenceData && (
         <RecurrenceUpdateDialog
           isOpen={showRecurrenceDialog}
@@ -395,7 +375,6 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
         />
       )}
 
-      {/* Recurrence Delete Dialog */}
       {showDeleteDialog && deleteData && (
         <RecurrenceDeleteDialog
           isOpen={showDeleteDialog}
@@ -410,6 +389,4 @@ const AllDaySchedule = ({ schedules = [], role, classId, teacherClasses = [] }: 
   );
 };
 
-
-
-export default AllDaySchedule;
+export default BigCalendar;

@@ -149,41 +149,39 @@ Hữu ích cho:
 
     async def answer(self, query: str, chat_history: List = None) -> Tuple[str, List[Document]]:
         """
-        Trả lời câu hỏi bằng RAG pipeline trực tiếp (không qua Agent).
-        Nhanh hơn Agent nhưng không có tool-calling flexibility.
+        Trả lời câu hỏi bằng RAG pipeline trực tiếp (chuẩn xác, nhanh, không bị lỗi tool thought_signature).
 
         Returns:
             (answer_text, source_documents)
         """
-        # 1. Query Transform
-        transformer = QueryTransformer(llm=self._get_llm())
-        queries = transformer.transform(query)
-
-        # 2. Hybrid Search (multi-query nếu có expand)
+        # 1. Hybrid Search
         search_engine = self._get_search_engine()
-        if len(queries) > 1:
-            docs = search_engine.multi_query_search(queries)
-        else:
-            docs = search_engine.search(query)
+        docs = search_engine.search(query)
 
-        # 3. Rerank
-        reranker = self._get_reranker()
-        docs = reranker.rerank(query, docs)
+        # 2. Context formatting
+        context_parts = []
+        for i, doc in enumerate(docs):
+            src = doc.metadata.get("source_file", "")
+            page = doc.metadata.get("page_number", "")
+            meta_str = f" [Nguồn: {src} - Trang {page}]" if src or page else ""
+            context_parts.append(f"--- Đoạn {i+1}{meta_str} ---\n{doc.page_content}")
+        context = "\n\n".join(context_parts) if context_parts else "Không tìm thấy đoạn trích phù hợp trong tài liệu."
 
-        # 4. Context Compression
-        compressor = self._get_compressor()
-        docs = compressor.filter_by_similarity(query, docs)
+        # 3. Prompt
+        prompt_text = f"""{self._system_prompt}
 
-        # 5. Format context
-        context = compressor.format_context(docs)
+Dưới đây là tài liệu tham khảo được trích xuất từ tài liệu học tập của người dùng:
+{context}
 
-        # 6. Generate answer
+Hãy trả lời câu hỏi của người dùng dựa trên tài liệu trên một cách rõ ràng, chi tiết, chính xác bằng tiếng Việt:
+Câu hỏi: {query}"""
+
+        # 4. Generate answer
         llm = self._get_llm()
-        response = await llm.ainvoke(
-            f"Dựa vào context sau, hãy trả lời câu hỏi:\n\nContext:\n{context}\n\nCâu hỏi: {query}"
-        )
+        response = await llm.ainvoke(prompt_text)
+        answer_text = response.content if hasattr(response, "content") else str(response)
 
-        return response.content, docs
+        return answer_text, docs
 
     # ------------------------------------------------------------------
     # Essay Generation

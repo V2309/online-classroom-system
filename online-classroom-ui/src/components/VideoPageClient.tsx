@@ -1,5 +1,5 @@
-// page/class/[id]/video/VideoPageclient.tsx
 "use client";
+
 import TableSearch from "@/components/TableSearch";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -15,6 +15,11 @@ import {
   Eye,
   Pencil,
   Trash2,
+  Plus,
+  Video as VideoIcon,
+  FolderPlus,
+  ArrowRightLeft,
+  Sparkles,
 } from "lucide-react";
 import {
   CourseWithDetails,
@@ -24,13 +29,10 @@ import { useState, useCallback } from "react";
 import MoveCourseModal from "@/components/modals/MoveCourseModal";
 import { courseService } from "@/services/course.service";
 import { toast } from "react-toastify";
-import ClassPageHeader from "@/components/ClassPageHeader";
 
-// TỐI ƯU: Tạo formatter một lần bên ngoài component
 const dateFormatter = new Intl.DateTimeFormat("vi-VN");
 const formatDate = (date: Date) => dateFormatter.format(new Date(date));
 
-// Props
 interface VideoListProps {
   data: CourseWithDetails[];
   count: number;
@@ -50,21 +52,14 @@ export default function VideoList({
   classCode,
   role,
 }: VideoListProps) {
-  // --- State ---
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [openFolderMenuId, setOpenFolderMenuId] = useState<string | null>(null);
   const [showFolderForm, setShowFolderForm] = useState(false);
-  const [folderFormType, setFolderFormType] = useState<"create" | "update">(
-    "create"
-  );
+  const [folderFormType, setFolderFormType] = useState<"create" | "update">("create");
   const [folderFormData, setFolderFormData] = useState<any>(null);
-
-  // BƯỚC 3.2: Thêm state cho modal di chuyển
   const [showMoveModal, setShowMoveModal] = useState(false);
-  const [courseToMove, setCourseToMove] = useState<CourseWithDetails | null>(
-    null
-  );
-  // --- Hooks ---
+  const [courseToMove, setCourseToMove] = useState<CourseWithDetails | null>(null);
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeFolderId = searchParams.get("folderId");
@@ -81,10 +76,9 @@ export default function VideoList({
       accessor: "date",
       className: "hidden lg:table-cell",
     },
-    { header: "Actions", accessor: "action" },
+    { header: "Thao tác", accessor: "action" },
   ];
 
-  // --- Callbacks (TỐI ƯU) ---
   const handleOpenMenu = useCallback((id: string) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
   }, []);
@@ -94,7 +88,7 @@ export default function VideoList({
   }, []);
 
   const handleFormSuccess = useCallback(() => {
-    router.refresh(); // Refresh trang để cập nhật danh sách folder
+    router.refresh();
   }, [router]);
 
   const handleCreateFolder = useCallback(() => {
@@ -110,7 +104,7 @@ export default function VideoList({
         id: folder.id,
         name: folder.name,
         description: folder.description || "",
-        color: folder.color || "#3B82F6",
+        color: folder.color || "#2b5938",
         classCode: classCode,
       });
       setShowFolderForm(true);
@@ -127,9 +121,7 @@ export default function VideoList({
         toast.success("Khóa học đã được xóa thành công!");
         router.refresh();
       } catch (error: any) {
-        toast.error(
-          error.response?.data?.message || "Có lỗi xảy ra khi xóa khóa học."
-        );
+        toast.error(error.response?.data?.message || "Có lỗi xảy ra khi xóa khóa học.");
       }
     },
     [router]
@@ -148,35 +140,28 @@ export default function VideoList({
         toast.success("Thư mục đã được xóa thành công!");
         router.refresh();
       } catch (error: any) {
-        toast.error(
-          error.response?.data?.message || "Có lỗi xảy ra khi xóa thư mục."
-        );
+        toast.error(error.response?.data?.message || "Có lỗi xảy ra khi xóa thư mục.");
       }
     },
     [router]
   );
 
-  // BƯỚC 3.3: Tạo callback để mở modal di chuyển
   const handleOpenMoveModal = useCallback((course: CourseWithDetails) => {
     setCourseToMove(course);
     setShowMoveModal(true);
-    setOpenMenuId(null); // Đóng menu '...'
+    setOpenMenuId(null);
   }, []);
 
-  // TỐI ƯU: Bọc renderRow trong useCallback
   const renderRow = useCallback(
     (course: CourseWithDetails) => (
-      <tr
-        key={course.id}
-        className="border-b border-gray-200 hover:bg-slate-50"
-      >
+      <tr key={course.id} className="border-b border-border/70 hover:bg-muted/40 transition-colors">
         {/* Tên bài giảng */}
-        <td className="p-4">
+        <td className="p-3.5 sm:p-4">
           <Link
             href={`/class/${classCode}/video/${course.id}`}
-            className="flex items-center gap-4 group"
+            className="flex items-center gap-3.5 group"
           >
-            <div className="relative w-20 h-12 overflow-hidden rounded-lg bg-slate-200 flex-shrink-0">
+            <div className="relative w-16 sm:w-20 h-11 sm:h-12 overflow-hidden rounded-2xl bg-card border border-border flex-shrink-0 shadow-2xs">
               {course.thumbnailUrl ? (
                 <Image
                   path={course.thumbnailUrl}
@@ -186,92 +171,93 @@ export default function VideoList({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                  <Play className="w-6 h-6 text-white" />
+                <div className="w-full h-full bg-accent flex items-center justify-center text-primary">
+                  <Play className="w-5 h-5 fill-primary text-primary" />
                 </div>
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+              <h3 className="font-heading font-bold text-xs sm:text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                 {course.title}
               </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                <span className="font-medium text-primary">
-                  {course._count?.videos || 0} videos
-                </span>
-                {course.folder && <span className="mx-2">•</span>}
-                {course.folder && <span>{course.folder.name}</span>}
+              <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-2">
+                <span className="font-bold text-primary">{course._count?.videos || 0} videos</span>
+                {course.folder && <span>•</span>}
+                {course.folder && <span className="truncate">{course.folder.name}</span>}
               </p>
             </div>
           </Link>
         </td>
+
         {/* Trạng thái */}
-        <td className="hidden md:table-cell p-4">
+        <td className="hidden md:table-cell p-3.5 sm:p-4">
           <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
               course.isActive
-                ? "bg-state-success/15 text-state-success"
-                : "bg-muted text-muted-foreground"
+                ? "bg-accent text-primary border border-primary/20"
+                : "bg-muted text-secondary"
             }`}
           >
-            {course.isActive ? "Hoạt động" : "Đã tắt"}
+            {course.isActive ? "Đang mở" : "Đã ẩn"}
           </span>
         </td>
+
         {/* Ngày tạo */}
-        <td className="hidden lg:table-cell p-4">
-          <time
-            dateTime={new Date(course.createdAt).toISOString()}
-            className="text-sm text-muted-foreground"
-          >
+        <td className="hidden lg:table-cell p-3.5 sm:p-4">
+          <time dateTime={new Date(course.createdAt).toISOString()} className="text-xs text-muted-foreground font-medium">
             {formatDate(new Date(course.createdAt))}
           </time>
         </td>
+
         {/* Actions */}
-        <td className="p-4">
+        <td className="p-3.5 sm:p-4">
           <div className="relative">
             <button
               type="button"
               onClick={() => handleOpenMenu(course.id)}
-              className="p-1 rounded-full hover:bg-accent"
+              className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              <MoreVertical className="w-4 h-4 text-muted-foreground" />
+              <MoreVertical className="w-4 h-4" />
             </button>
+
             {openMenuId === course.id && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-card rounded-xl shadow-lg border border-border z-10">
-                <div className="px-1 py-2">
-                  <Link
-                    href={`/class/${classCode}/video/${course.id}`}
-                    className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-secondary hover:bg-accent hover:text-foreground rounded-lg transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span>Xem chi tiết</span>
-                  </Link>
-                  {role === "teacher" && (
-                    <>
-                      <Link
-                        href={`/class/${classCode}/video/${course.id}/edit`}
-                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-secondary hover:bg-accent hover:text-foreground rounded-lg transition-colors"
-                      >
-                        <Pencil className="w-4 h-4" />
-                        <span>Chỉnh sửa</span>
-                      </Link>
-                      <button 
-                        onClick={() => handleOpenMoveModal(course)}
-                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-secondary hover:bg-accent hover:text-foreground rounded-lg transition-colors"
-                      >
-                        <Folder className="w-4 h-4" />
-                        <span>Di chuyển</span>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCourse(course.id)}
-                        className="px-2 py-2 flex items-center gap-3 w-full text-left text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        <span>Xóa</span>
-                      </button>
-                    </>
-                  )}
-                </div>
+              <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-2xl shadow-xl border border-border py-1.5 z-30 animate-in fade-in zoom-in-95 duration-150">
+                <Link
+                  href={`/class/${classCode}/video/${course.id}`}
+                  className="px-3.5 py-2 flex items-center gap-2.5 w-full text-left text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Xem chi tiết</span>
+                </Link>
+
+                {role === "teacher" && (
+                  <>
+                    <Link
+                      href={`/class/${classCode}/video/${course.id}/edit`}
+                      className="px-3.5 py-2 flex items-center gap-2.5 w-full text-left text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Chỉnh sửa</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenMoveModal(course)}
+                      className="px-3.5 py-2 flex items-center gap-2.5 w-full text-left text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <ArrowRightLeft className="w-3.5 h-3.5" />
+                      <span>Di chuyển</span>
+                    </button>
+                    <div className="border-t border-border my-1" />
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCourse(course.id)}
+                      className="px-3.5 py-2 flex items-center gap-2.5 w-full text-left text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Xóa bài giảng</span>
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -281,78 +267,98 @@ export default function VideoList({
     [classCode, role, openMenuId, handleOpenMenu, handleOpenMoveModal, handleDeleteCourse]
   );
 
-
   return (
-    <div className="flex flex-col md:flex-row bg-background text-foreground font-sans min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 border-b md:border-r border-border p-4 shrink-0 bg-card">
-        <nav className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible md:space-y-1">
+    <div className="flex flex-col lg:flex-row gap-5 h-full min-h-0 w-full overflow-hidden text-foreground">
+      {/* ── CỘT 1: THƯ MỤC BÀI GIẢNG (BÊN TRÁI) ── */}
+      <aside className="w-full lg:w-64 xl:w-72 bg-white rounded-3xl border border-border shadow-sm p-4 sm:p-5 flex flex-col flex-shrink-0 overflow-hidden">
+        {/* Header Thư mục */}
+        <div className="flex items-center justify-between pb-3 border-b border-border/80 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <FolderOpen className="w-4 h-4 text-primary" />
+            <h3 className="font-heading font-bold text-foreground text-sm">Thư mục</h3>
+          </div>
+
+          {role === "teacher" && (
+            <button
+              type="button"
+              onClick={handleCreateFolder}
+              className="p-1.5 rounded-xl bg-accent text-primary hover:bg-accent/80 transition-all shadow-2xs cursor-pointer"
+              title="Tạo thư mục mới"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Danh sách folder */}
+        <nav className="flex-1 overflow-y-auto space-y-1.5 pt-3 scrollbar-thin min-h-0">
+          {/* Mục Tất cả */}
           <Link
             href={`/class/${classCode}/video`}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium shrink-0 relative transition-colors ${
+            className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
               !activeFolderId
-                ? "text-primary bg-accent font-semibold before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-primary before:rounded-r-full"
-                : "text-secondary hover:bg-accent/50 hover:text-foreground"
+                ? "bg-accent text-primary shadow-2xs font-bold"
+                : "text-secondary hover:bg-muted"
             }`}
           >
-            <FolderOpen className="w-5 h-5" />
-            <span>Tất cả bài giảng</span>
-            <span className="ml-auto text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+            <div className="flex items-center gap-2.5 truncate">
+              <FolderOpen className="w-4 h-4" />
+              <span>Tất cả bài giảng</span>
+            </div>
+            <span className="text-xs bg-white text-secondary px-2 py-0.5 rounded-full border border-border/60">
               {allCoursesCount}
             </span>
           </Link>
+
+          {/* Các thư mục tùy chỉnh */}
           {folders.map((folder) => (
-            <div
-              key={folder.id}
-              className="relative group flex items-center justify-between shrink-0"
-            >
+            <div key={folder.id} className="relative group flex items-center justify-between">
               <Link
                 href={`/class/${classCode}/video?folderId=${folder.id}`}
-                className={`flex-1 relative overflow-hidden flex items-center gap-3 pl-3 pr-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold transition-all ${
                   activeFolderId === folder.id
-                    ? "text-primary bg-accent font-semibold before:content-[''] before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-6 before:bg-primary before:rounded-r-full"
-                    : "text-secondary hover:bg-accent/50 hover:text-foreground"
+                    ? "bg-accent text-primary shadow-2xs font-bold"
+                    : "text-secondary hover:bg-muted"
                 }`}
               >
-                <div className="relative flex items-center">
-                  <Folder
-                    className="w-5 h-5"
-                    style={{ color: folder.color || "var(--accent-primary)" }}
-                  />
+                <div className="flex items-center gap-2.5 truncate">
+                  <Folder className="w-4 h-4 text-primary" style={{ color: folder.color || undefined }} />
+                  <span className="truncate">{folder.name}</span>
                 </div>
-                <span className="truncate flex-1">{folder.name}</span>
-                <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                <span className="text-xs bg-white text-secondary px-2 py-0.5 rounded-full border border-border/60">
                   {folder._count?.courses || 0}
                 </span>
               </Link>
-              {/* Nút 3 chấm cho folder */}
+
+              {/* Menu folder cho giáo viên */}
               {role === "teacher" && (
                 <div className="relative">
                   <button
+                    type="button"
                     onClick={() => handleOpenFolderMenu(folder.id)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-full hover:bg-accent mr-2"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-xl hover:bg-muted mr-1"
                   >
-                    <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                    <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
-                  {/* Menu con của folder */}
+
                   {openFolderMenuId === folder.id && (
-                    <div className="absolute right-0 top-full mt-1 w-40 bg-card rounded-xl shadow-lg border border-border z-20">
-                      <div className="p-1">
-                        <button
-                          onClick={() => handleEditFolder(folder)}
-                          className="w-full px-2 py-1.5 text-xs text-left text-secondary hover:bg-accent hover:text-foreground rounded-lg flex items-center gap-2"
-                        >
-                          <Pencil className="w-3 h-3" />
-                          Chỉnh sửa
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFolder(folder.id)}
-                          className="w-full px-2 py-1.5 text-xs text-left text-destructive hover:bg-destructive/10 rounded-lg flex items-center gap-2"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          Xóa
-                        </button>
-                      </div>
+                    <div className="absolute right-0 top-full mt-1 w-36 bg-white rounded-2xl shadow-lg border border-border py-1 z-30 animate-in fade-in zoom-in-95 duration-150">
+                      <button
+                        type="button"
+                        onClick={() => handleEditFolder(folder)}
+                        className="w-full px-3.5 py-2 text-xs font-semibold text-left text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        <span>Sửa</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFolder(folder.id)}
+                        className="w-full px-3.5 py-2 text-xs font-semibold text-left text-rose-700 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Xóa</span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -362,52 +368,67 @@ export default function VideoList({
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 bg-background rounded-md flex flex-col">
-        {/* Top */}
-        <ClassPageHeader title="Danh sách bài giảng" count={count}>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-            <TableSearch />
+      {/* ── CỘT 2: DANH SÁCH KHÓA HỌC BÀI GIẢNG (BÊN PHẢI) ── */}
+      <main className="flex-1 bg-white rounded-3xl border border-border shadow-sm p-4 sm:p-6 flex flex-col min-h-0 overflow-hidden">
+        {/* Top Header Card tích hợp */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/80 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-accent text-primary flex items-center justify-center shadow-2xs flex-shrink-0">
+              <VideoIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-base sm:text-lg font-heading font-bold text-foreground">
+                  Bài giảng video
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent text-primary">
+                  {count} khóa học
+                </span>
+              </div>
+              <p className="text-[11px] text-secondary mt-0.5">
+                Các bài giảng ghi hình và tài liệu học tập
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap self-stretch sm:self-auto justify-between sm:justify-end">
+            <div className="w-full sm:w-60">
+              <TableSearch />
+            </div>
+
             {role === "teacher" && (
-              <>
-                <button
-                  onClick={handleCreateFolder}
-                  className="px-3.5 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-accent whitespace-nowrap transition-colors shadow-sm"
-                >
-                  Tạo thư mục
-                </button>
-                <Link
-                  href={`/class/${classCode}/video/add`}
-                  className="px-3.5 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary-hover whitespace-nowrap transition-colors shadow-sm"
-                >
-                  Tạo khóa học
-                </Link>
-              </>
+              <Link
+                href={`/class/${classCode}/video/add`}
+                className="px-4 py-2 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-2xl text-xs sm:text-sm shadow-xs transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tạo khóa học</span>
+              </Link>
             )}
           </div>
-        </ClassPageHeader>
+        </div>
 
-        {/* List */}
-        <div className="flex-1 p-4">
+        {/* Danh sách table cuộn nội bộ */}
+        <div className="flex-1 overflow-y-auto pt-3 min-h-0 scrollbar-thin">
           {data.length > 0 ? (
             <Table columns={columns} renderRow={renderRow} data={data} />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-10">
-              <FolderOpen className="w-16 h-16 mb-4 text-muted-foreground/40" />
-              <h3 className="text-xl font-semibold text-foreground">
-                {activeFolderId
-                  ? "Thư mục này trống"
-                  : "Chưa có bài giảng nào"}
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
+              <div className="w-14 h-14 rounded-3xl bg-accent text-primary flex items-center justify-center mb-3 shadow-2xs">
+                <VideoIcon className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-heading font-bold text-foreground">
+                {activeFolderId ? "Thư mục này hiện chưa có bài giảng" : "Chưa có bài giảng nào trong lớp"}
               </h3>
-              <p className="mt-2 text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm">
                 {role === "teacher"
-                  ? "Hãy bắt đầu bằng cách tạo một khóa học mới."
-                  : "Nội dung sẽ sớm được cập nhật."}
+                  ? "Bắt đầu đăng tải các bài giảng video mới để học sinh có thể tự ôn tập."
+                  : "Nội dung bài giảng sẽ sớm được giáo viên cập nhật."}
               </p>
               {role === "teacher" && (
                 <Link
                   href={`/class/${classCode}/video/add`}
-                  className="mt-6 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
+                  className="mt-5 px-5 py-2.5 bg-primary text-primary-foreground font-semibold rounded-2xl text-xs sm:text-sm shadow-xs hover:bg-primary-hover transition-all"
                 >
                   Tạo khóa học mới
                 </Link>
@@ -416,37 +437,38 @@ export default function VideoList({
           )}
         </div>
 
-        {/* Pagination */}
-        <div className="mt-4">
+        {/* Phân trang */}
+        <div className="pt-3 border-t border-border/80 flex-shrink-0">
           {data.length > 0 && <Pagination page={page} count={count} />}
         </div>
       </main>
 
-      {/* Folder Form Modal */}
+      {/* Modal tạo thư mục */}
       {showFolderForm && (
         <FolderForm
           type={folderFormType}
           data={folderFormData}
           classCode={classCode}
           setOpen={setShowFolderForm}
-          onSuccess={handleFormSuccess} // Dùng handler
+          onSuccess={handleFormSuccess}
         />
       )}
-      {/* BƯỚC 3.6: Render Modal Di chuyển */}
-        {showMoveModal && courseToMove && (
-          <MoveCourseModal
-            isOpen={showMoveModal}
-            onClose={() => setShowMoveModal(false)}
-            courseId={courseToMove.id}
-            currentFolderId={courseToMove.folderId || null}
-            folders={folders} // Truyền danh sách folders xuống
-            classCode={classCode}
-            onSuccess={() => {
-              handleFormSuccess(); // Refresh
-              setShowMoveModal(false); // Đóng
-            }}
-          />
-        )}
+
+      {/* Modal di chuyển */}
+      {showMoveModal && courseToMove && (
+        <MoveCourseModal
+          isOpen={showMoveModal}
+          onClose={() => setShowMoveModal(false)}
+          courseId={courseToMove.id}
+          currentFolderId={courseToMove.folderId || null}
+          folders={folders}
+          classCode={classCode}
+          onSuccess={() => {
+            handleFormSuccess();
+            setShowMoveModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

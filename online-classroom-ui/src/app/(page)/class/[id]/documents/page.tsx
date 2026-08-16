@@ -13,7 +13,14 @@ export default async function Document({ params, searchParams }: DocumentPagePro
   const classCode = params.id;
 
   if (!user) {
-    return <div>Bạn cần đăng nhập để xem tài liệu.</div>;
+    return (
+      <div className="h-full flex items-center justify-center p-6 text-foreground bg-background">
+        <div className="bg-white border border-border rounded-3xl p-8 max-w-md text-center shadow-sm">
+          <p className="text-base font-bold text-destructive mb-2">Chưa đăng nhập</p>
+          <p className="text-xs text-muted-foreground">Bạn cần đăng nhập để xem tài liệu của lớp.</p>
+        </div>
+      </div>
+    );
   }
 
   const { page, search } = searchParams;
@@ -41,7 +48,7 @@ export default async function Document({ params, searchParams }: DocumentPagePro
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md flex flex-col h-full">
+    <div className="h-full w-full p-4 sm:p-5 flex flex-col overflow-hidden bg-background text-foreground">
       <DocumentPageClient
         userRole={user.role as string}
         initialFiles={data.files || []}

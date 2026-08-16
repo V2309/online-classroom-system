@@ -1,12 +1,11 @@
 import Feed from "@/components/Feed";
 import Share from "@/components/Share";
 import ClassUpcomingSchedule from "@/components/ClassUpcomingSchedule";
+import ClassBanner from "@/components/ClassBanner";
 import { getCurrentUser } from "@/lib/auth-server";
 import { serverFetch } from "@/lib/server-api";
-import ClassPageHeader from "@/components/ClassPageHeader";
 
 export default async function NewsfeedPage({ params }: { params: { id: string } }) {
-  // Lấy thông tin lớp học và lịch học từ NestJS API
   let classInfo: any = null;
   let schedules: any[] = [];
   try {
@@ -22,37 +21,39 @@ export default async function NewsfeedPage({ params }: { params: { id: string } 
 
   if (!classInfo) {
     return (
-      <div className="p-8 text-center text-destructive font-medium bg-background">
-        Không tìm thấy lớp học
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 text-foreground">
+        <div className="bg-white border border-border rounded-3xl p-8 max-w-md text-center shadow-sm">
+          <p className="text-base font-bold text-destructive mb-2">Không tìm thấy lớp học</p>
+          <p className="text-xs text-muted-foreground">Lớp học không tồn tại hoặc bạn chưa tham gia lớp này.</p>
+        </div>
       </div>
     );
   }
 
-  // Lấy thông tin user hiện tại
   const user = getCurrentUser();
   const classCode = classInfo.class_code || params.id;
+  const isTeacher = user?.role === "teacher";
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <ClassPageHeader title={`Bảng tin lớp: ${classInfo.name}`} className="sticky top-0 z-40" />
+    <div className="min-h-screen bg-background text-foreground pb-12">
+      {/* Content Layout */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-6">
+        {/* Banner lớp học phong cách hiện đại */}
+        <ClassBanner
+          classInfo={classInfo}
+          classCode={classCode}
+          isTeacher={isTeacher}
+        />
 
-      {/* Content Layout: Trái (Posts) - Phải (Schedule Widget) */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+        {/* Bố cục 2 cột: Trái (Bài đăng) - Phải (Lịch học & Deadline) */}
         <div className="flex flex-col lg:flex-row items-start gap-6">
-          {/* CỘT TRÁI: Form tạo bài viết & Danh sách bài đăng */}
-          <div className="flex-1 w-full min-w-0">
-            {/* Form tạo bài viết mới */}
-            <div className="mb-4 sm:mb-6">
-              <Share classCode={classCode} userImg={user?.img || undefined} />
-            </div>
-
-            {/* Feed */}
-            <div className="space-y-4 sm:space-y-6">
-              <Feed classCode={classCode} />
-            </div>
+          {/* CỘT TRÁI: Form tạo bài viết & Feed */}
+          <div className="flex-1 w-full min-w-0 space-y-5">
+            <Share classCode={classCode} userImg={user?.img || undefined} />
+            <Feed classCode={classCode} />
           </div>
 
-          {/* CỘT PHẢI: Lịch / Thông báo sắp diễn ra */}
+          {/* CỘT PHẢI: Lịch / Deadline sắp diễn ra */}
           <div className="w-full lg:w-80 xl:w-88 flex-shrink-0 lg:sticky lg:top-24">
             <ClassUpcomingSchedule classCode={classCode} schedules={schedules} />
           </div>

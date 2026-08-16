@@ -8,7 +8,7 @@ import { uploadService } from "@/services/upload.service";
 import { postService } from "@/services/post.service";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Video as VideoIcon, Paperclip, X } from "lucide-react";
+import { Image as ImageIcon, Video as VideoIcon, Paperclip, X, Send, Sparkles } from "lucide-react";
 
 const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) => {
   const router = useRouter();
@@ -77,22 +77,29 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-2xl sm:rounded-3xl border border-[#ece7de] shadow-sm p-4 sm:p-5 lg:p-6 transition-all"
+      className="bg-white rounded-3xl border border-border shadow-sm p-5 sm:p-6 transition-all hover:shadow-md"
     >
       {/* TOP SECTION: AVATAR + INPUT */}
-      <div className="flex items-start gap-3 sm:gap-4">
+      <div className="flex items-start gap-3.5 sm:gap-4">
         {/* AVATAR */}
-        <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-black/5 mt-0.5">
-          <Image path={userImg || "/avatar.png"} alt="" w={100} h={100} tr={true} className="object-cover w-full h-full" />
+        <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-border shadow-2xs mt-0.5">
+          <Image
+            path={userImg || "/avatar.png"}
+            alt=""
+            w={100}
+            h={100}
+            tr={true}
+            className="object-cover w-full h-full"
+          />
         </div>
 
         {/* INPUT CONTAINER */}
-        <div className="flex-1 bg-[#f4efe8] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 transition-colors focus-within:bg-[#ede7df]">
+        <div className="flex-1 bg-card rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-border/70 transition-colors focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary">
           <textarea
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
-            placeholder="Bạn muốn chia sẻ điều gì?"
-            className="w-full bg-transparent outline-none border-none text-foreground placeholder:text-[#5a554a] text-sm sm:text-base resize-none min-h-[50px] sm:min-h-[64px] leading-relaxed"
+            placeholder="Bạn muốn chia sẻ điều gì với lớp học hôm nay?"
+            className="w-full bg-transparent outline-none border-none text-foreground placeholder:text-muted-foreground text-xs sm:text-sm resize-none min-h-[55px] sm:min-h-[65px] leading-relaxed font-medium"
             rows={2}
             required
           />
@@ -101,10 +108,10 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
 
       {/* PREVIEWS */}
       {media?.type.includes("image") && previewURL && (
-        <div className="relative rounded-2xl overflow-hidden mt-4 border border-border">
+        <div className="relative rounded-2xl overflow-hidden mt-4 border border-border shadow-2xs">
           <NextImage
             src={previewURL}
-            alt=""
+            alt="Preview ảnh bài đăng"
             width={600}
             height={600}
             className={`w-full ${
@@ -116,14 +123,14 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
             }`}
           />
           <div
-            className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white py-1 px-3.5 rounded-full font-semibold text-xs cursor-pointer hover:bg-black/80 transition"
+            className="absolute top-2.5 left-2.5 bg-black/60 backdrop-blur-sm text-white py-1 px-3.5 rounded-full font-semibold text-xs cursor-pointer hover:bg-black/80 transition"
             onClick={() => setIsEditorOpen(true)}
           >
             Chỉnh sửa ảnh
           </div>
           <button
             type="button"
-            className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white h-7 w-7 flex items-center justify-center rounded-full cursor-pointer hover:bg-black/80 transition"
+            className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white h-7 w-7 flex items-center justify-center rounded-full cursor-pointer hover:bg-black/80 transition"
             onClick={() => setMedia(null)}
           >
             <X className="w-4 h-4" />
@@ -132,11 +139,11 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
       )}
 
       {media?.type.includes("video") && previewURL && (
-        <div className="relative rounded-2xl overflow-hidden mt-4 border border-border">
+        <div className="relative rounded-2xl overflow-hidden mt-4 border border-border shadow-2xs">
           <video src={previewURL} controls className="w-full max-h-96 rounded-2xl" />
           <button
             type="button"
-            className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white h-7 w-7 flex items-center justify-center rounded-full cursor-pointer hover:bg-black/80 transition"
+            className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white h-7 w-7 flex items-center justify-center rounded-full cursor-pointer hover:bg-black/80 transition"
             onClick={() => setMedia(null)}
           >
             <X className="w-4 h-4" />
@@ -145,15 +152,15 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
       )}
 
       {attachment && (
-        <div className="flex items-center justify-between bg-[#f4efe8] rounded-xl px-3.5 py-2 mt-3 border border-border">
-          <div className="flex items-center gap-2 text-sm text-[#554e42] truncate">
-            <Paperclip className="w-4 h-4 text-[#554e42] flex-shrink-0" />
-            <span className="font-medium truncate">{attachment.name}</span>
+        <div className="flex items-center justify-between bg-card rounded-2xl px-4 py-2.5 mt-3 border border-border shadow-2xs">
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-secondary truncate">
+            <Paperclip className="w-4 h-4 text-primary flex-shrink-0" />
+            <span className="font-semibold truncate">{attachment.name}</span>
           </div>
           <button
             type="button"
             onClick={() => setAttachment(null)}
-            className="text-muted-foreground hover:text-destructive p-1 rounded-full"
+            className="text-muted-foreground hover:text-destructive p-1 rounded-full cursor-pointer transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -170,7 +177,7 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
       )}
 
       {/* DIVIDER LINE */}
-      <div className="border-t border-[#f0ebe3] my-3.5 sm:my-4" />
+      <div className="border-t border-border/70 my-3.5 sm:my-4" />
 
       {/* BOTTOM ACTION BAR */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -186,9 +193,9 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
           />
           <label
             htmlFor="post-image-file"
-            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-[#e6efe8] hover:bg-[#d9e7dc] text-[#346343] cursor-pointer transition-colors text-xs sm:text-sm font-semibold select-none shadow-2xs"
+            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-accent hover:bg-accent/80 text-primary cursor-pointer transition-all text-xs sm:text-sm font-bold select-none shadow-2xs active:scale-95"
           >
-            <ImageIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#346343]" />
+            <ImageIcon className="w-4 h-4" />
             <span>Ảnh</span>
           </label>
 
@@ -202,9 +209,9 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
           />
           <label
             htmlFor="post-video-file"
-            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-[#f4ede3] hover:bg-[#eae0d2] text-[#554b3d] cursor-pointer transition-colors text-xs sm:text-sm font-semibold select-none shadow-2xs"
+            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 cursor-pointer transition-all text-xs sm:text-sm font-bold select-none shadow-2xs active:scale-95"
           >
-            <VideoIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#554b3d]" />
+            <VideoIcon className="w-4 h-4" />
             <span>Video</span>
           </label>
 
@@ -218,9 +225,9 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
           />
           <label
             htmlFor="post-attach-file"
-            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl bg-[#ece7df] hover:bg-[#e0d9cf] text-[#554e42] cursor-pointer transition-colors text-xs sm:text-sm font-semibold select-none shadow-2xs"
+            className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-2xl bg-muted hover:bg-muted/80 text-secondary cursor-pointer transition-all text-xs sm:text-sm font-semibold select-none shadow-2xs active:scale-95"
           >
-            <Paperclip className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#554e42]" />
+            <Paperclip className="w-4 h-4" />
             <span>Đính kèm</span>
           </label>
         </div>
@@ -229,7 +236,7 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-[#3f6d4d] hover:bg-[#345c40] text-white font-semibold rounded-full py-2 px-6 sm:px-7 text-xs sm:text-sm disabled:cursor-not-allowed disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
+          className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold rounded-full py-2.5 px-6 sm:px-7 text-xs sm:text-sm disabled:opacity-50 transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
         >
           {isSubmitting ? (
             <>
@@ -237,7 +244,10 @@ const Share = ({ classCode, userImg }: { classCode: string; userImg?: string }) 
               <span>Đang đăng...</span>
             </>
           ) : (
-            <span>Đăng bài</span>
+            <>
+              <Send className="w-3.5 h-3.5" />
+              <span>Đăng bài</span>
+            </>
           )}
         </button>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, Loader2 } from "lucide-react";
+import { UploadCloud, Loader2, FileCheck } from "lucide-react";
 import React from "react";
 import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
@@ -32,17 +32,15 @@ const FileUpload = ({ onFileUploaded }: FileUploadProps) => {
       if (!file) return;
 
       if (file.size > 10 * 1024 * 1024) {
-        toast.error("File quá lớn, tối đa 10MB");
+        toast.error("File quá lớn, dung lượng tối đa 10MB");
         return;
       }
 
       try {
         setUploading(true);
 
-        // 1. Upload file tài liệu lên Cloudflare R2 thông qua backend uploadService
         const uploadData = await uploadService.uploadDocument(file, "documents");
 
-        // 2. Lưu thông tin file vào database thông qua documentService
         await documentService.createDocument({
           name: file.name,
           url: uploadData.url,
@@ -69,40 +67,38 @@ const FileUpload = ({ onFileUploaded }: FileUploadProps) => {
   });
 
   return (
-    <div className="p-4 bg-white rounded-xl shadow">
+    <div className="p-5 bg-white rounded-3xl border border-border shadow-2xs">
       <div
         {...getRootProps({
           className:
-            "border-dashed border-2 rounded-xl cursor-pointer bg-gray-50 py-8 flex justify-center items-center flex-col",
+            "border-dashed border-2 border-primary/40 rounded-2xl cursor-pointer bg-accent/20 hover:bg-accent/40 py-8 px-4 flex justify-center items-center flex-col transition-all active:scale-[0.99]",
         })}
       >
         <input {...getInputProps()} />
         {uploading ? (
           <>
-            <Loader2 className="h-10 w-10 text-blue-500 animate-spin" />
-            <p className="mt-2 text-sm text-slate-400">Đang tải lên...</p>
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            <p className="mt-2 text-xs sm:text-sm font-semibold text-primary">Đang tải file lên đám mây...</p>
           </>
         ) : (
           <>
-            <Inbox className="w-10 h-10 text-blue-500" />
-            <p className="mt-2 text-sm text-slate-400">
-              Kéo thả hoặc chọn file tài liệu (PDF, Word)
+            <div className="w-12 h-12 rounded-2xl bg-white text-primary flex items-center justify-center mb-2 shadow-2xs">
+              <UploadCloud className="w-6 h-6" />
+            </div>
+            <p className="text-xs sm:text-sm font-bold text-foreground">
+              Kéo thả hoặc nhấp để chọn file tài liệu
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Hỗ trợ định dạng PDF, DOC, DOCX (Tối đa 10MB)
             </p>
           </>
         )}
       </div>
 
       {uploadedUrl && (
-        <div className="mt-4 text-sm text-green-600 break-all">
-          <p>File đã tải lên:</p>
-          <a
-            href={uploadedUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline text-blue-600"
-          >
-            {uploadedUrl}
-          </a>
+        <div className="mt-3 p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+          <FileCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <span className="truncate">Đã tải lên thành công: <b>{uploadedUrl}</b></span>
         </div>
       )}
     </div>

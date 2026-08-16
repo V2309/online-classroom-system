@@ -65,7 +65,7 @@ class IngestPipeline:
 
         # Step 2: Clean
         documents = self.cleaner.clean_documents(documents)
-        print(f"[IngestPipeline] Cleaned → {len(documents)} docs remaining")
+        print(f"[IngestPipeline] Cleaned -> {len(documents)} docs remaining")
 
         # Step 3: Extract raw text (dùng cho podcast/essay, trước khi chunk)
         raw_text = self._extract_raw_text(documents)
@@ -73,7 +73,7 @@ class IngestPipeline:
         # Step 4: Chunk
         chunker = self._get_chunker()
         chunks = chunker.split(documents)
-        print(f"[IngestPipeline] Chunked → {len(chunks)} chunks")
+        print(f"[IngestPipeline] Chunked -> {len(chunks)} chunks")
 
         if not chunks:
             raise ValueError("No text chunks were created. The documents may be empty or unsupported.")
@@ -83,7 +83,7 @@ class IngestPipeline:
         vector_store = FAISSVectorStore(embeddings=embeddings)
         vector_store.build_from_documents(chunks)
 
-        print(f"[IngestPipeline] ✅ Ingestion complete: {len(chunks)} chunks indexed")
+        print(f"[IngestPipeline] [OK] Ingestion complete: {len(chunks)} chunks indexed")
 
         return IngestResult(
             vector_store=vector_store,

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-toastify";
+import { useExamStore } from "@/stores/useExamStore";
 
 interface HomeworkSession {
   answers: Record<number, string>;
@@ -24,6 +25,9 @@ export function useHomeworkSession({ homeworkId, duration, onTimeUp, role }: Use
 
   const storageKey = `homework-${homeworkId}${role === 'teacher' ? '-teacher' : ''}`;
   const isTeacher = role === 'teacher';
+
+  // Đồng bộ vào Zustand useExamStore
+  const { setAnswer: setStoreAnswer, clearExam: clearStoreExam } = useExamStore();
 
   // Hàm khởi tạo phiên làm bài mới
   const initializeNewSession = useCallback(() => {
@@ -154,6 +158,7 @@ export function useHomeworkSession({ homeworkId, duration, onTimeUp, role }: Use
   // Các hàm tiện ích
   const updateAnswer = (questionId: number, answer: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
+    setStoreAnswer(questionId, answer);
   };
 
   const getTimeSpent = () => {
@@ -162,6 +167,7 @@ export function useHomeworkSession({ homeworkId, duration, onTimeUp, role }: Use
 
   const clearSession = () => {
     localStorage.removeItem(storageKey);
+    clearStoreExam(homeworkId);
     setAnswers({});
     setTimeLeft(duration * 60);
     setStartTime(null);

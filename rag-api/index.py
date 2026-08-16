@@ -43,12 +43,12 @@ def configure_google_api_key():
     primary_key = os.getenv("GOOGLE_API_KEY")
     backup_key = os.getenv("GOOGLE_API_KEY_BACKUP")
     if primary_key and primary_key.strip():
-        print(f"[INFO] Sử dụng GOOGLE_API_KEY chính (***{primary_key[-4:]})")
+        print(f"[INFO] Using primary GOOGLE_API_KEY (***{primary_key[-4:]})")
     elif backup_key and backup_key.strip():
-        print(f"[WARN] Dùng GOOGLE_API_KEY_BACKUP (***{backup_key[-4:]})")
+        print(f"[WARN] Using backup GOOGLE_API_KEY_BACKUP (***{backup_key[-4:]})")
         os.environ["GOOGLE_API_KEY"] = backup_key
     else:
-        print("[CRITICAL] Không tìm thấy Google API Key trong .env!")
+        print("[CRITICAL] GOOGLE_API_KEY not found in .env!")
 
 
 configure_google_api_key()
@@ -57,7 +57,7 @@ app = FastAPI(title="UniAI Backend API", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://localhost:8080", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -196,12 +196,10 @@ async def upload_documents(files: List[UploadFile] = File(...)):
         # Ingest → Embed → Index
         ingest_result = IngestPipeline().run(uploaded_files)
 
-        # Build RAG Agent
+        # Build RAG Pipeline
         qa_pipeline = QAPipeline(ingest_result=ingest_result, system_prompt=AGENT_SYSTEM_PROMPT)
-        agent_executor = qa_pipeline.build_agent()
 
         sessions[session_id] = {
-            'agent_executor': agent_executor,
             'qa_pipeline': qa_pipeline,
             'raw_text': ingest_result.raw_text,
             'text_chunks': ingest_result.chunks,
@@ -225,25 +223,29 @@ async def upload_documents(files: List[UploadFile] = File(...)):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    """Gửi tin nhắn đến AI agent trong session."""
+    """Gửi tin nhắn đến AI trong session."""
     try:
         if request.session_id not in sessions:
             raise HTTPException(status_code=404, detail="Session không tồn tại. Vui lòng upload lại tài liệu.")
 
         session = sessions[request.session_id]
-        agent_executor = session['agent_executor']
-        chat_history = session['chat_history']
+        qa_pipeline = session.get('qa_pipeline')
+        chat_history = session.get('chat_history', [])
 
         chat_history.append(HumanMessage(content=request.message))
 
         try:
-            response = agent_executor.invoke({
-                "input": request.message,
-                "chat_history": chat_history,
-            })
-            answer = response['output']
+            if qa_pipeline:
+                answer, _ = await qa_pipeline.answer(request.message, chat_history)
+            else:
+                agent_executor = session.get('agent_executor')
+                response = agent_executor.invoke({
+                    "input": request.message,
+                    "chat_history": chat_history,
+                })
+                answer = response['output']
         except Exception as agent_error:
-            print(f"[ERROR] Agent failed: {agent_error}")
+            print(f"[ERROR] Chat failed: {agent_error}")
             answer = f"Xin lỗi, có lỗi xảy ra: {str(agent_error)}. Vui lòng thử lại."
             return ChatResponse(response=answer, is_quiz=False)
 

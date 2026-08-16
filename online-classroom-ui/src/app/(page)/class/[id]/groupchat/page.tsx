@@ -24,25 +24,23 @@ export default async function GroupChatPage({ params }: PageProps) {
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-background text-foreground">
-      <div className="h-full overflow-hidden">
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-full bg-background">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto mb-4"></div>
-                <p className="text-muted-foreground font-medium">Đang tải chat...</p>
-              </div>
+    <div className="h-full w-full p-4 sm:p-5 flex flex-col overflow-hidden bg-background text-foreground">
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-full bg-white rounded-3xl border border-border shadow-sm">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent mx-auto mb-3"></div>
+              <p className="text-secondary font-semibold text-sm">Đang tải cuộc trò chuyện...</p>
             </div>
-          }
-        >
-          <ChatBox
-            classCode={classCode}
-            initialMessages={initialData.messages || []}
-            allMembers={initialData.allMembers || []}
-          />
-        </Suspense>
-      </div>
+          </div>
+        }
+      >
+        <ChatBox
+          classCode={classCode}
+          initialMessages={initialData.messages || []}
+          allMembers={initialData.allMembers || []}
+        />
+      </Suspense>
     </div>
   );
 }

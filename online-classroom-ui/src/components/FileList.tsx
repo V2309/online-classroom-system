@@ -1,13 +1,11 @@
-// file-list.tsx
 "use client";
 
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
-import { Download, FileText, Trash2, Eye, Loader2 } from "lucide-react";
+import { Download, FileText, Trash2, Eye, Loader2, FileCode, FileSpreadsheet } from "lucide-react";
 import Table from "@/components/Table";
-import TableSearch from "./TableSearch";
 import FileViewersModal from "./modals/FileViewersModal";
 import { documentService } from "@/services/document.service";
 import { DocumentItem } from "@/types/document";
@@ -21,11 +19,11 @@ interface FileListProps {
 }
 
 const formatFileSize = (bytes: number) => {
-  if (bytes === 0) return "0 Bytes";
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 };
 
 const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
@@ -38,18 +36,26 @@ const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
 const formatDate = (dateString: string | Date) =>
   dateFormatter.format(new Date(dateString));
 
-const fileIconMap: Record<string, React.ReactNode> = {
-  pdf: <FileText className="w-5 h-5 text-red-500" />,
-  word: <FileText className="w-5 h-5 text-blue-500" />,
-  document: <FileText className="w-5 h-5 text-blue-500" />,
-  default: <FileText className="w-5 h-5 text-gray-500" />,
-};
-
-const getFileIcon = (type: string) => {
-  if (type.includes("pdf")) return fileIconMap.pdf;
-  if (type.includes("word") || type.includes("document"))
-    return fileIconMap.document;
-  return fileIconMap.default;
+const getFileBadge = (type: string) => {
+  if (type.includes("pdf")) {
+    return (
+      <div className="w-9 h-9 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center justify-center flex-shrink-0 shadow-2xs font-bold text-[10px]">
+        PDF
+      </div>
+    );
+  }
+  if (type.includes("word") || type.includes("doc")) {
+    return (
+      <div className="w-9 h-9 rounded-2xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center flex-shrink-0 shadow-2xs font-bold text-[10px]">
+        DOC
+      </div>
+    );
+  }
+  return (
+    <div className="w-9 h-9 rounded-2xl bg-muted border border-border text-secondary flex items-center justify-center flex-shrink-0 shadow-2xs font-bold text-[10px]">
+      FILE
+    </div>
+  );
 };
 
 const FileList = ({
@@ -170,9 +176,7 @@ const FileList = ({
           }
         } catch (error: any) {
           console.error("Error deleting file:", error);
-          toast.error(
-            error.response?.data?.message || "Lỗi khi xóa tài liệu"
-          );
+          toast.error(error.response?.data?.message || "Lỗi khi xóa tài liệu");
         }
       }
     },
@@ -189,37 +193,34 @@ const FileList = ({
       let detailLink = `/class/${classCode}/documents/${file.id}`;
 
       return (
-        <tr
-          key={file.id}
-          className="border-b border-gray-200 hover:bg-slate-50"
-        >
+        <tr key={file.id} className="border-b border-border/70 hover:bg-muted/40 transition-colors">
           {/* Tên tài liệu */}
-          <td className="p-4">
+          <td className="p-3.5 sm:p-4">
             <Link href={detailLink} className="flex items-center gap-3 group">
-              <div className="flex-shrink-0">{getFileIcon(file.type)}</div>
+              {getFileBadge(file.type)}
               <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                <h3 className="font-heading font-bold text-xs sm:text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                   {file.name}
                 </h3>
-                <p className="text-sm text-slate-500 mt-1">
-                  {file.type.split("/")[1]?.toUpperCase() || "FILE"}
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {file.size ? formatFileSize(file.size) : "Tài liệu học"}
                 </p>
               </div>
             </Link>
           </td>
 
           {/* Người tải lên */}
-          <td className="p-4 hidden lg:table-cell">
-            <span className="text-sm text-slate-600">
-              {file.teacher?.username}
+          <td className="p-3.5 sm:p-4 hidden lg:table-cell">
+            <span className="text-xs font-semibold text-secondary">
+              {file.teacher?.username || "Giáo viên"}
             </span>
           </td>
 
           {/* Ngày tải lên */}
-          <td className="p-4 hidden lg:table-cell">
+          <td className="p-3.5 sm:p-4 hidden lg:table-cell">
             <time
               dateTime={new Date(file.uploadedAt).toISOString()}
-              className="text-sm text-slate-500"
+              className="text-xs text-muted-foreground font-medium"
             >
               {formatDate(file.uploadedAt)}
             </time>
@@ -227,32 +228,25 @@ const FileList = ({
 
           {/* Lượt xem (cho teacher) hoặc Trạng thái (cho student) */}
           {role === "teacher" ? (
-            <td className="p-4 hidden md:table-cell">
+            <td className="p-3.5 sm:p-4 hidden md:table-cell">
               <button
+                type="button"
                 onClick={() => handleShowViewers(file)}
-                className="flex items-center space-x-1 px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs rounded-full transition-colors"
-                title="Nhấn để xem chi tiết danh sách người đã xem"
+                className="flex items-center gap-1.5 px-3 py-1 bg-card hover:bg-muted text-secondary hover:text-foreground text-xs font-bold rounded-full border border-border transition-all cursor-pointer shadow-2xs"
+                title="Xem danh sách người đã xem"
               >
-                <Eye className="w-3.5 h-3.5 text-gray-500" />
-                <span>{file._count?.views || 0}</span>
-                <span className="text-gray-400">người xem</span>
+                <Eye className="w-3.5 h-3.5 text-primary" />
+                <span>{file._count?.views || 0} người xem</span>
               </button>
             </td>
           ) : (
-            <td className="p-4 hidden md:table-cell">
+            <td className="p-3.5 sm:p-4 hidden md:table-cell">
               {file.viewedByCurrentUser ? (
-                <div className="flex flex-col">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 w-fit">
-                    Đã xem
-                  </span>
-                  {file.firstViewedAt && (
-                    <span className="text-xs text-gray-400 mt-0.5">
-                      Lần đầu: {formatDate(file.firstViewedAt)}
-                    </span>
-                  )}
-                </div>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Đã xem
+                </span>
               ) : (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-muted text-secondary">
                   Chưa xem
                 </span>
               )}
@@ -260,11 +254,11 @@ const FileList = ({
           )}
 
           {/* Actions */}
-          <td className="p-4">
-            <div className="flex items-center space-x-2">
+          <td className="p-3.5 sm:p-4">
+            <div className="flex items-center gap-1.5">
               <Link
                 href={detailLink}
-                className="p-1.5 hover:bg-gray-100 rounded text-gray-600 hover:text-blue-600 transition-colors"
+                className="p-1.5 hover:bg-muted rounded-xl text-secondary hover:text-foreground transition-all cursor-pointer"
                 title="Xem chi tiết tài liệu"
               >
                 <Eye className="w-4 h-4" />
@@ -272,15 +266,16 @@ const FileList = ({
               <a
                 href={file.url}
                 download={file.name}
-                className="p-1.5 hover:bg-gray-100 rounded text-gray-600 hover:text-blue-600 transition-colors"
+                className="p-1.5 hover:bg-muted rounded-xl text-secondary hover:text-foreground transition-all cursor-pointer"
                 title="Tải xuống tài liệu"
               >
                 <Download className="w-4 h-4" />
               </a>
               {role === "teacher" && (
                 <button
+                  type="button"
                   onClick={() => handleDeleteFile(file.id)}
-                  className="p-1.5 hover:bg-red-50 rounded text-gray-600 hover:text-red-600 transition-colors"
+                  className="p-1.5 hover:bg-rose-50 rounded-xl text-muted-foreground hover:text-rose-700 transition-all cursor-pointer"
                   title="Xóa tài liệu"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -297,15 +292,22 @@ const FileList = ({
   return (
     <div>
       {loading ? (
-        <div className="flex justify-center items-center py-10">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="w-7 h-7 animate-spin text-primary" />
         </div>
       ) : files.length > 0 ? (
         <Table columns={columns} renderRow={renderRow} data={files} />
       ) : (
-        <div className="text-center py-10 text-gray-500">
-          <FileText className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-          <p>Chưa có tài liệu nào trong lớp học này</p>
+        <div className="text-center py-16 text-muted-foreground">
+          <div className="w-14 h-14 rounded-3xl bg-accent text-primary flex items-center justify-center mx-auto mb-3 shadow-2xs">
+            <FileText className="w-7 h-7" />
+          </div>
+          <h3 className="font-heading font-bold text-foreground text-base">Chưa có tài liệu nào</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            {role === "teacher"
+              ? "Hãy tải lên tài liệu PDF hoặc Word để học sinh có thể đọc và tham khảo."
+              : "Giáo viên chưa đăng tải tài liệu nào cho lớp học này."}
+          </p>
         </div>
       )}
 

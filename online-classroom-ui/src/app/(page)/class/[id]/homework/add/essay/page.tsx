@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import HomeworkFileUpload from "@/components/HomeworkFileUpload";
 import Image from "next/image";
+import { aiService } from "@/services/ai.service";
 
 interface EssayQuestion {
   question_number: number;
@@ -42,40 +43,24 @@ export default function EssayGenerationPage({ params }: { params: { id: string }
     setError("");
 
     try {
-      // Bước 1: Upload tài liệu để tạo session (sử dụng API có sẵn)
-      const uploadFormData = new FormData();
-      uploadFormData.append('files', selectedFile);
-
-      const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/upload-documents`, {
-        method: 'POST',
-        body: uploadFormData,
-      });
-
-      const uploadResult = await uploadResponse.json();
+      // Bước 1: Upload tài liệu để tạo session
+      const uploadResult = await aiService.uploadDocuments([selectedFile]);
 
       if (!uploadResult.success) {
         throw new Error(uploadResult.message || "Không thể upload file");
       }
 
       // Bước 2: Tạo câu hỏi tự luận từ session
-      const essayResponse = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/api/generate-essay-questions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: uploadResult.session_id,
-          num_questions: numQuestions,
-        }),
+      const essayResult = await aiService.generateEssayQuestions({
+        session_id: uploadResult.session_id,
+        num_questions: numQuestions,
       });
-
-      const essayResult = await essayResponse.json();
 
       if (essayResult.success) {
         // Lưu dữ liệu vào localStorage
         const essayData: EssayGenerationData = {
           success: true,
-          questions: essayResult.questions,
+          questions: essayResult.questions as any,
           total_questions: essayResult.questions.length,
           source_type: 'file',
           source_name: selectedFile.name,
@@ -94,8 +79,8 @@ export default function EssayGenerationPage({ params }: { params: { id: string }
       } else {
         setError(essayResult.message || "Có lỗi xảy ra khi tạo câu hỏi tự luận");
       }
-    } catch (err) {
-      setError("Không thể kết nối đến server. Vui lòng thử lại.");
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Không thể kết nối đến server. Vui lòng thử lại.");
       console.error("Essay generation error:", err);
     } finally {
       setIsGenerating(false);
@@ -117,24 +102,16 @@ export default function EssayGenerationPage({ params }: { params: { id: string }
     setError("");
 
     try {
-      const essayResponse = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/api/generate-essay-questions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic: topic.trim(),
-          num_questions: numQuestions,
-        }),
+      const essayResult = await aiService.generateEssayQuestions({
+        topic: topic.trim(),
+        num_questions: numQuestions,
       });
-
-      const essayResult = await essayResponse.json();
 
       if (essayResult.success) {
         // Lưu dữ liệu vào localStorage
         const essayData: EssayGenerationData = {
           success: true,
-          questions: essayResult.questions,
+          questions: essayResult.questions as any,
           total_questions: essayResult.questions.length,
           source_type: 'topic',
           source_name: topic.trim(),
@@ -147,8 +124,8 @@ export default function EssayGenerationPage({ params }: { params: { id: string }
       } else {
         setError(essayResult.message || "Có lỗi xảy ra khi tạo câu hỏi tự luận");
       }
-    } catch (err) {
-      setError("Không thể kết nối đến server. Vui lòng thử lại.");
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Không thể kết nối đến server. Vui lòng thử lại.");
       console.error("Topic essay generation error:", err);
     } finally {
       setIsGenerating(false);

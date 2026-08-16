@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from '@/components/Image';
-import { toast } from 'react-toastify';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { ClassGroupItem, StudentWithoutGroup } from '@/types/group';
-import { groupService } from '@/services/group.service';
-import ClassPageHeader from '@/components/ClassPageHeader';
+import { useState } from "react";
+import Image from "@/components/Image";
+import { toast } from "react-toastify";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { ClassGroupItem, StudentWithoutGroup } from "@/types/group";
+import { groupService } from "@/services/group.service";
+import { Users, Plus, Trash2, X, Sparkles, GripVertical, UserPlus, Check } from "lucide-react";
 
 interface ClassGroupsPageProps {
   classCode: string;
@@ -18,14 +18,14 @@ interface ClassGroupsPageProps {
 }
 
 const groupColors = {
-  'blue': '#3B82F6',
-  'green': '#10B981',
-  'red': '#EF4444',
-  'purple': '#8B5CF6',
-  'yellow': '#F59E0B',
-  'pink': '#EC4899',
-  'indigo': '#6366F1',
-  'teal': '#14B8A6',
+  blue: "#2b5938",
+  emerald: "#10b981",
+  amber: "#f59e0b",
+  rose: "#e11d48",
+  purple: "#8b5cf6",
+  cyan: "#06b6d4",
+  orange: "#ea580c",
+  teal: "#0d9488",
 };
 
 const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
@@ -39,82 +39,87 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
   const [groups, setGroups] = useState(initialGroups);
   const [studentsWithoutGroup, setStudentsWithoutGroup] = useState(initialStudents);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [selectedColor, setSelectedColor] = useState('blue');
+  const [newGroupName, setNewGroupName] = useState("");
+  const [selectedColor, setSelectedColor] = useState("blue");
   const [maxGroupSize, setMaxGroupSize] = useState<number | null>(null);
 
   // Xử lý logic cập nhật UI sau khi kéo thả
-  const updateUIAfterDrop = (studentId: string, sourceGroupId: string | null, targetGroupId: string | null) => {
+  const updateUIAfterDrop = (
+    studentId: string,
+    sourceGroupId: string | null,
+    targetGroupId: string | null
+  ) => {
     let studentToMove: StudentWithoutGroup | null = null;
 
-    // 1. Tìm và lấy thông tin student từ nguồn (source)
     if (sourceGroupId) {
-      // Nếu kéo từ một nhóm
-      const sourceGroup = groups.find(g => g.id === sourceGroupId);
-      const member = sourceGroup?.members.find(m => m.student.id === studentId);
+      const sourceGroup = groups.find((g) => g.id === sourceGroupId);
+      const member = sourceGroup?.members.find((m) => m.student.id === studentId);
       if (member) {
         studentToMove = member.student;
-        // Xóa khỏi nhóm cũ
-        setGroups(prev => prev.map(g => {
-          if (g.id === sourceGroupId) {
-            return { ...g, members: g.members.filter(m => m.student.id !== studentId) };
-          }
-          return g;
-        }));
+        setGroups((prev) =>
+          prev.map((g) => {
+            if (g.id === sourceGroupId) {
+              return {
+                ...g,
+                members: g.members.filter((m) => m.student.id !== studentId),
+              };
+            }
+            return g;
+          })
+        );
       }
     } else {
-      // Nếu kéo từ danh sách chưa phân nhóm (unassigned)
-      studentToMove = studentsWithoutGroup.find(s => s.id === studentId) || null;
+      studentToMove = studentsWithoutGroup.find((s) => s.id === studentId) || null;
       if (studentToMove) {
-        // Xóa khỏi danh sách unassigned
-        setStudentsWithoutGroup(prev => prev.filter(s => s.id !== studentId));
+        setStudentsWithoutGroup((prev) => prev.filter((s) => s.id !== studentId));
       }
     }
 
-    // Nếu không tìm thấy học sinh thì dừng
     if (!studentToMove) return;
 
-    // 2. Thêm student vào đích (target)
     if (targetGroupId) {
-      // Thêm vào nhóm mới
-      setGroups(prev => prev.map(g => {
-        if (g.id === targetGroupId) {
-          return {
-            ...g,
-            members: [...g.members, {
-              id: `temp-${Date.now()}`,
-              student: studentToMove!,
-              groupId: targetGroupId,
-              studentId: studentId,
-              role: 'MEMBER' as const,
-              joinedAt: new Date(),
-            }]
-          };
-        }
-        return g;
-      }));
+      setGroups((prev) =>
+        prev.map((g) => {
+          if (g.id === targetGroupId) {
+            return {
+              ...g,
+              members: [
+                ...g.members,
+                {
+                  id: `temp-${Date.now()}`,
+                  student: studentToMove!,
+                  groupId: targetGroupId,
+                  studentId: studentId,
+                  role: "MEMBER" as const,
+                  joinedAt: new Date(),
+                },
+              ],
+            };
+          }
+          return g;
+        })
+      );
     } else {
-      // Trả về danh sách chưa phân nhóm
-      setStudentsWithoutGroup(prev => [...prev, studentToMove!]);
+      setStudentsWithoutGroup((prev) => [...prev, studentToMove!]);
     }
   };
 
-  // Xử lý sự kiện kéo thả
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result;
 
-    // Nếu thả ra ngoài hoặc thả vào chỗ cũ thì không làm gì
-    if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+    if (
+      !destination ||
+      (destination.droppableId === source.droppableId && destination.index === source.index)
+    ) {
       return;
     }
 
     const studentId = draggableId;
-    const sourceGroupId = source.droppableId === 'unassigned' ? null : source.droppableId;
-    const targetGroupId = destination.droppableId === 'unassigned' ? null : destination.droppableId;
+    const sourceGroupId = source.droppableId === "unassigned" ? null : source.droppableId;
+    const targetGroupId = destination.droppableId === "unassigned" ? null : destination.droppableId;
 
-    // Kiểm tra giới hạn số lượng thành viên của nhóm đích
     if (targetGroupId) {
-      const targetGroup = groups.find(g => g.id === targetGroupId);
+      const targetGroup = groups.find((g) => g.id === targetGroupId);
       if (targetGroup?.maxSize && targetGroup.members.length >= targetGroup.maxSize) {
         toast.error(`Nhóm đã đầy (tối đa ${targetGroup.maxSize} thành viên)`);
         return;
@@ -128,7 +133,6 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
         classCode,
       });
 
-      // Cập nhật UI ngay lập tức
       updateUIAfterDrop(studentId, sourceGroupId, targetGroupId);
       toast.success(targetGroupId ? "Đã thêm vào nhóm" : "Đã loại khỏi nhóm");
     } catch (error: any) {
@@ -137,7 +141,6 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
     }
   };
 
-  // Tạo nhóm mới
   const handleCreateGroup = async () => {
     if (!newGroupName.trim()) {
       toast.error("Vui lòng nhập tên nhóm");
@@ -146,41 +149,41 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
 
     try {
       const createdGroup = await groupService.createGroup({
-        name: newGroupName,
+        name: newGroupName.trim(),
         classCode,
         color: groupColors[selectedColor as keyof typeof groupColors],
         maxSize: maxGroupSize,
       });
 
-      setGroups(prev => [...prev, createdGroup]);
-      setNewGroupName('');
+      setGroups((prev) => [...prev, createdGroup]);
+      setNewGroupName("");
+      setMaxGroupSize(null);
       setIsCreatingGroup(false);
-      toast.success("Tạo nhóm thành công");
+      toast.success("Tạo nhóm thành công!");
     } catch (error: any) {
       console.error(error);
       toast.error(error.response?.data?.message || "Có lỗi xảy ra khi tạo nhóm");
     }
   };
 
-  // Xóa nhóm
   const handleDeleteGroup = async (groupId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa nhóm này? Các thành viên sẽ trở về danh sách chưa phân nhóm.')) {
+    if (
+      !confirm("Bạn có chắc chắn muốn xóa nhóm này? Các thành viên sẽ trở về danh sách chưa phân nhóm.")
+    ) {
       return;
     }
 
     try {
       await groupService.deleteGroup(groupId);
 
-      // Di chuyển tất cả thành viên của nhóm về danh sách chưa phân nhóm
-      const deletedGroup = groups.find(g => g.id === groupId);
+      const deletedGroup = groups.find((g) => g.id === groupId);
       if (deletedGroup && deletedGroup.members.length > 0) {
-        const membersToMove = deletedGroup.members.map(member => member.student);
-        setStudentsWithoutGroup(prev => [...prev, ...membersToMove]);
+        const membersToMove = deletedGroup.members.map((member) => member.student);
+        setStudentsWithoutGroup((prev) => [...prev, ...membersToMove]);
       }
 
-      // Xóa nhóm khỏi state
-      setGroups(prev => prev.filter(g => g.id !== groupId));
-      toast.success("Xóa nhóm thành công");
+      setGroups((prev) => prev.filter((g) => g.id !== groupId));
+      toast.success("Xóa nhóm thành công!");
     } catch (error: any) {
       console.error(error);
       toast.error(error.response?.data?.message || "Có lỗi xảy ra khi xóa nhóm");
@@ -189,47 +192,283 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="bg-background min-h-screen text-foreground transition-colors">
-        {/* Header */}
-        <ClassPageHeader title="Phân Chia Nhóm Lớp" className="sticky top-0 z-40">
-          {isTeacher && (
-            <button
-              onClick={() => setIsCreatingGroup(true)}
-              className="px-5 py-2 bg-[#3f6d4d] hover:bg-[#345c40] text-white rounded-full transition-all shadow-sm text-sm font-semibold flex items-center gap-1.5 active:scale-95"
-            >
-              + Tạo Nhóm Mới
-            </button>
-          )}
-        </ClassPageHeader>
+      <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* ── TOP HEADER CARD ── */}
+          <div className="bg-white rounded-3xl border border-border shadow-sm p-5 sm:p-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-accent text-primary flex items-center justify-center shadow-2xs flex-shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
+                  Phân chia nhóm học tập
+                </h1>
+                <p className="text-xs sm:text-sm text-secondary">
+                  Kéo thả học sinh giữa các nhóm để phân công làm bài tập và thảo luận
+                </p>
+              </div>
+            </div>
 
-        {/* Create Group Modal */}
+            {isTeacher && (
+              <button
+                type="button"
+                onClick={() => setIsCreatingGroup(true)}
+                className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-2xl text-xs sm:text-sm shadow-xs transition-all flex items-center gap-2 active:scale-95 cursor-pointer self-stretch sm:self-auto justify-center"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tạo nhóm mới</span>
+              </button>
+            )}
+          </div>
+
+          {/* ── MAIN CONTENT: 2 COLUMNS (Unassigned vs Groups Grid) ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            {/* CỘT TRÁI: HỌC SINH CHƯA PHÂN NHÓM */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-border lg:sticky lg:top-24 text-foreground space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-border/70">
+                  <h3 className="font-heading font-bold text-foreground text-sm sm:text-base">
+                    Chưa phân nhóm
+                  </h3>
+                  <span className="bg-muted text-secondary text-xs font-bold px-2.5 py-0.5 rounded-full">
+                    {studentsWithoutGroup.length}
+                  </span>
+                </div>
+
+                <Droppable droppableId="unassigned">
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`space-y-2.5 min-h-[380px] max-h-[calc(100vh-250px)] overflow-y-auto p-2.5 rounded-2xl border-2 border-dashed transition-all scrollbar-thin ${
+                        snapshot.isDraggingOver
+                          ? "border-primary bg-accent/40"
+                          : "border-border bg-card/50"
+                      }`}
+                    >
+                      {studentsWithoutGroup.map((student, index) => (
+                        <Draggable key={student.id} draggableId={student.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className={`flex items-center gap-2.5 p-2.5 sm:p-3 bg-white rounded-2xl border border-border cursor-grab active:cursor-grabbing transition-all ${
+                                snapshot.isDragging
+                                  ? "shadow-xl ring-2 ring-primary rotate-1 z-50"
+                                  : "shadow-2xs hover:border-primary/40"
+                              }`}
+                              style={provided.draggableProps.style}
+                            >
+                              <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border shadow-2xs">
+                                <Image
+                                  path={student.img || "/avatar.png"}
+                                  alt={student.username}
+                                  w={48}
+                                  h={48}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className="text-xs sm:text-sm font-bold text-foreground truncate min-w-0 flex-1">
+                                {student.username}
+                              </p>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+
+                      {studentsWithoutGroup.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-40 text-muted-foreground text-xs text-center p-4 font-medium">
+                          <Check className="w-6 h-6 text-emerald-600 mb-1.5" />
+                          <span>Tất cả học sinh đã được phân nhóm</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            </div>
+
+            {/* CỘT PHẢI: LƯỚI DANH SÁCH CÁC NHÓM */}
+            <div className="lg:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {groups.map((group) => (
+                  <div
+                    key={group.id}
+                    className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-border flex flex-col text-foreground transition-all hover:shadow-md"
+                  >
+                    {/* Header Nhóm */}
+                    <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-border/70">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="w-3.5 h-3.5 rounded-full shadow-2xs flex-shrink-0 ring-2 ring-white"
+                          style={{ backgroundColor: group.color || "#2b5938" }}
+                        />
+                        <h4 className="font-heading font-bold text-foreground text-sm sm:text-base truncate">
+                          {group.name}
+                        </h4>
+                      </div>
+
+                      {isTeacher && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGroup(group.id)}
+                          className="text-muted-foreground hover:text-destructive p-1 rounded-full hover:bg-destructive/10 transition-colors cursor-pointer"
+                          title="Xóa nhóm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Số lượng thành viên */}
+                    <div className="flex justify-between items-center text-xs text-muted-foreground mb-3 font-medium">
+                      <span>Thành viên</span>
+                      <span
+                        className={`font-bold ${
+                          group.maxSize && group.members.length >= group.maxSize
+                            ? "text-rose-600"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {group.members.length}
+                        {group.maxSize ? `/${group.maxSize}` : ""}
+                      </span>
+                    </div>
+
+                    {/* Vùng thả thành viên */}
+                    <Droppable droppableId={group.id}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`flex-1 space-y-2.5 min-h-[170px] p-2.5 rounded-2xl border-2 border-dashed transition-all scrollbar-thin ${
+                            snapshot.isDraggingOver
+                              ? "border-primary bg-accent/40"
+                              : "border-border bg-card/40"
+                          }`}
+                        >
+                          {group.members.map((member, index) => (
+                            <Draggable
+                              key={member.student.id}
+                              draggableId={member.student.id}
+                              index={index}
+                            >
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={`flex items-center gap-2.5 p-2 bg-white rounded-2xl border border-border cursor-grab active:cursor-grabbing transition-all ${
+                                    snapshot.isDragging
+                                      ? "shadow-xl rotate-1 z-50 ring-2 ring-primary"
+                                      : "shadow-2xs hover:border-primary/40"
+                                  }`}
+                                  style={provided.draggableProps.style}
+                                >
+                                  <GripVertical className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                  <div className="w-7 h-7 rounded-full overflow-hidden flex-shrink-0 ring-1 ring-border shadow-2xs">
+                                    <Image
+                                      path={member.student.img || "/avatar.png"}
+                                      alt={member.student.username}
+                                      w={40}
+                                      h={40}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <p className="text-xs font-bold text-foreground truncate min-w-0 flex-1">
+                                    {member.student.username}
+                                  </p>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+
+                          {group.members.length === 0 && (
+                            <div className="flex flex-col items-center justify-center h-full py-8 text-muted-foreground text-xs font-medium">
+                              <UserPlus className="w-5 h-5 text-muted-foreground/50 mb-1" />
+                              <span>Kéo học sinh vào đây</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Droppable>
+                  </div>
+                ))}
+
+                {/* Empty State */}
+                {groups.length === 0 && (
+                  <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-3xl border border-border border-dashed shadow-sm text-foreground text-center p-6">
+                    <div className="w-16 h-16 rounded-3xl bg-accent text-primary flex items-center justify-center mb-4 shadow-2xs">
+                      <Users className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-lg font-heading font-bold text-foreground mb-1">
+                      Chưa có nhóm học tập nào
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-6 max-w-sm">
+                      {isTeacher
+                        ? "Tạo các nhóm học tập để chia nhỏ lớp học phục vụ làm đồ án, thảo luận và làm bài tập theo nhóm."
+                        : "Giáo viên hiện chưa tạo nhóm nào cho lớp học này."}
+                    </p>
+                    {isTeacher && (
+                      <button
+                        type="button"
+                        onClick={() => setIsCreatingGroup(true)}
+                        className="px-6 py-2.5 bg-primary hover:bg-primary-hover text-primary-foreground rounded-2xl font-semibold text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
+                      >
+                        + Tạo nhóm ngay
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── CREATE GROUP MODAL ── */}
         {isCreatingGroup && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white p-6 rounded-2xl sm:rounded-3xl shadow-xl max-w-md w-full mx-4 border border-[#ece7de] text-foreground animate-in fade-in zoom-in duration-200">
-              <h3 className="text-lg font-bold mb-4 text-[#1f2421]">Tạo Nhóm Mới</h3>
-              
+            <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl max-w-md w-full border border-border text-foreground animate-in fade-in zoom-in-95 duration-150 space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-border/80">
+                <h3 className="text-lg font-heading font-bold text-foreground">Tạo nhóm học mới</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsCreatingGroup(false)}
+                  className="p-1 rounded-full text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground">Tên nhóm</label>
+                  <label className="block text-xs font-bold text-foreground mb-1.5">Tên nhóm</label>
                   <input
                     type="text"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="VD: Nhóm 1, Nhóm A..."
-                    className="w-full px-3.5 py-2.5 bg-[#f4efe8] border border-border rounded-xl focus:ring-1 focus:ring-primary focus:bg-white outline-none text-foreground text-sm transition-all"
+                    placeholder="VD: Nhóm 1, Nhóm A, Nhóm Dự Án..."
+                    className="w-full px-4 py-2.5 bg-card border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-foreground text-xs sm:text-sm font-medium transition-all"
                     autoFocus
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground">Màu nhóm</label>
-                  <div className="flex flex-wrap gap-2">
+                  <label className="block text-xs font-bold text-foreground mb-1.5">Màu đại diện nhóm</label>
+                  <div className="flex flex-wrap gap-2.5">
                     {Object.entries(groupColors).map(([name, color]) => (
                       <button
                         key={name}
                         onClick={() => setSelectedColor(name)}
-                        className={`w-8 h-8 rounded-full transition-all ${
-                          selectedColor === name ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-105 opacity-85 hover:opacity-100'
+                        className={`w-7 h-7 rounded-full transition-all cursor-pointer ${
+                          selectedColor === name
+                            ? "ring-2 ring-offset-2 ring-primary scale-110 shadow-sm"
+                            : "hover:scale-105 opacity-80 hover:opacity-100"
                         }`}
                         style={{ backgroundColor: color }}
                         title={name}
@@ -240,228 +479,41 @@ const ClassGroupsPageSimple: React.FC<ClassGroupsPageProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground">Số thành viên tối đa (tùy chọn)</label>
+                  <label className="block text-xs font-bold text-foreground mb-1.5">
+                    Số thành viên tối đa (tùy chọn)
+                  </label>
                   <input
                     type="number"
-                    value={maxGroupSize || ''}
-                    onChange={(e) => setMaxGroupSize(e.target.value ? parseInt(e.target.value) : null)}
+                    value={maxGroupSize || ""}
+                    onChange={(e) =>
+                      setMaxGroupSize(e.target.value ? parseInt(e.target.value) : null)
+                    }
                     placeholder="Để trống nếu không giới hạn"
                     min="1"
-                    className="w-full px-3.5 py-2.5 bg-[#f4efe8] border border-border rounded-xl focus:ring-1 focus:ring-primary focus:bg-white outline-none text-foreground text-sm transition-all"
+                    className="w-full px-4 py-2.5 bg-card border border-border rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-foreground text-xs sm:text-sm font-medium transition-all"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 pt-2">
                 <button
-                  onClick={handleCreateGroup}
-                  className="flex-1 px-4 py-2.5 bg-[#3f6d4d] hover:bg-[#345c40] text-white font-semibold rounded-xl transition-colors text-sm shadow-sm"
-                >
-                  Tạo Nhóm
-                </button>
-                <button
+                  type="button"
                   onClick={() => setIsCreatingGroup(false)}
-                  className="px-4 py-2.5 bg-muted text-foreground hover:bg-accent rounded-xl transition-colors text-sm font-medium"
+                  className="flex-1 px-4 py-2.5 bg-muted text-foreground hover:bg-muted/80 font-semibold rounded-2xl text-xs sm:text-sm transition-all cursor-pointer"
                 >
                   Hủy
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateGroup}
+                  className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-2xl text-xs sm:text-sm shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                  Tạo nhóm
                 </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6 p-4 sm:p-6">
-          
-          {/* Unassigned Students Column */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 shadow-sm border border-[#ece7de] sticky top-24 text-foreground">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-[#1f2421] text-base">
-                  Chưa phân nhóm
-                </h3>
-                <span className="bg-[#f4ede3] text-[#554e42] text-xs font-semibold px-2.5 py-1 rounded-full">
-                  {studentsWithoutGroup.length}
-                </span>
-              </div>
-              
-              <Droppable droppableId="unassigned">
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`space-y-2.5 min-h-[400px] max-h-[calc(100vh-220px)] overflow-y-auto p-2.5 rounded-2xl border-2 border-dashed transition-colors scrollbar-thin ${
-                      snapshot.isDraggingOver 
-                        ? 'border-primary bg-accent/30' 
-                        : 'border-[#e6dfd5] bg-[#faf6f0]/60'
-                    }`}
-                  >
-                    {studentsWithoutGroup.map((student, index) => (
-                      <Draggable key={student.id} draggableId={student.id} index={index}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`flex items-center gap-3 p-3 bg-white rounded-xl border border-[#ece7de] cursor-grab active:cursor-grabbing transition-all ${
-                              snapshot.isDragging
-                                ? 'shadow-lg ring-2 ring-primary rotate-1 z-50'
-                                : 'shadow-2xs hover:shadow-sm hover:border-primary/40'
-                            }`}
-                            style={{
-                              ...provided.draggableProps.style,
-                            }}
-                          >
-                            <div className="text-muted-foreground text-xs select-none">⋮⋮</div>
-                            <Image
-                              path={student.img || "/avatar.png"}
-                              alt={student.username}
-                              w={32}
-                              h={32}
-                              className="w-8 h-8 rounded-full object-cover border border-border flex-shrink-0"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">
-                                {student.username}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                    
-                    {studentsWithoutGroup.length === 0 && (
-                      <div className="flex items-center justify-center h-32 text-muted-foreground text-sm text-center px-4 font-medium">
-                        Tất cả học sinh đã có nhóm
-                      </div>
-                    )}
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          </div>
-
-          {/* Groups Grid */}
-          <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {groups.map((group) => (
-                <div key={group.id} className="bg-white rounded-2xl sm:rounded-3xl p-5 shadow-sm border border-[#ece7de] flex flex-col h-full text-foreground transition-all">
-                  
-                  {/* Group Header */}
-                  <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-[#f0ebe3]">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div 
-                        className="w-3.5 h-3.5 rounded-full shadow-2xs flex-shrink-0 ring-1 ring-black/10"
-                        style={{ backgroundColor: group.color || '#3B82F6' }}
-                      />
-                      <h4 className="font-bold text-[#1f2421] text-base truncate" title={group.name}>
-                        {group.name}
-                      </h4>
-                    </div>
-                    
-                    {isTeacher && (
-                      <button
-                        onClick={() => handleDeleteGroup(group.id)}
-                        className="text-muted-foreground hover:text-destructive p-1 rounded-full hover:bg-destructive/10 transition-colors"
-                        title="Xóa nhóm"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Member Count */}
-                  <div className="flex justify-between items-center text-xs text-muted-foreground mb-2.5 px-1 font-medium">
-                    <span>Thành viên</span>
-                    <span className={`${
-                      group.maxSize && group.members.length >= group.maxSize ? 'text-destructive font-bold' : 'font-semibold text-foreground'
-                    }`}>
-                      {group.members.length}{group.maxSize ? `/${group.maxSize}` : ''}
-                    </span>
-                  </div>
-
-                  {/* Members List - Droppable */}
-                  <Droppable droppableId={group.id}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`flex-1 space-y-2.5 min-h-[160px] p-2.5 rounded-2xl border-2 border-dashed transition-colors scrollbar-thin ${
-                          snapshot.isDraggingOver 
-                            ? 'border-[#3f6d4d] bg-[#e5eee8]/50' 
-                            : 'border-[#e6dfd5] bg-[#faf6f0]/60'
-                        }`}
-                      >
-                        {group.members.map((member, index) => (
-                          <Draggable key={member.student.id} draggableId={member.student.id} index={index}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`flex items-center gap-2.5 p-2.5 bg-white rounded-xl border border-[#ece7de] cursor-grab active:cursor-grabbing transition-all ${
-                                  snapshot.isDragging
-                                    ? 'shadow-lg rotate-1 z-50 ring-1 ring-primary'
-                                    : 'shadow-2xs hover:shadow-sm hover:border-primary/40'
-                                }`}
-                                style={provided.draggableProps.style}
-                              >
-                                <div className="text-muted-foreground text-xs select-none">⋮⋮</div>
-                                <Image
-                                  path={member.student.img || "/avatar.png"}
-                                  alt={member.student.username}
-                                  w={28}
-                                  h={28}
-                                  className="w-7 h-7 rounded-full object-cover border border-border flex-shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-foreground truncate">
-                                    {member.student.username}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                        
-                        {group.members.length === 0 && (
-                          <div className="flex flex-col items-center justify-center h-full py-8 text-muted-foreground text-sm font-medium">
-                            <span className="text-2xl mb-1 opacity-70">👥</span>
-                            <span>Kéo học sinh vào đây</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              ))}
-
-              {/* Empty State */}
-              {groups.length === 0 && (
-                <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl sm:rounded-3xl border border-[#ece7de] border-dashed shadow-sm text-foreground">
-                  <div className="text-5xl mb-4 opacity-30">👥</div>
-                  <h3 className="text-lg font-bold text-[#1f2421] mb-2">Chưa có nhóm nào</h3>
-                  <p className="text-sm text-muted-foreground mb-6 text-center max-w-sm">
-                    {isTeacher 
-                      ? 'Hãy tạo nhóm mới để bắt đầu chia nhóm và quản lý hoạt động lớp học' 
-                      : 'Giáo viên chưa tạo nhóm nào cho lớp này'
-                    }
-                  </p>
-                  {isTeacher && (
-                    <button
-                      onClick={() => setIsCreatingGroup(true)}
-                      className="px-6 py-2.5 bg-[#3f6d4d] hover:bg-[#345c40] text-white rounded-full transition-all font-semibold text-sm shadow-sm"
-                    >
-                      + Tạo Nhóm Ngay
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </DragDropContext>
   );

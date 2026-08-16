@@ -66,10 +66,12 @@ const PostInteractions = ({
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: `Bài viết từ ${username}`,
-        url: window.location.href,
-      }).catch(() => {});
+      navigator
+        .share({
+          title: `Bài viết từ ${username}`,
+          url: window.location.href,
+        })
+        .catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Đã sao chép liên kết bài viết!");
@@ -125,57 +127,50 @@ const PostInteractions = ({
   );
 
   return (
-    <div className="pt-3.5 mt-3.5 border-t border-[#f0ebe3]">
+    <div className="pt-3 mt-3 border-t border-border/70">
       {/* INTERACTION BUTTONS */}
-      <div className="flex items-center justify-between gap-4 text-[#554e42] select-none">
-        <div className="flex items-center gap-6 sm:gap-8">
+      <div className="flex items-center justify-between gap-4 text-secondary select-none">
+        <div className="flex items-center gap-4 sm:gap-6">
           {/* LIKE BUTTON */}
           <button
+            type="button"
             onClick={likeAction}
-            className="flex items-center gap-2 cursor-pointer group py-1 text-sm font-medium hover:text-[#2e3230] transition-colors"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+              optimisticCount.isLiked
+                ? "bg-accent text-primary"
+                : "hover:bg-muted text-secondary hover:text-foreground"
+            }`}
           >
             <ThumbsUp
-              className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-active:scale-125 ${
-                optimisticCount.isLiked
-                  ? "fill-[#3f6d4d] text-[#3f6d4d]"
-                  : "text-[#554e42] group-hover:text-[#2e3230]"
+              className={`w-4 h-4 transition-transform active:scale-125 ${
+                optimisticCount.isLiked ? "fill-primary text-primary" : ""
               }`}
             />
-            <span
-              className={`${
-                optimisticCount.isLiked ? "text-[#3f6d4d] font-semibold" : "text-[#554e42] group-hover:text-[#2e3230]"
-              }`}
-            >
-              {optimisticCount.likes} Thích
-            </span>
+            <span>{optimisticCount.likes} Thích</span>
           </button>
 
           {/* COMMENTS BUTTON */}
           <button
+            type="button"
             onClick={() => setShowComments(!showComments)}
-            className="flex items-center gap-2 cursor-pointer group py-1 text-sm font-medium hover:text-[#2e3230] transition-colors"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+              showComments
+                ? "bg-accent text-primary"
+                : "hover:bg-muted text-secondary hover:text-foreground"
+            }`}
           >
-            <MessageSquare
-              className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-active:scale-125 ${
-                showComments ? "fill-[#3f6d4d] text-[#3f6d4d]" : "text-[#554e42] group-hover:text-[#2e3230]"
-              }`}
-            />
-            <span
-              className={`${
-                showComments ? "text-[#3f6d4d] font-semibold" : "text-[#554e42] group-hover:text-[#2e3230]"
-              }`}
-            >
-              {state.comments} Bình luận
-            </span>
+            <MessageSquare className="w-4 h-4" />
+            <span>{state.comments} Bình luận</span>
           </button>
         </div>
 
         {/* SHARE BUTTON */}
         <button
+          type="button"
           onClick={handleShare}
-          className="flex items-center gap-2 cursor-pointer group py-1 text-sm font-medium text-[#554e42] hover:text-[#2e3230] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold hover:bg-muted text-secondary hover:text-foreground transition-all cursor-pointer"
         >
-          <Share2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#554e42] group-hover:text-[#2e3230] transition-transform group-active:scale-125" />
+          <Share2 className="w-4 h-4" />
           <span>Chia sẻ</span>
         </button>
       </div>

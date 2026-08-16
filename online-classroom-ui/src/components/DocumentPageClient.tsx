@@ -5,9 +5,8 @@ import FileList from "@/components/FileList";
 import Pagination from "@/components/Pagination";
 import { useState, useCallback } from "react";
 import { DocumentItem } from "@/types/document";
-import ClassPageHeader from "@/components/ClassPageHeader";
 import TableSearch from "@/components/TableSearch";
-import { Upload, X } from "lucide-react";
+import { FolderOpen, Upload, X, Plus } from "lucide-react";
 
 interface DocumentPageClientProps {
   userRole?: string;
@@ -38,45 +37,69 @@ export default function DocumentPageClient({
   }, []);
 
   return (
-    <div className="flex bg-background text-foreground font-sans h-full flex-col">
-      {/* Header chuẩn chung */}
-      <ClassPageHeader title="Tài liệu lớp học" count={count}>
+    <div className="bg-white rounded-3xl border border-border shadow-sm flex flex-col h-full overflow-hidden text-foreground">
+      {/* ── HEADER CARD TÍCH HỢP ── */}
+      <div className="p-4 sm:p-5 border-b border-border/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4 flex-shrink-0 bg-white">
         <div className="flex items-center gap-3">
-          <TableSearch />
+          <div className="w-10 h-10 rounded-2xl bg-accent text-primary flex items-center justify-center shadow-2xs flex-shrink-0">
+            <FolderOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base sm:text-lg font-heading font-bold text-foreground leading-tight">
+                Tài liệu lớp học
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-accent text-primary">
+                {count} tài liệu
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-secondary mt-0.5">
+              Tài liệu PDF, Word và giáo trình tự học
+            </p>
+          </div>
+        </div>
+
+        {/* Right Controls */}
+        <div className="flex items-center gap-2.5 flex-wrap self-stretch lg:self-auto justify-between lg:justify-end">
+          <div className="w-full sm:w-60">
+            <TableSearch />
+          </div>
+
           {userRole === "teacher" && (
             <button
+              type="button"
               onClick={() => setShowUpload(!showUpload)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold rounded-2xl transition-all shadow-xs active:scale-95 cursor-pointer whitespace-nowrap ${
                 showUpload
-                  ? "bg-muted text-foreground hover:bg-accent border border-border"
-                  : "bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm"
+                  ? "bg-muted hover:bg-muted/80 text-secondary border border-border"
+                  : "bg-primary hover:bg-primary-hover text-primary-foreground"
               }`}
             >
               {showUpload ? (
                 <>
-                  <X className="w-3.5 h-3.5" />
-                  <span>Đóng</span>
+                  <X className="w-4 h-4" />
+                  <span>Đóng tải lên</span>
                 </>
               ) : (
                 <>
-                  <Upload className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   <span>Tải tài liệu lên</span>
                 </>
               )}
             </button>
           )}
         </div>
-      </ClassPageHeader>
+      </div>
 
       {/* Box Upload khi bật (chỉ dành cho giáo viên) */}
       {userRole === "teacher" && showUpload && (
-        <div className="p-4 border-b border-border bg-card">
+        <div className="p-4 sm:p-5 border-b border-border/80 bg-accent/20 animate-in fade-in zoom-in-95 duration-150">
           <FileUpload onFileUploaded={handleFileUploaded} />
         </div>
       )}
 
-      {/* File List */}
-      <div className="flex-1 p-4">
+      {/* File List cuộn nội bộ */}
+      <div className="flex-1 p-4 sm:p-5 overflow-y-auto min-h-0 scrollbar-thin">
         <FileList
           refreshTrigger={refreshTrigger}
           role={userRole || null}
@@ -88,7 +111,7 @@ export default function DocumentPageClient({
 
       {/* Pagination */}
       {files.length > 0 && (
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-border/80 flex-shrink-0 bg-white">
           <Pagination page={page} count={count} />
         </div>
       )}

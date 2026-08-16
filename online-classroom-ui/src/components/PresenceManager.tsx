@@ -19,15 +19,13 @@ export default function PresenceManager() {
 
     const fetchUserClasses = async () => {
       try {
-        const response = await fetch("/api/user/classes");
-        if (response.ok) {
-          const data = await response.json();
-          // Lấy class_code từ mỗi class
-          const codes = data
-            .map((cls: any) => cls.class_code)
-            .filter((code: string | null) => code !== null) as string[];
-          setClassCodes(codes);
-        }
+        const { classService } = await import("@/services/class.service");
+        const res = await classService.getClasses();
+        const classes = Array.isArray(res) ? res : (res?.data || []);
+        const codes = classes
+          .map((cls: any) => cls.class_code)
+          .filter((code: string | null) => code !== null) as string[];
+        setClassCodes(codes);
       } catch (error) {
         console.error("[PresenceManager] Error fetching classes:", error);
       }

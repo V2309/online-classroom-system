@@ -11,8 +11,8 @@ from typing import List, Literal
 # ---------------------------------------------------------------------------
 @dataclass
 class ChunkingConfig:
-    chunk_size: int = 800
-    chunk_overlap: int = 150
+    chunk_size: int = 1500
+    chunk_overlap: int = 200
     min_chunk_length: int = 50       # Loại bỏ chunk < N ký tự
     min_word_count: int = 5          # Loại bỏ chunk < N từ
     separators: List[str] = field(default_factory=lambda: [
@@ -25,10 +25,10 @@ class ChunkingConfig:
 # ---------------------------------------------------------------------------
 @dataclass
 class EmbeddingConfig:
-    provider: Literal["openai", "google"] = "openai"
+    provider: Literal["openai", "google"] = "google"
     openai_model: str = "text-embedding-3-small"
     openai_dimensions: int = 1536
-    google_model: str = "models/embedding-001"
+    google_model: str = "models/gemini-embedding-001"
 
 
 # ---------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class PostProcessingConfig:
 @dataclass
 class GenerationConfig:
     # Chat agent
-    chat_model: str = "gemini-2.5-flash"
+    chat_model: str = "gemini-flash-latest"
     chat_temperature: float = 0.05
     chat_max_tokens: int = 4096
     chat_top_p: float = 0.7
@@ -86,7 +86,7 @@ class GenerationConfig:
     chat_timeout: int = 60
 
     # Essay / Content generation
-    essay_model: str = "gemini-2.5-flash"
+    essay_model: str = "gemini-flash-latest"
     essay_temperature: float = 0.2
     essay_max_tokens: int = 4096
     essay_top_p: float = 0.7

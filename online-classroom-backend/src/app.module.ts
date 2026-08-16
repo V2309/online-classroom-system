@@ -19,6 +19,7 @@ import { DocumentModule } from './module/document/document.module';
 import { RealtimeModule } from './module/realtime/realtime.module';
 import { R2Module } from './lib/r2/r2.module';
 import { HomeworkModule } from './module/homework/homework.module';
+import { AiModule } from './module/ai/ai.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { HomeworkModule } from './module/homework/homework.module';
     DocumentModule,
     RealtimeModule,
     HomeworkModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

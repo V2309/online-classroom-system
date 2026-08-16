@@ -116,7 +116,7 @@ export const homeworkService = {
 
   // 14. Xuất file Excel nộp bài
   async exportSubmissions(homeworkId: number | string): Promise<Blob> {
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api';
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
     const response = await fetch(`${baseURL}/homework/${homeworkId}/export`, {
       method: 'GET',
       credentials: 'include',

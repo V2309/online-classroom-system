@@ -1,5 +1,3 @@
-// @/components/scores/ScoreLineChart.tsx
-
 "use client";
 
 import {
@@ -24,41 +22,55 @@ interface ScoreLineChartProps {
 
 export default function ScoreLineChart({ data }: ScoreLineChartProps) {
   return (
-    // TỐI ƯU RESPONSIVE:
-    // Đặt chiều cao linh hoạt: h-80 (320px) trên di động,
-    // h-[400px] (400px) trên màn hình vừa (md) trở lên.
-    <div className="w-full h-80 md:h-[400px]">
+    <div className="w-full h-72 sm:h-80 md:h-[360px] pt-2">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
           margin={{
-            top: 5,
-            right: 30,
-            left: 20,
+            top: 10,
+            right: 25,
+            left: -10,
             bottom: 5,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(74, 124, 89, 0.15)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(74, 124, 89, 0.12)" vertical={false} />
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 12, fill: '#4a5046' }}
+            tick={{ fontSize: 11, fill: "var(--text-secondary, #333a35)", fontWeight: 500 }}
+            axisLine={{ stroke: "var(--border-default, rgba(74, 124, 89, 0.18))" }}
+            tickLine={false}
           />
-          <YAxis domain={[0, 10]} tick={{ fontSize: 12, fill: '#4a5046' }} />
+          <YAxis
+            domain={[0, 10]}
+            ticks={[0, 2, 4, 6, 8, 10]}
+            tick={{ fontSize: 11, fill: "var(--text-muted, #575246)", fontWeight: 500 }}
+            axisLine={false}
+            tickLine={false}
+          />
           <Tooltip
             contentStyle={{
-              backgroundColor: "var(--bg-surface, #f4ede3)",
-              border: "1px solid rgba(74, 124, 89, 0.18)",
-              borderRadius: "8px",
-              color: "#2e3230",
+              backgroundColor: "#ffffff",
+              border: "1px solid rgba(74, 124, 89, 0.2)",
+              borderRadius: "16px",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08)",
+              fontSize: "12px",
+              fontWeight: 600,
+              padding: "10px 14px",
             }}
+            labelStyle={{ color: "var(--text-primary, #1f2421)", fontWeight: 700, marginBottom: "4px" }}
           />
-          <Legend />
+          <Legend
+            verticalAlign="top"
+            align="right"
+            wrapperStyle={{ paddingBottom: "12px", fontSize: "12px", fontWeight: 600 }}
+          />
           <Line
             type="monotone"
             dataKey="Điểm TB"
-            stroke="#4a7c59"
-            strokeWidth={2}
-            activeDot={{ r: 8, fill: '#35603e' }}
+            stroke="var(--accent-primary, #4a7c59)"
+            strokeWidth={3}
+            dot={{ r: 4, fill: "#ffffff", stroke: "var(--accent-primary, #4a7c59)", strokeWidth: 2 }}
+            activeDot={{ r: 7, fill: "var(--accent-primary, #4a7c59)", stroke: "#ffffff", strokeWidth: 2 }}
           />
         </LineChart>
       </ResponsiveContainer>

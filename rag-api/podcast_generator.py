@@ -17,11 +17,12 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Configure OpenAI API
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai_api_key = os.getenv("OPENAI_API_KEY") or "sk-dummy-key-not-set"
+openai_client = OpenAI(api_key=openai_api_key)
 
 class PodcastGenerator:
     def __init__(self):
-        self.gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+        self.gemini_model = genai.GenerativeModel('gemini-flash-latest')
     
     def analyze_document_structure(self, pdf_content: str) -> str:
         """

@@ -3,8 +3,10 @@
 # Tách từ agent_core.split_documents() — thêm SemanticChunker.
 
 from typing import List
-from langchain_core.documents import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
 from config import rag_config
 
 
@@ -63,7 +65,7 @@ class RecursiveChunker:
             })
             result.append(chunk)
 
-        print(f"[Chunker] Recursive: {len(chunks)} raw → {len(result)} filtered chunks")
+        print(f"[Chunker] Recursive: {len(chunks)} raw -> {len(result)} filtered chunks")
         return result
 
 
@@ -127,5 +129,5 @@ class SemanticChunker:
             })
             result.append(chunk)
 
-        print(f"[Chunker] Semantic: {len(chunks)} raw → {len(result)} filtered chunks")
+        print(f"[Chunker] Semantic: {len(chunks)} raw -> {len(result)} filtered chunks")
         return result

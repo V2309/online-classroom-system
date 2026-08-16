@@ -134,8 +134,8 @@ Trước khi đụng code, phải:
 | 16 | Whiteboard | state | `src/lib/actions/whiteboard.action.ts` | ✅ Đã xác nhận |
 | 18 | Realtime | Pusher auth (Channel/Presence/User auth), Stream token | `src/app/api/pusher/auth/route.ts`, `src/lib/actions/stream.action.ts` | ✅ Đã xác nhận |
 
-| 19 | Mail | gửi lại email xác minh | (đã gộp ở #5, tách nếu cần) | ⬜ Chưa làm |
-| 20 | AI Gateway | proxy sang FastAPI | các nơi gọi `NEXT_PUBLIC_FLASK_API_URL` | ⬜ Chưa làm |
+| 19 | Mail | gửi lại email xác minh | (đã gộp ở #5, `POST /auth/resend-verification`) | ✅ Đã xác nhận |
+| 20 | AI Gateway | proxy sang FastAPI | các nơi gọi `NEXT_PUBLIC_FLASK_API_URL` | ✅ Đã xác nhận |
 | 21 | Dashboard | thống kê admin | `src/lib/actions/dashboard.action.ts` | ⬜ Chưa làm |
 | 22 | Homework | tạo/sửa homework + câu hỏi, bảng điểm scoretable, tổng quan overview | `src/lib/actions/actions.ts`, `src/app/(page)/class/[id]/scoretable/**`, `src/app/(page)/overview/**` | ✅ Đã xác nhận |
 | 23 | Homework | nộp/lưu nháp/chấm điểm, ẩn điểm theo deadline | `src/app/api/homework/[id]/{save,submit,grade}/route.ts` | ✅ Đã xác nhận |

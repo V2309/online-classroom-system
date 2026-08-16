@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { homeworkService } from "@/services/homework.service";
+import { aiService } from "@/services/ai.service";
 import Breadcrumb from "@/components/Breadcrumb";
 import HomeworkSettings from "@/components/HomeworkSettings";
 import QuestionCardGrid from "@/components/QuestionCardGrid";
@@ -212,25 +213,14 @@ export default function CreateHomeworkPage({ params }: { params: { id: string } 
         // Chuẩn bị dữ liệu từ quiz_data gốc
         let processedQuizData = [...quizData.quiz_data];
 
-        // Nếu có bật đảo, gọi API Flask để xử lý
+        // Nếu có bật đảo, gọi API AI để xử lý
         if (formData.isShuffleQuestions || formData.isShuffleAnswers) {
-          const shuffleResponse = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/api/shuffle-quiz`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              quiz_data: processedQuizData,
-              shuffle_questions: formData.isShuffleQuestions,
-              shuffle_answers: formData.isShuffleAnswers,
-            }),
+          const shuffleResult = await aiService.shuffleQuiz({
+            quiz_data: processedQuizData,
+            shuffle_questions: formData.isShuffleQuestions,
+            shuffle_answers: formData.isShuffleAnswers,
           });
 
-          if (!shuffleResponse.ok) {
-            throw new Error('Không thể đảo đề thi');
-          }
-
-          const shuffleResult = await shuffleResponse.json();
           if (shuffleResult.success) {
             processedQuizData = shuffleResult.quiz_data;
           }

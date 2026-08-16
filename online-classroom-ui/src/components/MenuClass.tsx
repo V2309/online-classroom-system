@@ -8,6 +8,7 @@ import { RefAttributes, useState , ForwardRefExoticComponent } from "react";
 import LeaveClassDialog from "./LeaveClassDialog";
 import { toast } from 'react-toastify'; 
 import QRCodeModal from './modals/QRCodeModal'; // Import Modal QR Code
+import { useChatStore } from '@/stores/useChatStore';
 
 // Import icon từ lucide-react
 import {
@@ -88,6 +89,8 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
     ? `${window.location.origin}/join/${class_code}` 
     : '';
 
+  const unreadCount = useChatStore((s) => (classDetail.id ? s.unreadCounts[Number(classDetail.id)] || 0 : 0));
+
   const links: MenuLink[] = [
     { href: `/class/${class_code}/newsfeed`, label: "Bảng tin", icon: menuIcons.newsfeed, badge: 0 },
 { href: `/class/${class_code}/whiteboard`, label: "Bảng trắng", icon: menuIcons.whiteboard, badge: 0 },
@@ -99,7 +102,7 @@ export default function MenuClass({ classDetail, role, pendingRequestCount }: Me
       badge: role === 'teacher' ? pendingRequestCount : 0 
     },
     { href: `/class/${class_code}/groups`, label: "Nhóm lớp", icon: menuIcons.groups, badge: 0 }, 
-    { href: `/class/${class_code}/groupchat`, label: "Nhóm chat", icon: menuIcons.groupchat, badge: 0 },
+    { href: `/class/${class_code}/groupchat`, label: "Nhóm chat", icon: menuIcons.groupchat, badge: unreadCount },
     { href: `/class/${class_code}/homework/list`, label: "Bài tập", icon: menuIcons.homework, badge: 0 },
     { href: `/class/${class_code}/scoretable`, label: "Bảng điểm", icon: menuIcons.scoretable, badge: 0 },
     { href: `/class/${class_code}/video`, label: "Bài giảng", icon: menuIcons.lectures, badge: 0 },

@@ -41,17 +41,39 @@ class FAISSVectorStore:
 
     def build_from_documents(self, documents: List[Document]) -> "FAISSVectorStore":
         """
-        Tạo FAISS index mới từ list Documents.
+        Tạo FAISS index mới từ list Documents theo batch để tránh bị vượt rate limit (429) của API.
         Trả về self để hỗ trợ method chaining.
         """
+        import time
         if not documents:
             raise ValueError("Cannot build vector store from empty document list.")
 
         print(f"[VectorStore] Building FAISS index from {len(documents)} chunks...")
-        self._store = FAISS.from_documents(
-            documents=documents,
-            embedding=self._embeddings,
-        )
+        batch_size = 50
+        self._store = None
+
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i : i + batch_size]
+            retries = 3
+            while retries > 0:
+                try:
+                    if self._store is None:
+                        self._store = FAISS.from_documents(batch, embedding=self._embeddings)
+                    else:
+                        self._store.add_documents(batch)
+                    print(f"[VectorStore] Indexed {min(i + batch_size, len(documents))}/{len(documents)} chunks...")
+                    break
+                except Exception as e:
+                    if "429" in str(e) or "quota" in str(e).lower() or "rate" in str(e).lower():
+                        print(f"[VectorStore] Hit rate limit (429). Sleeping 15s before retry... ({retries} retries left)")
+                        time.sleep(15)
+                        retries -= 1
+                    else:
+                        raise e
+
+            if i + batch_size < len(documents):
+                time.sleep(1)  # Delay nhẹ giữa các batch để không chạm trần 100 RPM
+
         print(f"[VectorStore] FAISS index built successfully.")
 
         # Tự động lưu xuống disk nếu config bật

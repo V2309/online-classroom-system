@@ -15,18 +15,20 @@ export default function ClassPageHeader({
 }: ClassPageHeaderProps) {
   return (
     <div
-      className={`flex flex-col sm:flex-row sm:items-center justify-between px-4 py-4 border-b border-border bg-card ${className}`}
+      className={`bg-white/90 backdrop-blur-md border-b border-border/80 px-5 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-foreground transition-all ${className}`}
     >
-      <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-        <span>{title}</span>
+      <div className="flex items-center gap-2.5">
+        <h1 className="text-xl sm:text-2xl font-heading font-bold text-foreground flex items-center gap-2.5 tracking-tight">
+          <span>{title}</span>
+        </h1>
         {count !== undefined && count !== null && (
-          <span className="text-sm font-medium text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border">
+          <span className="text-xs font-bold text-primary bg-accent px-3 py-1 rounded-full shadow-2xs">
             {count}
           </span>
         )}
-      </h1>
+      </div>
       {children && (
-        <div className="flex items-center gap-2 mt-3 sm:mt-0">
+        <div className="flex items-center gap-2.5 mt-2 sm:mt-0 flex-wrap">
           {children}
         </div>
       )}

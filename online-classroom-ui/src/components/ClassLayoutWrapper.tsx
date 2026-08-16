@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import MenuClass from "@/components/MenuClass";
+import { useClassStore } from "@/stores/useClassStore";
 
 interface ClassLayoutWrapperProps {
   children: React.ReactNode;
@@ -12,6 +14,13 @@ interface ClassLayoutWrapperProps {
 
 export default function ClassLayoutWrapper({ children, classDetail, role, pendingRequestCount }: ClassLayoutWrapperProps) {
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (classDetail) {
+      const userRole = role?.toLowerCase() === 'teacher' ? 'TEACHER' : 'STUDENT';
+      useClassStore.getState().setCurrentClass(classDetail, userRole);
+    }
+  }, [classDetail, role]);
   
   // Ẩn layout cho các trang đặc biệt
   const hideLayoutRoutes = [

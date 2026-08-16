@@ -70,6 +70,9 @@ class LLMFactory:
         else:
             raise ValueError(f"Unknown task: '{task}'. Use 'chat' or 'essay'.")
 
+        import os
+        params["google_api_key"] = os.getenv("GOOGLE_API_KEY")
+
         llm = ChatGoogleGenerativeAI(**params)
         print(f"[LLMFactory] Google Gemini '{params['model']}' initialized (task={task})")
         return llm

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Clock, FileText, Save, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { homeworkService } from "@/services/homework.service";
+import { useExamStore } from "@/stores/useExamStore";
 
 interface Question {
   id: number;
@@ -41,10 +42,23 @@ export function EssayTestPage({
   role
 }: EssayTestPageProps) {
   const router = useRouter();
+  const { startExam, answers: storeAnswers, setAnswer: setStoreAnswer, clearExam } = useExamStore();
   const [timeLeft, setTimeLeft] = useState(duration * 60); // Convert minutes to seconds
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Khởi tạo bài thi trong Zustand store khi mount
+  useEffect(() => {
+    startExam(homework.id, duration * 60);
+    if (storeAnswers && Object.keys(storeAnswers).length > 0) {
+      const converted: Record<number, string> = {};
+      Object.entries(storeAnswers).forEach(([k, v]) => {
+        converted[Number(k)] = String(v);
+      });
+      setAnswers(converted);
+    }
+  }, [homework.id, duration]);
 
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
@@ -59,8 +73,8 @@ export function EssayTestPage({
       });
 
       if (result?.submissionId) {
-        // Clear saved answers
-        localStorage.removeItem(`homework-${homework.id}-answers`);
+        // Clear saved answers trong Zustand
+        clearExam(homework.id);
         
         // Redirect to detail page to show results
         router.push(`/class/${classCode}/homework/${homework.id}/detail?utid=${result.submissionId}`);
@@ -72,7 +86,7 @@ export function EssayTestPage({
       alert("Nộp bài không thành công. Vui lòng thử lại.");
       setIsSubmitting(false);
     }
-  }, [isSubmitting, answers, userId, timeLeft, duration, homework.id, classCode, router]);
+  }, [isSubmitting, answers, userId, timeLeft, duration, homework.id, classCode, router, clearExam]);
 
   // Timer effect
   useEffect(() => {
@@ -87,30 +101,6 @@ export function EssayTestPage({
 
     return () => clearInterval(timer);
   }, [timeLeft, handleSubmit]);
-
-  // Auto-save answers periodically
-  useEffect(() => {
-    const autoSave = setInterval(() => {
-      if (Object.keys(answers).length > 0) {
-        // Save to localStorage as backup
-        localStorage.setItem(`homework-${homework.id}-answers`, JSON.stringify(answers));
-      }
-    }, 30000); // Save every 30 seconds
-
-    return () => clearInterval(autoSave);
-  }, [answers, homework.id]);
-
-  // Load saved answers on mount
-  useEffect(() => {
-    const saved = localStorage.getItem(`homework-${homework.id}-answers`);
-    if (saved) {
-      try {
-        setAnswers(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load saved answers:", e);
-      }
-    }
-  }, [homework.id]);
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -128,6 +118,7 @@ export function EssayTestPage({
       ...prev,
       [questionId]: value
     }));
+    setStoreAnswer(questionId, value);
   };
 
   const handleSave = async () => {

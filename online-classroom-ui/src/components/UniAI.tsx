@@ -1,42 +1,30 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Upload, FileText, MessageCircle, Send, Loader2, BookOpen, Brain, Mic } from "lucide-react";
 import { useDropzone } from "react-dropzone";
-import { uploadDocuments, sendMessage, generatePodcast } from "@/lib/chatService";
+import { aiService } from "@/services/ai.service";
 import ChatMessage from "./ChatMessage";
-
-type Role = "user" | "assistant";
-
-interface ChatItem {
-  role: Role;
-  content: string;
-  isQuiz: boolean;
-}
-
-interface UploadResponse {
-  session_id: string;
-}
-
-interface SendMessageResponse {
-  response: string;
-  is_quiz: boolean;
-}
-
-interface PodcastData {
-  success: boolean;
-  dialogue?: string;
-  audio_url?: string;
-  message?: string;
-}
+import { useAiStore, ChatItem } from "@/stores/useAiStore";
 
 const UniAI: React.FC = () => {
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatItem[]>([]);
+  const {
+    sessionId,
+    messages,
+    uploadedFiles,
+    isLoading,
+    isUploading,
+    isGeneratingPodcast,
+    podcastData,
+    setSessionId,
+    setMessages,
+    addMessage,
+    setUploadedFiles,
+    setIsLoading,
+    setIsUploading,
+    setIsGeneratingPodcast,
+    setPodcastData,
+  } = useAiStore();
+
   const [inputMessage, setInputMessage] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-  const [isGeneratingPodcast, setIsGeneratingPodcast] = useState<boolean>(false);
-  const [podcastData, setPodcastData] = useState<PodcastData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = () => {
@@ -48,7 +36,7 @@ const UniAI: React.FC = () => {
   }, [messages]);
 
   const onDrop = async (acceptedFiles: File[]) => {
-    const pdfFiles = acceptedFiles.filter((file) => file.type === "application/pdf");
+    const pdfFiles = acceptedFiles.filter((file) => file.type === "application/pdf" || file.name.endsWith('.pdf'));
 
     if (pdfFiles.length === 0) {
       alert("Vui lòng chọn file PDF!");
@@ -57,7 +45,7 @@ const UniAI: React.FC = () => {
 
     setIsUploading(true);
     try {
-      const response = (await uploadDocuments(pdfFiles)) as UploadResponse;
+      const response = await aiService.uploadDocuments(pdfFiles);
       setSessionId(response.session_id);
       setUploadedFiles(pdfFiles.map((f) => f.name));
 
@@ -72,7 +60,7 @@ const UniAI: React.FC = () => {
       ]);
     } catch (error: any) {
       console.error("Upload error:", error);
-      alert("Lỗi upload tài liệu: " + (error.response?.data?.detail || error.message));
+      alert("Lỗi upload tài liệu: " + (error.response?.data?.detail || error.response?.data?.message || error.message));
     } finally {
       setIsUploading(false);
     }
@@ -95,12 +83,12 @@ const UniAI: React.FC = () => {
       isQuiz: false,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(userMessage);
     setInputMessage("");
     setIsLoading(true);
 
     try {
-      const response = (await sendMessage(userMessage.content, sessionId)) as SendMessageResponse;
+      const response = await aiService.sendMessage(userMessage.content, sessionId);
 
       const aiMessage: ChatItem = {
         role: "assistant",
@@ -108,7 +96,7 @@ const UniAI: React.FC = () => {
         isQuiz: response.is_quiz,
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      addMessage(aiMessage);
     } catch (error: any) {
       console.error("[ERROR] Send message error:", error);
       const errorMessage: ChatItem = {
@@ -116,7 +104,7 @@ const UniAI: React.FC = () => {
         content: "Xin lỗi, có lỗi xảy ra khi xử lý tin nhắn của bạn.",
         isQuiz: false,
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      addMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +118,7 @@ const UniAI: React.FC = () => {
 
     setIsGeneratingPodcast(true);
     try {
-      const response = (await generatePodcast(sessionId)) as PodcastData;
+      const response = await aiService.generatePodcast(sessionId);
 
       if (response.success) {
         setPodcastData(response);
@@ -140,7 +128,7 @@ const UniAI: React.FC = () => {
       }
     } catch (error: any) {
       console.error("Error generating podcast:", error);
-      alert("Lỗi khi tạo podcast: " + (error.response?.data?.detail || error.message));
+      alert("Lỗi khi tạo podcast: " + (error.response?.data?.detail || error.response?.data?.message || error.message));
     } finally {
       setIsGeneratingPodcast(false);
     }
@@ -148,19 +136,6 @@ const UniAI: React.FC = () => {
 
   return (
     <div className="">
-      {/* Header
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-2">
-              <Brain className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">UniAI</h1>
-            </div>
-            <span className="text-gray-500">Trợ lý học tập thông minh</span>
-          </div>
-        </div>
-      </header> */}
-
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-background text-foreground">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar (Upload + Hướng dẫn + Podcast) */}
@@ -251,7 +226,7 @@ const UniAI: React.FC = () => {
                       <div>
                         <h4 className="text-sm font-medium text-foreground mb-2">Audio:</h4>
                         <audio controls className="w-full">
-                          <source src={`${process.env.NEXT_PUBLIC_FLASK_API_URL}${podcastData.audio_url}`} type="audio/mpeg" />
+                          <source src={aiService.getAudioUrl(podcastData.audio_url || '')} type="audio/mpeg" />
                           Trình duyệt không hỗ trợ audio.
                         </audio>
                       </div>

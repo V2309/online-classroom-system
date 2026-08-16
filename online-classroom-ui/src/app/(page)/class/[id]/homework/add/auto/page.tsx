@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/components/Breadcrumb";
 import HomeworkFileUpload from "@/components/HomeworkFileUpload";
+import { aiService } from "@/services/ai.service";
 
 interface QuizQuestion {
   question_number: number;
@@ -39,16 +40,8 @@ export default function AutoExtractPage({ params }: { params: { id: string } }) 
     setError("");
 
     try {
-      // Trích xuất câu hỏi qua Flask API
-      const extractFormData = new FormData();
-      extractFormData.append('file', selectedFile);
-
-      const extractResponse = await fetch(`${process.env.NEXT_PUBLIC_FLASK_API_URL}/api/extract-quiz`, {
-        method: 'POST',
-        body: extractFormData,
-      });
-
-      const extractResult = await extractResponse.json();
+      // Trích xuất câu hỏi qua AI Service
+      const extractResult = await aiService.extractQuiz(selectedFile);
 
       if (extractResult.success) {
         // Lưu dữ liệu vào localStorage với file URL từ S3
@@ -69,8 +62,8 @@ export default function AutoExtractPage({ params }: { params: { id: string } }) 
       } else {
         setError(extractResult.error || "Có lỗi xảy ra khi xử lý file");
       }
-    } catch (err) {
-      setError("Không thể kết nối đến server. Vui lòng thử lại.");
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Không thể kết nối đến server. Vui lòng thử lại.");
       console.error("Processing error:", err);
     } finally {
       setIsExtracting(false);

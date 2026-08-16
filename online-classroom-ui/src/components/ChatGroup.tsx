@@ -1,16 +1,28 @@
-// components/ChatBox.tsx
 "use client";
 
 import { useEffect, useState, useRef, FormEvent } from "react";
 import { useUser } from "@/hooks/useUser";
+import { useChatStore } from "@/stores/useChatStore";
 import { pusherClient } from "@/lib/pusher-client";
 import { type Channel, type Members } from "pusher-js";
 import { chatService } from "@/services/chat.service";
 import { toast } from "react-toastify";
 import { globalPresenceManager } from "@/lib/presence-manager";
-
-
 import Image from "@/components/Image";
+import {
+  MessageSquare,
+  Users,
+  Send,
+  Pin,
+  X,
+  Reply,
+  MoreVertical,
+  Trash2,
+  Undo2,
+  Sparkles,
+  Smile,
+} from "lucide-react";
+
 // Type cho tin nhắn
 interface ChatGroupMessage {
   id: string;
@@ -60,68 +72,76 @@ interface SystemMessage {
   createdAt: string;
 }
 
-// Type cho date separator
-interface DateSeparator {
-  id: string;
-  type: "date";
-  date: string;
-}
-
 // Helper functions for date formatting
 const formatDateSeparator = (date: Date): string => {
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  
+
   const messageDate = new Date(date);
-  
-  // Reset time to compare only dates
+
   today.setHours(0, 0, 0, 0);
   yesterday.setHours(0, 0, 0, 0);
   messageDate.setHours(0, 0, 0, 0);
-  
+
   const diffTime = today.getTime() - messageDate.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (messageDate.getTime() === today.getTime()) {
     return "Hôm nay";
   } else if (messageDate.getTime() === yesterday.getTime()) {
     return "Hôm qua";
   } else if (diffDays <= 7) {
-    return messageDate.toLocaleDateString('vi-VN', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit'
+    return messageDate.toLocaleDateString("vi-VN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
     });
   } else {
-    return messageDate.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return messageDate.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   }
 };
 
-const shouldShowDateSeparator = (currentMsg: ChatGroupMessage | SystemMessage, prevMsg: ChatGroupMessage | SystemMessage | null): boolean => {
+const shouldShowDateSeparator = (
+  currentMsg: ChatGroupMessage | SystemMessage,
+  prevMsg: ChatGroupMessage | SystemMessage | null
+): boolean => {
   if (!prevMsg) return true;
-  
   const currentDate = new Date(currentMsg.createdAt);
   const prevDate = new Date(prevMsg.createdAt);
-  
   return currentDate.toDateString() !== prevDate.toDateString();
 };
 
 const formatTime = (date: Date): string => {
-  return date.toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit'
+  return date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
+function formatLastSeen(lastSeen: Date): string {
+  const now = new Date();
+  const diff = now.getTime() - lastSeen.getTime();
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (minutes < 1) return "Vừa mới offline";
+  if (minutes < 60) return `${minutes} phút trước`;
+  if (hours < 24) return `${hours} giờ trước`;
+  if (days < 7) return `${days} ngày trước`;
+
+  return lastSeen.toLocaleDateString("vi-VN");
+}
+
 interface ChatBoxProps {
   classCode: string;
-  initialMessages: ChatGroupMessage[]; // Tải tin nhắn cũ từ Server Component
-  allMembers?: ClassMember[]; // Tất cả thành viên trong lớp
+  initialMessages: ChatGroupMessage[];
+  allMembers?: ClassMember[];
 }
 
 export function ChatBox({
@@ -130,130 +150,86 @@ export function ChatBox({
   allMembers = [],
 }: ChatBoxProps) {
   const { user } = useUser();
-  const [messages, setMessages] =
-    useState<(ChatGroupMessage | SystemMessage)[]>(initialMessages);
+  const [messages, setMessages] = useState<(ChatGroupMessage | SystemMessage)[]>(initialMessages);
   const [onlineMembers, setOnlineMembers] = useState<Member[]>([]);
   const [classMembers, setClassMembers] = useState<ClassMember[]>(allMembers);
   const [newMessage, setNewMessage] = useState("");
   const channelRef = useRef<Channel | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const lastSentRef = useRef<{content: string, timestamp: number} | null>(null);
+  const lastSentRef = useRef<{ content: string; timestamp: number } | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replyTo, setReplyTo] = useState<ChatGroupMessage | null>(null);
+  const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
+  const [showMembersMobile, setShowMembersMobile] = useState(false);
+
+  // Reset unread counts khi mở màn hình chat này
+  useEffect(() => {
+    if (classCode) {
+      useChatStore.getState().setActiveChat(Number(classCode) || null);
+      if (Number(classCode)) {
+        useChatStore.getState().resetUnread(Number(classCode));
+      }
+    }
+    return () => {
+      useChatStore.getState().setActiveChat(null);
+    };
+  }, [classCode]);
 
   // Cuộn xuống cuối khi có tin nhắn mới
   useEffect(() => {
     const timer = setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ 
+      messagesEndRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "end",
-        inline: "nearest"
+        inline: "nearest",
       });
     }, 100);
-    
     return () => clearTimeout(timer);
   }, [messages]);
 
   useEffect(() => {
     if (!user || !classCode) return;
 
-
-
-    // Lấy channel từ globalPresenceManager hoặc đợi nó được tạo
     const setupChannelListeners = async () => {
       try {
-        // Đảm bảo channel đã được subscribe
         let channel = globalPresenceManager.getChannel(classCode);
-        
         if (!channel) {
-        
           channel = await globalPresenceManager.subscribeToClass(classCode);
         }
-        
-        if (!channel) {
-         
-          return;
-        }
-        
+        if (!channel) return;
         channelRef.current = channel;
-   
 
-        // Lấy members hiện tại ngay lập tức
         const currentMembers = globalPresenceManager.getCurrentMembers(classCode);
         if (currentMembers.length > 0) {
           setOnlineMembers(currentMembers);
-        
-
-          // Cập nhật trạng thái online cho class members
-          setClassMembers((prev) => {
-            return prev.map((m) => {
-              const isOnline = currentMembers.some((om) => String(om.id) === String(m.id));
-        
-              return {
-                ...m,
-                isOnline,
-              };
-            });
-          });
+          setClassMembers((prev) =>
+            prev.map((m) => ({
+              ...m,
+              isOnline: currentMembers.some((om) => String(om.id) === String(m.id)),
+            }))
+          );
         } else {
-          // Nếu không lấy được ngay, thử lại sau 500ms
           setTimeout(() => {
             const retryMembers = globalPresenceManager.getCurrentMembers(classCode);
             if (retryMembers.length > 0) {
               setOnlineMembers(retryMembers);
-              setClassMembers((prev) => {
-                return prev.map((m) => {
-                  const isOnline = retryMembers.some((om) => String(om.id) === String(m.id));
-                  return {
-                    ...m,
-                    isOnline,
-                  };
-                });
-              });
-             
+              setClassMembers((prev) =>
+                prev.map((m) => ({
+                  ...m,
+                  isOnline: retryMembers.some((om) => String(om.id) === String(m.id)),
+                }))
+              );
             }
           }, 500);
         }
 
-      // Log khi channel có lỗi
-      channel.bind("pusher:subscription_error", (error: any) => {
-        console.error("[ChatGroup] Subscription error:", error);
-        console.error("[ChatGroup] Error type:", error.type);
-        console.error("[ChatGroup] Error details:", JSON.stringify(error, null, 2));
-      });
-
-      // Log connection status
-      pusherClient.connection.bind("connected", () => {
-        console.log("[ChatGroup] Pusher connected");
-      });
-
-    pusherClient.connection.bind("error", (err: any) => {
-      console.error("[ChatGroup] Pusher connection error:", err);
-      console.error("[ChatGroup] Error type:", err.type);
-      console.error("[ChatGroup] Error data:", JSON.stringify(err.data, null, 2));
-      if (err.data?.message) {
-        console.error("[ChatGroup] Error message:", err.data.message);
-      }
-      if (err.data?.code) {
-        console.error("[ChatGroup] Error code:", err.data.code);
-      }
-    });
-
-      pusherClient.connection.bind("disconnected", () => {
-        console.log("[ChatGroup] Pusher disconnected");
-      });
-
-        // 4. Lắng nghe sự kiện "new-message" (tin nhắn mới)
         channel.bind("new-message", (data: ChatGroupMessage) => {
           setMessages((prev) => {
-            // Kiểm tra duplicate theo ID
-            if (prev.find((msg) => msg.id === data.id)) {
-              return prev;
-            }
-            
-            // Nếu là tin nhắn của chính mình, thay thế optimistic message
+            if (prev.find((msg) => msg.id === data.id)) return prev;
             if (data.user.id === user?.id) {
-              // Tìm và xóa optimistic message cùng nội dung
-              const withoutOptimistic = prev.filter(msg => {
-                if (msg.id.startsWith('temp-') && 'user' in msg) {
+              const withoutOptimistic = prev.filter((msg) => {
+                if (msg.id.startsWith("temp-") && "user" in msg) {
                   const chatMsg = msg as ChatGroupMessage;
                   return !(chatMsg.user.id === data.user.id && chatMsg.content === data.content);
                 }
@@ -261,134 +237,71 @@ export function ChatBox({
               });
               return [...withoutOptimistic, data];
             }
-            
-            // Tin nhắn từ người khác
             return [...prev, data];
           });
         });
 
-        // Lắng nghe sự kiện xóa tin nhắn
-        channel.bind("message-deleted", (data: { messageId: string, userId: string }) => {
-          setMessages((prev) => prev.filter(msg => msg.id !== data.messageId));
+        channel.bind("message-deleted", (data: { messageId: string; userId: string }) => {
+          setMessages((prev) => prev.filter((msg) => msg.id !== data.messageId));
         });
 
-        // Lắng nghe sự kiện thu hồi tin nhắn
-        channel.bind("message-recalled", (data: { messageId: string, content: string, userId: string }) => {
-          setMessages((prev) => prev.map(msg => 
-            msg.id === data.messageId 
-              ? { ...msg, content: data.content }
-              : msg
-          ));
+        channel.bind("message-recalled", (data: { messageId: string; content: string; userId: string }) => {
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === data.messageId ? { ...msg, content: data.content } : msg))
+          );
         });
 
-        // Lắng nghe sự kiện ghim tin nhắn
-        channel.bind("message-pinned", (data: { messageId: string, pinnedAt: string, userId: string }) => {
-          setMessages((prev) => prev.map(msg => 
-            msg.id === data.messageId 
-              ? { ...msg, isPinned: true, pinnedAt: data.pinnedAt }
-              : msg
-          ));
+        channel.bind("message-pinned", (data: { messageId: string; pinnedAt: string; userId: string }) => {
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === data.messageId ? { ...msg, isPinned: true, pinnedAt: data.pinnedAt } : msg))
+          );
         });
 
-        // Lắng nghe sự kiện bỏ ghim tin nhắn
-        channel.bind("message-unpinned", (data: { messageId: string, userId: string }) => {
-          setMessages((prev) => prev.map(msg => 
-            msg.id === data.messageId 
-              ? { ...msg, isPinned: false, pinnedAt: undefined }
-              : msg
-          ));
+        channel.bind("message-unpinned", (data: { messageId: string; userId: string }) => {
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === data.messageId ? { ...msg, isPinned: false, pinnedAt: undefined } : msg))
+          );
         });
 
-    // 4. Lắng nghe "who's online" (Presence Events)
-
-      // Vẫn bind subscription_succeeded để handle trường hợp channel mới được tạo
-      channel.bind("pusher:subscription_succeeded", (members: Members) => {
-        const memberArray: Member[] = [];
-        members.each((member: Member) => memberArray.push(member));
-        
-        // Chỉ update nếu chưa có members hoặc số lượng khác
-        setOnlineMembers(prev => {
-          if (prev.length === 0 || prev.length !== memberArray.length) {
-            console.log(`[ChatGroup] Subscription succeeded - updating members: ${memberArray.length}`);
-            
-            // Cập nhật trạng thái online cho class members
-            setClassMembers((prevClass) => {
-              return prevClass.map((m) => {
-                const isOnline = memberArray.some((om) => String(om.id) === String(m.id));
-                return {
-                  ...m,
-                  isOnline,
-                };
-              });
-            });
-            
-            return memberArray;
-          }
-          return prev;
+        channel.bind("pusher:subscription_succeeded", (members: Members) => {
+          const memberArray: Member[] = [];
+          members.each((member: Member) => memberArray.push(member));
+          setOnlineMembers(memberArray);
+          setClassMembers((prevClass) =>
+            prevClass.map((m) => ({
+              ...m,
+              isOnline: memberArray.some((om) => String(om.id) === String(m.id)),
+            }))
+          );
         });
-      });
 
-    // Khi có người mới tham gia
-    channel.bind("pusher:member_added", (member: Member) => {
-      setOnlineMembers((prev) => {
-        // Tránh duplicate
-        if (prev.some(m => String(m.id) === String(member.id))) {
-          return prev;
-        }
-        return [...prev, member];
-      });
+        channel.bind("pusher:member_added", (member: Member) => {
+          setOnlineMembers((prev) => {
+            if (prev.some((m) => String(m.id) === String(member.id))) return prev;
+            return [...prev, member];
+          });
+          setClassMembers((prev) =>
+            prev.map((m) => (String(m.id) === String(member.id) ? { ...m, isOnline: true } : m))
+          );
+        });
 
-      // Cập nhật trạng thái online trong classMembers
-      // Đảm bảo so sánh ID dạng string
-      setClassMembers((prev) =>
-        prev.map((m) => (String(m.id) === String(member.id) ? { ...m, isOnline: true } : m))
-      );
-
-      // Thêm thông báo hệ thống
-      const systemMessage: SystemMessage = {
-        id: `system-join-${member.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        type: "system",
-        content: `${member.info.username} đã tham gia chat`,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, systemMessage]);
-    });
-
-    // Khi có người rời đi
-    channel.bind("pusher:member_removed", (member: Member) => {
-      setOnlineMembers((prev) => prev.filter((m) => String(m.id) !== String(member.id)));
-
-      // Cập nhật trạng thái offline và lastSeen trong classMembers
-      // Đảm bảo so sánh ID dạng string
-      setClassMembers((prev) =>
-        prev.map((m) =>
-          String(m.id) === String(member.id)
-            ? { ...m, isOnline: false, lastSeen: new Date() }
-            : m
-        )
-      );
-
-      // Thêm thông báo hệ thống
-      const systemMessage: SystemMessage = {
-        id: `system-leave-${member.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        type: "system",
-        content: `${member.info.username} đã rời khỏi chat`,
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, systemMessage]);
-      });
+        channel.bind("pusher:member_removed", (member: Member) => {
+          setOnlineMembers((prev) => prev.filter((m) => String(m.id) !== String(member.id)));
+          setClassMembers((prev) =>
+            prev.map((m) =>
+              String(m.id) === String(member.id) ? { ...m, isOnline: false, lastSeen: new Date() } : m
+            )
+          );
+        });
       } catch (error) {
         console.error("[ChatGroup] Error setting up channel listeners:", error);
       }
     };
 
-    // Gọi setup function
     setupChannelListeners();
 
-    // 5. Dọn dẹp - chỉ xóa listeners, không unsubscribe
     return () => {
       if (channelRef.current) {
-        // Xóa các event listeners
         channelRef.current.unbind("new-message");
         channelRef.current.unbind("message-deleted");
         channelRef.current.unbind("message-recalled");
@@ -402,41 +315,21 @@ export function ChatBox({
     };
   }, [user, classCode]);
 
-  // Hàm gửi tin nhắn
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [replyTo, setReplyTo] = useState<ChatGroupMessage | null>(null);
-  const [showMenuFor, setShowMenuFor] = useState<string | null>(null);
-  const [pinnedMessages, setPinnedMessages] = useState<ChatGroupMessage[]>([]);
-  const [showPinnedMessages, setShowPinnedMessages] = useState(false);
-
-  // Close menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => {
-      setShowMenuFor(null);
-    };
-
-    if (showMenuFor) {
-      document.addEventListener('click', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
+    const handleClickOutside = () => setShowMenuFor(null);
+    if (showMenuFor) document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [showMenuFor]);
-  
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !user || isSubmitting) return;
-    
-    // Kiểm tra duplicate trong vòng 2 giây
+
     const now = Date.now();
-    if (lastSentRef.current && 
-        lastSentRef.current.content === newMessage.trim() && 
-        now - lastSentRef.current.timestamp < 2000) {
-      console.log('[ChatGroup] Duplicate message prevented');
+    if (lastSentRef.current && lastSentRef.current.content === newMessage.trim() && now - lastSentRef.current.timestamp < 2000) {
       return;
     }
-    
+
     setIsSubmitting(true);
     lastSentRef.current = { content: newMessage.trim(), timestamp: now };
 
@@ -445,11 +338,13 @@ export function ChatBox({
       id: optimisticId,
       content: newMessage,
       createdAt: new Date().toISOString(),
-      replyTo: replyTo ? {
-        id: replyTo.id,
-        content: replyTo.content,
-        user: replyTo.user
-      } : undefined,
+      replyTo: replyTo
+        ? {
+            id: replyTo.id,
+            content: replyTo.content,
+            user: replyTo.user,
+          }
+        : undefined,
       user: {
         id: user.id,
         username: user.username,
@@ -459,567 +354,419 @@ export function ChatBox({
 
     const messageContent = newMessage;
     const replyData = replyTo;
-    
-    // Thêm tin nhắn của mình vào UI ngay lập tức
-    setMessages((prev) => {
-      // Cleanup old optimistic messages (older than 30 seconds)
-      const thirtySecondsAgo = Date.now() - 30000;
-      const cleaned = prev.filter(msg => {
-        if (msg.id.startsWith('temp-')) {
-          const timestamp = parseInt(msg.id.split('-')[1]);
-          return timestamp > thirtySecondsAgo;
-        }
-        return true;
-      });
-      
-      return [...cleaned, optimisticMessage];
-    });
+
+    setMessages((prev) => [...prev, optimisticMessage]);
     setNewMessage("");
     setReplyTo(null);
 
     try {
-      // Gửi lên server
-      await chatService.sendMessage({ 
-        content: messageContent, 
+      await chatService.sendMessage({
+        content: messageContent,
         classCode,
-        replyTo: replyData ? {
-          id: replyData.id,
-          content: replyData.content,
-          user: replyData.user
-        } : undefined
+        replyTo: replyData
+          ? {
+              id: replyData.id,
+              content: replyData.content,
+              user: replyData.user,
+            }
+          : undefined,
       });
-      // Khi thành công, Pusher sẽ gửi lại và thay thế optimistic message
     } catch (error: any) {
-      console.error('Error sending message:', error);
-      toast.error(error.response?.data?.message || 'Gửi tin nhắn thất bại');
+      toast.error(error.response?.data?.message || "Gửi tin nhắn thất bại");
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticId));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle delete message
   const handleDeleteMessage = async (messageId: string) => {
     try {
       await chatService.deleteMessage(messageId, classCode);
-      toast.success('Tin nhắn đã được xóa');
+      toast.success("Tin nhắn đã được xóa");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Xóa tin nhắn thất bại');
+      toast.error(error.response?.data?.message || "Xóa tin nhắn thất bại");
     }
   };
 
-  // Handle recall message
   const handleRecallMessage = async (messageId: string) => {
     try {
       await chatService.recallMessage(messageId, classCode);
-      toast.success('Tin nhắn đã được thu hồi');
+      toast.success("Tin nhắn đã được thu hồi");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Thu hồi tin nhắn thất bại');
+      toast.error(error.response?.data?.message || "Thu hồi tin nhắn thất bại");
     }
   };
 
-  // Handle pin message
   const handlePinMessage = async (messageId: string) => {
     try {
-      // Optimistic update
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, isPinned: true, pinnedAt: new Date().toISOString() }
-          : msg
-      ));
-      
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === messageId ? { ...msg, isPinned: true, pinnedAt: new Date().toISOString() } : msg))
+      );
       await chatService.pinMessage(messageId, classCode);
-      toast.success('Tin nhắn đã được ghim');
+      toast.success("Đã ghim tin nhắn");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Ghim tin nhắn thất bại');
-      // Revert optimistic update on error
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, isPinned: false, pinnedAt: undefined }
-          : msg
-      ));
+      toast.error(error.response?.data?.message || "Ghim tin nhắn thất bại");
     }
   };
 
-  // Handle unpin message
   const handleUnpinMessage = async (messageId: string) => {
     try {
-      // Optimistic update
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, isPinned: false, pinnedAt: undefined }
-          : msg
-      ));
-      
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === messageId ? { ...msg, isPinned: false, pinnedAt: undefined } : msg))
+      );
       await chatService.unpinMessage(messageId, classCode);
-      toast.success('Đã bỏ ghim tin nhắn');
+      toast.success("Đã bỏ ghim tin nhắn");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Bỏ ghim tin nhắn thất bại');
-      // Revert optimistic update on error
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, isPinned: true, pinnedAt: new Date().toISOString() }
-          : msg
-      ));
+      toast.error(error.response?.data?.message || "Bỏ ghim tin nhắn thất bại");
     }
   };
 
+  const pinnedList = messages.filter((msg) => !("type" in msg) && (msg as ChatGroupMessage).isPinned);
 
   return (
-    <div className="flex h-full w-full bg-background text-foreground overflow-hidden">
-      {/* Cột chính (Chat) */}
-      <div className="flex-1 flex flex-col bg-card border-r border-border min-h-0">
-        {/* Header */}
-        <div className="p-4 border-b border-border bg-card">
-          <h2 className="text-lg font-semibold text-foreground">Chat nhóm</h2>
-          <p className="text-sm text-muted-foreground">Lớp {classCode}</p>
-        </div>
-        
-        {/* Pinned Messages Section */}
-        {messages.filter(msg => !("type" in msg) && (msg as ChatGroupMessage).isPinned).length > 0 && (
-          <div className="bg-terra-amber/10 border-b border-terra-amber/20 p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-4 h-4 text-terra-amber" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8 2a1 1 0 000 2h4a1 1 0 100-2H8zM3 7a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM4 10a1 1 0 011-1h8a1 1 0 110 2H5a1 1 0 01-1-1zm0 3a1 1 0 011-1h4a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm font-medium text-terra-amber">Tin nhắn đã ghim</span>
+    <div className="h-full w-full bg-white rounded-3xl border border-border shadow-sm flex overflow-hidden">
+      {/* ── CỘT CHÍNH: KHUNG TRÒ CHUYỆN ── */}
+      <div className="flex-1 flex flex-col min-h-0 bg-white">
+        {/* HEADER CHAT */}
+        <div className="px-5 py-3.5 border-b border-border/80 bg-white flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-accent text-primary flex items-center justify-center shadow-2xs flex-shrink-0">
+              <MessageSquare className="w-4 h-4" />
             </div>
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {messages.filter(msg => !("type" in msg) && (msg as ChatGroupMessage).isPinned).map(msg => {
-                const pinnedMsg = msg as ChatGroupMessage;
-                return (
-                  <div key={`pinned-${pinnedMsg.id}`} className="bg-card rounded-lg p-2 shadow-sm border border-terra-amber/30">
-                    <div className="flex items-start gap-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 aspect-square">
-                        <Image
-                          path={pinnedMsg.user.img || "/avatar.png"}
-                          alt={pinnedMsg.user.username}
-                          w={48}
-                          h={48}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-foreground">{pinnedMsg.user.username}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatTime(new Date(pinnedMsg.createdAt))}
-                          </span>
-                        </div>
-                        <p className="text-xs text-secondary mt-1 break-words">
-                          {pinnedMsg.content.length > 100 
-                            ? pinnedMsg.content.substring(0, 100) + '...' 
-                            : pinnedMsg.content
-                          }
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleUnpinMessage(pinnedMsg.id)}
-                        className="p-1 text-terra-amber hover:text-terra-amber-dark transition-colors flex-shrink-0"
-                        title="Bỏ ghim"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+            <div>
+              <h2 className="text-base font-heading font-bold text-foreground leading-tight">
+                Nhóm thảo luận chung
+              </h2>
+              <p className="text-[11px] text-secondary flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>{onlineMembers.length} thành viên đang trực tuyến</span>
+              </p>
             </div>
           </div>
+
+          {/* Nút toggle xem thành viên trên mobile */}
+          <button
+            type="button"
+            onClick={() => setShowMembersMobile(!showMembersMobile)}
+            className="sm:hidden p-2 rounded-xl bg-card border border-border text-secondary hover:text-foreground"
+          >
+            <Users className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* KHU VỰC TIN NHẮN ĐÃ GHIM */}
+        {pinnedList.length > 0 && (
+          <div className="bg-amber-50/90 border-b border-amber-200/70 px-4 py-2.5 flex items-center justify-between gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Pin className="w-3.5 h-3.5 text-amber-700 flex-shrink-0" />
+              <div className="truncate text-xs text-amber-950 font-medium">
+                <span className="font-bold mr-1.5">Tin đã ghim:</span>
+                {(pinnedList[0] as ChatGroupMessage).content}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleUnpinMessage((pinnedList[0] as ChatGroupMessage).id)}
+              className="text-amber-800 hover:text-amber-950 p-1 rounded-full cursor-pointer"
+              title="Bỏ ghim"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         )}
-        
-        {/* Khung chat (cuộn) */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background min-h-0">
+
+        {/* FEED DANH SÁCH TIN NHẮN */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-muted/20 min-h-0 scrollbar-thin">
           {messages.map((msg, index) => {
             const elements = [];
-            
-            // Check if we need to show date separator
             const prevMsg = index > 0 ? messages[index - 1] : null;
+
             if (shouldShowDateSeparator(msg, prevMsg)) {
               elements.push(
-                <div key={`date-${msg.id}`} className="flex justify-center my-6">
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-border"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="bg-muted px-4 py-1 text-muted-foreground font-medium rounded-full shadow-sm border border-border">
-                        {formatDateSeparator(new Date(msg.createdAt))}
-                      </span>
-                    </div>
-                  </div>
+                <div key={`date-${msg.id}`} className="flex justify-center my-3">
+                  <span className="bg-white px-3.5 py-1 text-secondary text-[11px] font-bold rounded-full shadow-2xs border border-border">
+                    {formatDateSeparator(new Date(msg.createdAt))}
+                  </span>
                 </div>
               );
             }
-            
-            // Render system message ở giữa
+
             if ("type" in msg && msg.type === "system") {
               elements.push(
-                <div key={msg.id} className="flex justify-center my-4">
-                  <div className="bg-accent text-primary text-xs px-4 py-2 rounded-full border border-border">
-                    <span className="font-medium">{msg.content}</span>
+                <div key={msg.id} className="flex justify-center my-2">
+                  <div className="bg-card text-muted-foreground text-[11px] px-3.5 py-1 rounded-full border border-border/80 shadow-2xs">
+                    {msg.content}
                   </div>
                 </div>
               );
               return elements;
             }
 
-            // Render normal chat message
             const chatMsg = msg as ChatGroupMessage;
             const isMyMessage = chatMsg.user.id === user?.id;
-            
+
             const messageElement = (
               <div
                 key={chatMsg.id}
-                className={`flex gap-3 mb-4 ${
-                  isMyMessage ? "justify-end" : "justify-start"
-                }`}
+                className={`flex gap-2.5 ${isMyMessage ? "justify-end" : "justify-start"}`}
               >
-                {/* Avatar cho tin nhắn của người khác */}
                 {!isMyMessage && (
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 aspect-square ring-2 ring-card shadow-sm">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-border shadow-2xs">
                       <Image
                         path={chatMsg.user.img || "/avatar.png"}
                         alt={chatMsg.user.username}
-                        w={80}
-                        h={80}
-                        className="w-full h-full rounded-full object-cover"
+                        w={64}
+                        h={64}
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                 )}
-                
-                {/* Message content */}
-                <div className={`flex flex-col max-w-xs lg:max-w-md ${
-                  isMyMessage ? "items-end" : "items-start"
-                }`}>
-                  {/* Tên người gửi */}
+
+                <div className={`flex flex-col max-w-[80%] sm:max-w-md ${isMyMessage ? "items-end" : "items-start"}`}>
                   {!isMyMessage && (
-                    <span className="text-xs text-muted-foreground mb-1 ml-3 font-medium">
+                    <span className="text-[11px] font-bold text-secondary mb-1 ml-1">
                       {chatMsg.user.username}
                     </span>
                   )}
-                  
-                  {/* Bubble chat */}
-                  <div className="relative group">
+
+                  <div className="relative group flex items-center gap-1.5">
+                    {/* BUBBLE CHAT */}
                     <div
-                      className={`px-4 py-3 rounded-2xl shadow-sm ${
+                      className={`px-4 py-2.5 rounded-2xl shadow-2xs text-xs sm:text-sm leading-relaxed break-words ${
                         isMyMessage
-                          ? "bg-primary text-primary-foreground rounded-br-md"
-                          : "bg-card text-foreground border border-border rounded-bl-md"
+                          ? "bg-primary text-primary-foreground rounded-tr-xs"
+                          : "bg-white text-foreground border border-border rounded-tl-xs"
                       }`}
                     >
-                      {/* Reply preview */}
                       {chatMsg.replyTo && (
-                        <div className={`mb-2 p-2 rounded-lg border-l-2 ${
-                          isMyMessage 
-                            ? "bg-black/20 border-primary-foreground/40" 
-                            : "bg-muted border-border"
-                        }`}>
-                          <p className={`text-xs font-medium ${
-                            isMyMessage ? "text-primary-foreground/90" : "text-foreground"
-                          }`}>
-                            {chatMsg.replyTo.user.username}
-                          </p>
-                          <p className={`text-xs ${
-                            isMyMessage ? "text-primary-foreground/70" : "text-muted-foreground"
-                          }`}>
-                            {chatMsg.replyTo.content.length > 50 
-                              ? chatMsg.replyTo.content.substring(0, 50) + '...' 
-                              : chatMsg.replyTo.content
-                            }
-                          </p>
+                        <div
+                          className={`mb-2 p-2 rounded-xl text-xs border-l-2 ${
+                            isMyMessage
+                              ? "bg-black/15 border-primary-foreground/50 text-white/90"
+                              : "bg-muted/70 border-primary text-secondary"
+                          }`}
+                        >
+                          <p className="font-bold">{chatMsg.replyTo.user.username}</p>
+                          <p className="truncate opacity-80 mt-0.5">{chatMsg.replyTo.content}</p>
                         </div>
                       )}
-                      
-                      <p className="text-sm leading-relaxed">{chatMsg.content}</p>
-                      <p className={`text-xs mt-2 ${
-                        isMyMessage ? "text-primary-foreground/70" : "text-muted-foreground"
-                      }`}>
-                        {new Date(chatMsg.createdAt).toLocaleTimeString('vi-VN', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
+
+                      <p>{chatMsg.content}</p>
+
+                      <div
+                        className={`text-[10px] mt-1 font-medium text-right ${
+                          isMyMessage ? "text-primary-foreground/75" : "text-muted-foreground"
+                        }`}
+                      >
+                        {formatTime(new Date(chatMsg.createdAt))}
+                      </div>
                     </div>
-                    
-                    {/* Message actions */}
-                    <div className={`absolute top-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${
-                      isMyMessage ? "-left-16" : "-right-16"
-                    }`}>
+
+                    {/* MENU HÀNH ĐỘNG TIN NHẮN */}
+                    <div
+                      className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${
+                        isMyMessage ? "order-first" : ""
+                      }`}
+                    >
                       <button
+                        type="button"
                         onClick={() => setReplyTo(chatMsg)}
-                        className="p-1.5 bg-card border border-border rounded-full shadow-sm hover:bg-accent text-foreground transition-colors"
+                        className="p-1.5 bg-white border border-border rounded-full hover:bg-muted text-secondary hover:text-foreground transition-all shadow-2xs cursor-pointer"
                         title="Trả lời"
                       >
-                        <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                        </svg>
+                        <Reply className="w-3.5 h-3.5" />
                       </button>
-                      
+
                       <div className="relative">
                         <button
-                          onClick={() => setShowMenuFor(showMenuFor === chatMsg.id ? null : chatMsg.id)}
-                          className="p-1.5 bg-card border border-border rounded-full shadow-sm hover:bg-accent text-foreground transition-colors"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowMenuFor(showMenuFor === chatMsg.id ? null : chatMsg.id);
+                          }}
+                          className="p-1.5 bg-white border border-border rounded-full hover:bg-muted text-secondary hover:text-foreground transition-all shadow-2xs cursor-pointer"
                           title="Tùy chọn"
                         >
-                          <svg className="w-4 h-4 text-muted-foreground hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                          </svg>
+                          <MoreVertical className="w-3.5 h-3.5" />
                         </button>
-                        
-                        {/* Menu dropdown */}
+
                         {showMenuFor === chatMsg.id && (
-                          <div className={`absolute top-full mt-1 bg-card border border-border rounded-xl shadow-lg py-1 z-10 min-w-32 ${
-                            isMyMessage ? "right-0" : "left-0"
-                          }`}>
+                          <div className="absolute top-full mt-1 bg-white border border-border rounded-2xl shadow-lg py-1 z-30 min-w-32 right-0 animate-in fade-in zoom-in-95 duration-150">
                             {isMyMessage && (
                               <>
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     handleDeleteMessage(chatMsg.id);
                                     setShowMenuFor(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2 cursor-pointer"
                                 >
-                                  Xóa tin nhắn
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Xóa</span>
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => {
                                     handleRecallMessage(chatMsg.id);
                                     setShowMenuFor(null);
                                   }}
-                                  className="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                                  className="w-full px-3.5 py-2 text-left text-xs font-semibold text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2 cursor-pointer"
                                 >
-                                  Thu hồi
+                                  <Undo2 className="w-3.5 h-3.5" />
+                                  <span>Thu hồi</span>
                                 </button>
-                                <hr className="my-1 border-border" />
-                                <button
-                                  onClick={() => {
-                                    if (chatMsg.isPinned) {
-                                      handleUnpinMessage(chatMsg.id);
-                                    } else {
-                                      handlePinMessage(chatMsg.id);
-                                    }
-                                    setShowMenuFor(null);
-                                  }}
-                                  className="w-full px-3 py-2 text-left text-sm text-primary hover:bg-accent transition-colors"
-                                >
-                                  {chatMsg.isPinned ? 'Bỏ ghim tin nhắn' : 'Ghim tin nhắn'}
-                                </button>
+                                <div className="border-t border-border my-1" />
                               </>
                             )}
-                            {!isMyMessage && (
-                              <>
-                                <button
-                                  onClick={() => {
-                                    setReplyTo(chatMsg);
-                                    setShowMenuFor(null);
-                                  }}
-                                  className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-accent transition-colors"
-                                >
-                                  Trả lời
-                                </button>
-                                <hr className="my-1 border-border" />
-                                <button
-                                  onClick={() => {
-                                    if (chatMsg.isPinned) {
-                                      handleUnpinMessage(chatMsg.id);
-                                    } else {
-                                      handlePinMessage(chatMsg.id);
-                                    }
-                                    setShowMenuFor(null);
-                                  }}
-                                  className="w-full px-3 py-2 text-left text-sm text-primary hover:bg-accent transition-colors"
-                                >
-                                  {chatMsg.isPinned ? 'Bỏ ghim tin nhắn' : 'Ghim tin nhắn'}
-                                </button>
-                              </>
-                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (chatMsg.isPinned) handleUnpinMessage(chatMsg.id);
+                                else handlePinMessage(chatMsg.id);
+                                setShowMenuFor(null);
+                              }}
+                              className="w-full px-3.5 py-2 text-left text-xs font-semibold text-primary hover:bg-accent transition-colors flex items-center gap-2 cursor-pointer"
+                            >
+                              <Pin className="w-3.5 h-3.5" />
+                              <span>{chatMsg.isPinned ? "Bỏ ghim" : "Ghim"}</span>
+                            </button>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                {/* Avatar cho tin nhắn của mình */}
+
                 {isMyMessage && (
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 aspect-square ring-2 ring-primary/20 shadow-sm">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-primary/30 shadow-2xs">
                       <Image
                         path={user?.img || "/avatar.png"}
-                        alt={user?.username || 'You'}
-                        w={80}
-                        h={80}
-                        className="w-full h-full rounded-full object-cover"
+                        alt="You"
+                        w={64}
+                        h={64}
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                 )}
               </div>
             );
-            
+
             elements.push(messageElement);
             return elements;
           })}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Reply preview */}
+        {/* KHUNG TRẢ LỜI TIN NHẮN TRƯỚC ĐÓ */}
         {replyTo && (
-          <div className="px-4 py-2 bg-accent/40 border-t border-border">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-xs text-primary font-medium mb-1">
-                  Trả lời {replyTo.user.username}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {replyTo.content.length > 100 
-                    ? replyTo.content.substring(0, 100) + '...' 
-                    : replyTo.content
-                  }
-                </p>
-              </div>
-              <button
-                onClick={() => setReplyTo(null)}
-                className="ml-2 p-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className="px-4 py-2 bg-accent/60 border-t border-border/80 flex items-center justify-between gap-2 flex-shrink-0">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-primary font-bold">Trả lời {replyTo.user.username}</p>
+              <p className="text-[11px] text-secondary truncate">{replyTo.content}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setReplyTo(null)}
+              className="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         )}
-        
-        {/* Khung nhập liệu */}
-        <div className="p-4 bg-card border-t border-border">
-          <form onSubmit={handleSubmit} className="flex items-end gap-3">
-            <div className="flex-1 relative">
+
+        {/* KHUNG NHẬP LIỆU */}
+        <div className="p-3.5 sm:p-4 bg-white border-t border-border/80 flex-shrink-0">
+          <form onSubmit={handleSubmit} className="flex items-center gap-2.5">
+            <div className="flex-1 relative bg-card border border-border/80 rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-2xs">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
-                placeholder="Nhập tin nhắn..."
-                className="w-full border border-input bg-background text-foreground rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                placeholder="Nhập tin nhắn thảo luận..."
+                className="w-full bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground text-xs sm:text-sm font-medium"
                 disabled={!user || isSubmitting}
               />
             </div>
             <button
               type="submit"
-              className={`p-3 rounded-full transition-all duration-200 ${
-                !user || isSubmitting || !newMessage.trim()
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'bg-primary hover:bg-primary-hover text-primary-foreground shadow-md hover:shadow-lg transform hover:scale-105'
-              }`}
               disabled={!user || isSubmitting || !newMessage.trim()}
+              className="p-3 bg-primary hover:bg-primary-hover text-primary-foreground rounded-2xl disabled:opacity-40 transition-all shadow-xs cursor-pointer active:scale-95 flex items-center justify-center flex-shrink-0"
+              title="Gửi tin nhắn"
             >
-              {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              )}
+              <Send className="w-4 h-4" />
             </button>
           </form>
         </div>
       </div>
 
-      {/* Cột phụ (All members) */}
-      <div className="w-80 bg-card border-l border-border flex flex-col">
-        {/* Header thành viên */}
-        <div className="p-4 border-b border-border">
-          <h3 className="font-semibold text-foreground text-lg">
-            Thành viên
-          </h3>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-state-success rounded-full"></div>
-              {onlineMembers.length} đang hoạt động
+      {/* ── CỘT PHỤ: DANH SÁCH THÀNH VIÊN ── */}
+      <div className="w-72 lg:w-80 border-l border-border/80 bg-card/40 flex flex-col min-h-0 hidden sm:flex">
+        <div className="p-4 border-b border-border/80 bg-white flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />
+            <h3 className="font-heading font-bold text-foreground text-sm">Thành viên lớp</h3>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-secondary mt-1 font-medium">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+              {onlineMembers.length} trực tuyến
             </span>
             <span>•</span>
-            <span>{classMembers.length} tổng cộng</span>
+            <span>{classMembers.length} tổng số</span>
           </div>
         </div>
-        
-        {/* Danh sách thành viên */}
-        <div className="flex-1 overflow-y-auto p-4 min-h-0">
-          <div className="space-y-2">
-            {classMembers.map((member) => {
-              const isOnline = onlineMembers.some((om) => String(om.id) === String(member.id));
-              return (
-                <div key={member.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-                  isOnline ? 'bg-state-success/10 border border-state-success/20' : 'bg-muted/40 hover:bg-accent/40'
-                }`}>
-                  <div className="relative flex-shrink-0 w-11 h-11">
-                    <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 aspect-square ring-2 ring-card shadow-sm">
-                      <Image
-                        path={member.img || "/avatar.png"}
-                        alt={member.username}
-                        w={88}
-                        h={88}
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    </div>
-                    {/* Status indicator */}
-                    <div
-                      className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card shadow-sm z-10 ${
-                        isOnline ? "bg-state-success" : "bg-muted-foreground"
-                      }`}
-                    ></div>
-                  </div>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate text-sm">
-                      {member.username}
-                    </p>
-                    {isOnline ? (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="w-2 h-2 bg-state-success rounded-full animate-pulse"></div>
-                        <p className="text-xs text-state-success font-medium">Đang hoạt động</p>
-                      </div>
-                    ) : member.lastSeen ? (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatLastSeen(member.lastSeen)}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-muted-foreground mt-0.5">Ngoại tuyến</p>
-                    )}
+        {/* Danh sách thành viên cuộn */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0 scrollbar-thin">
+          {classMembers.map((member) => {
+            const isOnline = onlineMembers.some((om) => String(om.id) === String(member.id));
+            return (
+              <div
+                key={member.id}
+                className={`flex items-center gap-3 p-2.5 rounded-2xl transition-all border ${
+                  isOnline
+                    ? "bg-white border-emerald-200/80 shadow-2xs"
+                    : "bg-white/60 border-border/50 hover:bg-white"
+                }`}
+              >
+                <div className="relative flex-shrink-0 w-9 h-9">
+                  <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-border shadow-2xs">
+                    <Image
+                      path={member.img || "/avatar.png"}
+                      alt={member.username}
+                      w={72}
+                      h={72}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                  <span
+                    className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                      isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"
+                    }`}
+                  />
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-foreground truncate text-xs">{member.username}</p>
+                  {isOnline ? (
+                    <p className="text-[11px] text-emerald-600 font-semibold mt-0.2">Đang hoạt động</p>
+                  ) : member.lastSeen ? (
+                    <p className="text-[11px] text-muted-foreground mt-0.2">{formatLastSeen(member.lastSeen)}</p>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground mt-0.2">Ngoại tuyến</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
-}
-
-// Helper function để format thời gian last seen
-function formatLastSeen(lastSeen: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - lastSeen.getTime();
-
-  const minutes = Math.floor(diff / (1000 * 60));
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (minutes < 1) return "Vừa mới offline";
-  if (minutes < 60) return `${minutes} phút trước`;
-  if (hours < 24) return `${hours} giờ trước`;
-  if (days < 7) return `${days} ngày trước`;
-
-  return lastSeen.toLocaleDateString("vi-VN");
 }

@@ -8,7 +8,6 @@ import {
   FolderItem,
 } from "@/types/course";
 
-// Types giữ lại cho tương thích với client components
 export type CourseWithDetails = CourseItem;
 export type FolderWithCourseCount = FolderItem;
 
@@ -53,14 +52,16 @@ export default async function VideoPage({
   }
 
   return (
-    <VideoList
-      data={data.courses || []}
-      count={data.count || 0}
-      folders={data.folders || []}
-      allCoursesCount={data.allCoursesCount || 0}
-      page={p}
-      classCode={classCode}
-      role={user.role as string}
-    />
+    <div className="h-full w-full p-4 sm:p-5 flex flex-col overflow-hidden bg-background text-foreground">
+      <VideoList
+        data={data.courses || []}
+        count={data.count || 0}
+        folders={data.folders || []}
+        allCoursesCount={data.allCoursesCount || 0}
+        page={p}
+        classCode={classCode}
+        role={user.role as string}
+      />
+    </div>
   );
 }

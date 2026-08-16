@@ -74,13 +74,15 @@ class DocumentLoader:
 
     def _load_upload_file(self, upload_file) -> tuple:
         """Tải UploadFile (FastAPI) — lưu tạm rồi đọc."""
-        filename = upload_file.name
+        import uuid
+        filename = getattr(upload_file, "filename", None) or getattr(upload_file, "name", "document.pdf")
         ext = Path(filename).suffix.lower()
-        tmp_path = os.path.join(".", filename)
+        tmp_path = os.path.join(tempfile.gettempdir(), f"upload_{uuid.uuid4()}_{filename}")
 
         print(f"[Loader] Saving UploadFile to temp: {tmp_path}")
+        content = upload_file.file.read() if hasattr(upload_file, "file") else (upload_file.getbuffer() if hasattr(upload_file, "getbuffer") else upload_file.read())
         with open(tmp_path, "wb") as f:
-            f.write(upload_file.getbuffer())
+            f.write(content)
 
         if ext == ".pdf":
             docs = self._load_pdf(tmp_path, filename=filename)
@@ -92,9 +94,15 @@ class DocumentLoader:
         return tmp_path, docs
 
     def _load_pdf(self, path: str, filename: str) -> List[Document]:
-        """Load PDF với PyPDFLoader, thêm metadata trang."""
-        loader = PyPDFLoader(path, extract_images=False)
-        pages = loader.load()
+        """Load PDF với PyMuPDFLoader (ưu tiên) hoặc PyPDFLoader."""
+        try:
+            from langchain_community.document_loaders import PyMuPDFLoader
+            loader = PyMuPDFLoader(path)
+            pages = loader.load()
+        except Exception as e:
+            print(f"[Loader] PyMuPDFLoader error ({e}), falling back to PyPDFLoader")
+            loader = PyPDFLoader(path, extract_images=False)
+            pages = loader.load()
 
         for i, doc in enumerate(pages):
             doc.metadata.update({

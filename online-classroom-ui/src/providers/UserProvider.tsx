@@ -1,7 +1,7 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import React, { createContext, useContext, useEffect, ReactNode } from "react";
 import type { UserProfile } from "@/types/auth";
-import { authService } from "@/services/auth.service";
+import { useUserStore } from "@/stores/useUserStore";
 
 interface UserContextType {
   user: UserProfile | null;
@@ -17,30 +17,7 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-
-  const fetchUser = useCallback(async () => {
-    try {
-      setLoading(true);
-      // getProfile() trả về UserProfile trực tiếp (đã unwrap bởi interceptor)
-      const profile = await authService.getProfile();
-      setUser(profile);
-      setError(null);
-    } catch (err: any) {
-      // 401 → user chưa đăng nhập (bình thường ở public routes)
-      if (err.response?.status === 401) {
-        setUser(null);
-      } else {
-        console.error("Error fetching user:", err);
-        setError(err.response?.data?.message || "Failed to load user information");
-      }
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { user, error, loading, fetchUser, refetchUser } = useUserStore();
 
   useEffect(() => {
     fetchUser();
@@ -58,10 +35,6 @@ export function UserProvider({ children }: UserProviderProps) {
     };
   }, [fetchUser]);
 
-  const refetchUser = useCallback(() => {
-    fetchUser();
-  }, [fetchUser]);
-
   return (
     <UserContext.Provider value={{ user, error, loading, refetchUser }}>
       {children}
@@ -72,7 +45,9 @@ export function UserProvider({ children }: UserProviderProps) {
 export function useUser(): UserContextType {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error("useUser must be used within a UserProvider");
+    // Fallback directly to Zustand store if called outside provider
+    const { user, error, loading, refetchUser } = useUserStore();
+    return { user, error, loading, refetchUser };
   }
   return context;
 }

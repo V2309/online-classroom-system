@@ -23,8 +23,14 @@ class EmbeddingFactory:
         Args:
             provider: "openai" hoặc "google". Nếu None, dùng giá trị trong config.
         """
+        import os
         cfg = rag_config.embedding
         selected = provider or cfg.provider
+
+        # Tự động chọn provider dựa theo API key có sẵn
+        if selected == "openai" and not os.getenv("OPENAI_API_KEY"):
+            if os.getenv("GOOGLE_API_KEY"):
+                selected = "google"
 
         if selected == "openai":
             return self._get_openai_embeddings(cfg)
@@ -46,6 +52,11 @@ class EmbeddingFactory:
         )
 
     def _get_google_embeddings(self, cfg):
+        import os
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
+        api_key = os.getenv("GOOGLE_API_KEY")
         print(f"[Embeddings] Using Google: {cfg.google_model}")
-        return GoogleGenerativeAIEmbeddings(model=cfg.google_model)
+        return GoogleGenerativeAIEmbeddings(
+            model=cfg.google_model,
+            google_api_key=api_key,
+        )

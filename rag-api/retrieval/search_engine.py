@@ -2,11 +2,34 @@
 # Logic tìm kiếm cốt lõi — Hybrid Search kết hợp Vector + BM25 keyword search.
 # Tách và mở rộng từ agent_core.create_hybrid_retriever().
 
-from typing import List, Optional
+from typing import List, Optional, Any
 from langchain_core.documents import Document
-from langchain.retrievers import EnsembleRetriever
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_community.retrievers import BM25Retriever
 from config import rag_config
+
+
+class EnsembleRetriever(BaseRetriever):
+    retrievers: List[Any]
+    weights: Optional[List[float]] = None
+
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None
+    ) -> List[Document]:
+        all_docs = []
+        for r in self.retrievers:
+            docs = r.invoke(query) if hasattr(r, 'invoke') else r.get_relevant_documents(query)
+            all_docs.extend(docs)
+        seen = set()
+        unique = []
+        for d in all_docs:
+            key = d.page_content[:200]
+            if key not in seen:
+                seen.add(key)
+                unique.append(d)
+        return unique
+
 
 
 class HybridSearchEngine:
@@ -94,7 +117,7 @@ class HybridSearchEngine:
         """
         self._assert_built()
         docs = self._retriever.invoke(query)
-        print(f"[SearchEngine] Search '{query[:60]}...' → {len(docs)} results")
+        print(f"[SearchEngine] Search '{query[:60]}...' -> {len(docs)} results")
         return docs
 
     def multi_query_search(self, queries: List[str]) -> List[Document]:
@@ -119,7 +142,7 @@ class HybridSearchEngine:
                     all_docs.append(doc)
 
         print(
-            f"[SearchEngine] Multi-query ({len(queries)} queries) → "
+            f"[SearchEngine] Multi-query ({len(queries)} queries) -> "
             f"{len(all_docs)} unique results"
         )
         return all_docs

@@ -1,41 +1,51 @@
 "use client";
 
-import { useState } from 'react';
-import * as XLSX from 'xlsx'; // Import thư viện xlsx
-import { Download } from 'lucide-react';
-import { toast } from 'react-toastify'; // Giả sử bạn dùng react-toastify
+import { useState } from "react";
+import * as XLSX from "xlsx";
+import { Download, Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
-// Vì chúng ta không thể import type từ Server Component, 
-// chúng ta sẽ nhận props là 'any' hoặc định nghĩa lại type cơ bản.
-// Ở đây dùng `any` cho đơn giản, vì đây là component nội bộ.
 interface ExportButtonProps {
   studentScores: any[];
   homeworks: any[];
   className?: string;
 }
 
-export default function ExportButton({ studentScores, homeworks, className }: ExportButtonProps) {
+export default function ExportButton({
+  studentScores,
+  homeworks,
+  className = "",
+}: ExportButtonProps) {
   const [loading, setLoading] = useState(false);
 
   const handleExport = () => {
+    if (!studentScores || studentScores.length === 0) {
+      toast.warn("Không có dữ liệu để xuất file!");
+      return;
+    }
+
     setLoading(true);
-    toast.info("Đang chuẩn bị file Excel...");
+    toast.info("Đang xuất file Excel...");
 
     try {
       // 1. Tạo Tiêu đề (Header)
       const headers = [
-        "STT", 
-        "Họ và tên", 
-        "Trung Bình",
-        ...homeworks.map(h => h.title) // Lấy tên các bài tập
+        "STT",
+        "Họ và tên",
+        "Lớp",
+        "Trường",
+        "Điểm Trung Bình",
+        ...homeworks.map((h) => `${h.title} (${h.points || 10}đ)`),
       ];
 
       // 2. Tạo các hàng dữ liệu (Body)
       const body = studentScores.map((student, index) => [
         index + 1,
         student.username,
-        student.average.toFixed(1),
-        ...homeworks.map(h => student.homeworkScores[h.id] ?? '-') // Lấy điểm hoặc '-'
+        student.class_name || "-",
+        student.schoolname || "-",
+        student.average ? Number(student.average).toFixed(1) : "-",
+        ...homeworks.map((h) => student.homeworkScores[h.id] ?? "-"),
       ]);
 
       // 3. Gộp Header và Body
@@ -43,36 +53,41 @@ export default function ExportButton({ studentScores, homeworks, className }: Ex
 
       // 4. Tạo file Excel
       const ws = XLSX.utils.aoa_to_sheet(dataToExport);
+
+      // Auto set column widths
+      const colWidths = headers.map((header) => ({
+        wch: Math.max(header.length + 4, 12),
+      }));
+      ws["!cols"] = colWidths;
+
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Bảng điểm"); // Đặt tên sheet là "Bảng điểm"
+      XLSX.utils.book_append_sheet(wb, ws, "Bảng điểm");
 
       // 5. Tải file
-      XLSX.writeFile(wb, "bang_diem.xlsx"); // Tên file tải về
+      XLSX.writeFile(wb, `bang_diem_${new Date().toISOString().slice(0, 10)}.xlsx`);
 
-      setLoading(false);
-
+      toast.success("Xuất file Excel thành công!");
     } catch (err) {
       console.error("Lỗi khi xuất Excel:", err);
-      toast.error("Xuất file thất bại!");
+      toast.error("Xuất file thất bại. Vui lòng thử lại!");
+    } finally {
       setLoading(false);
     }
   };
 
   return (
     <button
+      type="button"
       onClick={handleExport}
       disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors ${className}`}
+      className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary-hover disabled:opacity-50 rounded-2xl shadow-2xs transition-all active:scale-95 cursor-pointer ${className}`}
     >
       {loading ? (
-        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+        <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
-        <Download size={16} />
+        <Download className="w-4 h-4" />
       )}
-      <span>{loading ? "Đang xử lý..." : "Tải xuống (Excel)"}</span>
+      <span>{loading ? "Đang xuất..." : "Xuất Excel"}</span>
     </button>
   );
 }
