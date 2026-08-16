@@ -1,219 +1,205 @@
-# 🎓 UniAI Backend API
+﻿<div align="center">
+  <br />
+  <h1>🤖 Online Classroom — AI / RAG Service</h1>
+  <br />
 
-> An intelligent AI-powered study assistant backend built with FastAPI, LangChain, and Google Gemini — designed to help students learn smarter through document analysis, quiz extraction, essay generation, and podcast creation.
+  <div>
+    <img src="https://img.shields.io/badge/-Python_3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+    <img src="https://img.shields.io/badge/-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+    <img src="https://img.shields.io/badge/-LangChain-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" />
+    <img src="https://img.shields.io/badge/-OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" />
+    <img src="https://img.shields.io/badge/-Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white" />
+    <img src="https://img.shields.io/badge/-FAISS-00A67E?style=for-the-badge&logo=meta&logoColor=white" />
+    <img src="https://img.shields.io/badge/-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
+  </div>
+
+  <h3 align="center">Online Classroom System — FastAPI RAG & AI Service</h3>
+
+  <div align="center">
+    An intelligent AI-powered study assistant built with FastAPI, LangChain, and Google Gemini —
+    enabling document-based Q&A, automatic quiz extraction, essay generation, and podcast creation.
+  </div>
+</div>
 
 ---
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [API Endpoints](#api-endpoints)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Deployment](#deployment)
+1. ✨ [Introduction](#introduction)
+2. ⚙️ [Tech Stack](#tech-stack)
+3. 🔋 [Features](#features)
+4. 🏗️ [Architecture](#architecture)
+5. 🗂️ [Project Structure](#project-structure)
+6. 🤸 [Quick Start](#quick-start)
+7. 🌐 [API Overview](#api-overview)
+8. 📌 [Environment Variables](#environment-variables)
+9. 🚀 [Deployment](#deployment)
+10. 📝 [Notes & Limitations](#notes--limitations)
 
 ---
 
-## Overview
+## <a name="introduction">✨ Introduction</a>
 
-**UniAI Backend** is the server-side component of the UniAI learning platform. It exposes a RESTful API that enables:
+**RAG API** is the AI brain of the Online Classroom System. It exposes a RESTful API that enables:
 
-- Uploading PDF documents and creating intelligent AI agents that can answer questions about the content using **Retrieval-Augmented Generation (RAG)**.
-- Extracting multiple-choice quiz questions from uploaded `.pdf` and `.docx` files.
-- Generating open-ended essay questions either from an uploaded document or from a given topic.
-- Creating an audio podcast dialogue from a PDF's content using Google Gemini (script generation) and OpenAI TTS (text-to-speech).
+- Uploading PDF documents and creating intelligent AI agents that can answer questions based on the content using **Retrieval-Augmented Generation (RAG)**.
+- Extracting structured multiple-choice quiz questions from `.pdf` and `.docx` files.
+- Generating open-ended essay questions either from uploaded documents or from any given topic.
+- Creating an audio podcast dialogue from a PDF's content using **Google Gemini** (script) and **OpenAI TTS** (speech).
 
-The backend manages stateful chat sessions in memory, allowing multi-turn conversations with full chat history tracking.
-
----
-
-## Features
-
-### 🤖 AI Chat Agent (RAG-based)
-- Upload one or more PDF documents to create a dedicated session.
-- A **LangChain Agent** is created per session, powered by **Google Gemini 2.5 Flash**.
-- Uses a **Hybrid Retriever** combining:
-  - **FAISS** vector store with **OpenAI `text-embedding-3-small`** embeddings (semantic search).
-  - **BM25** retriever for keyword-based search.
-  - **MMR (Maximal Marginal Relevance)** to ensure answer diversity.
-- The agent has access to two tools:
-  1. `document_search` — Searches uploaded documents first (highest priority).
-  2. `web_search` — Falls back to Tavily web search if no relevant document content is found.
-- Full conversation history is stored per session.
-
-### 📝 Quiz Extraction
-- Upload a `.pdf` or `.docx` file containing Vietnamese multiple-choice questions (`Câu 1`, `Câu 2`, etc.).
-- Extracts question text, answer options (A–D), and highlighted/marked correct answers.
-- PDF extraction uses **PyMuPDF (fitz)** with support for embedded drawings/images rendered as inline Base64 images.
-- DOCX extraction uses **python-docx** with a multi-strategy parser (multi-line and single-line formats).
-- Returns structured JSON with all questions.
-
-### 🔀 Quiz Shuffling
-- Shuffle question order and/or answer option order.
-- The `correct_answer_index` and `correct_answer_char` are automatically updated to reflect the new ordering.
-
-### ⬇️ Quiz Download
-- Download the extracted/shuffled quiz as a **Word (.docx)** or **PDF** file.
-- Includes a formatted answer key table.
-
-### ✍️ Essay Question Generation
-- Generate open-ended academic questions using **Google Gemini 2.5 Flash**.
-- Two modes:
-  - **RAG Mode** (`session_id`): Questions are grounded in the content of previously uploaded PDF documents.
-  - **Topic Mode** (`topic`): Questions are generated from general AI knowledge on any subject.
-- Includes suggested model answers for each question.
-- Robust JSON extraction and repair logic handles truncated or malformed LLM outputs, with up to 3 automatic retries.
-
-### 🎙️ Podcast Generator
-- Converts PDF content into a natural conversational podcast script between two personas:
-  - **Person A (Host)**: Asks insightful questions.
-  - **Person B (Expert)**: Provides in-depth explanations.
-- Uses **Google Gemini** to generate the dialogue script.
-- Converts each dialogue line to speech using **OpenAI TTS (`tts-1-hd`)**.
-  - Person A voice: `echo` (warm male voice).
-  - Person B voice: `nova` (clear female voice).
-- Merges all audio segments using **pydub** with natural pauses between speakers.
-- Audio is served as an MP3 file via a dedicated endpoint.
+The service manages stateful chat sessions in memory, supporting multi-turn conversations with full chat history tracking. It is consumed internally by the **NestJS backend** via the AI Gateway module.
 
 ---
 
-## Architecture
+## <a name="tech-stack">⚙️ Tech Stack</a>
+
+| Technology | Purpose |
+|---|---|
+| **[FastAPI](https://fastapi.tiangolo.com/)** | High-performance Python async web framework |
+| **[Uvicorn](https://www.uvicorn.org/)** | ASGI server — runs the FastAPI application |
+| **[LangChain](https://www.langchain.com/)** | LLM orchestration, agent creation, and chain building |
+| **[Google Gemini 2.5 Flash](https://deepmind.google/technologies/gemini/)** | Primary LLM — chat Q&A, essay generation, podcast scripting |
+| **[OpenAI `text-embedding-3-small`](https://platform.openai.com/docs/guides/embeddings)** | Dense vector embeddings for semantic search |
+| **[OpenAI TTS (`tts-1-hd`)](https://platform.openai.com/docs/guides/text-to-speech)** | Text-to-speech for podcast audio generation |
+| **[FAISS](https://faiss.ai/)** | Local vector store for fast similarity search |
+| **[rank-bm25](https://github.com/dorianbrown/rank_bm25)** | BM25 keyword-based retriever |
+| **[Tavily Search](https://tavily.com/)** | Web search fallback when documents lack relevant content |
+| **[PyMuPDF (fitz)](https://pymupdf.readthedocs.io/)** | PDF parsing with inline image support |
+| **[python-docx](https://python-docx.readthedocs.io/)** | Word document (.docx) parsing |
+| **[ReportLab](https://www.reportlab.com/)** | Generate downloadable PDF quiz files |
+| **[pydub](https://github.com/jiaaro/pydub)** | Merge audio segments with pauses for podcast |
+| **[Pydantic](https://docs.pydantic.dev/)** | Request/response model validation |
+| **[python-dotenv](https://github.com/theskumar/python-dotenv)** | Load environment variables from `.env` |
+
+---
+
+## <a name="features">🔋 Features</a>
+
+🤖 **AI Chat Agent — RAG-based (`/upload-documents`, `/chat`)**
+Upload one or more PDF files to create a dedicated chat session. A **LangChain Agent** is initialized per session, powered by **Google Gemini 2.5 Flash**. Uses a **Hybrid Retriever** combining FAISS (semantic search) + BM25 (keyword search) + MMR (result diversity). The agent has two tools: `document_search` (searches uploaded docs first) and `web_search` (Tavily fallback). Full conversation history is tracked per session.
+
+📝 **Quiz Extraction (`/api/extract-quiz`)**
+Upload a `.pdf` or `.docx` file containing Vietnamese multiple-choice questions. Extracts question text, answer options (A–D), and highlighted correct answers. Returns structured JSON. PDF extraction uses PyMuPDF with embedded image support; DOCX uses python-docx with multi-strategy parsing.
+
+🔀 **Quiz Shuffling (`/api/shuffle-quiz`)**
+Shuffle question order and/or answer option order. The `correct_answer_index` and `correct_answer_char` fields are automatically recalculated to match the new ordering.
+
+⬇️ **Quiz Download (`/api/download-quiz`)**
+Download the extracted or shuffled quiz as a formatted **Word (.docx)** or **PDF** file, complete with an answer key table.
+
+✍️ **Essay Question Generation (`/api/generate-essay-questions`)**
+Generate academic open-ended questions via Google Gemini with two modes:
+- **RAG Mode** (`session_id`): Questions grounded in previously uploaded document content.
+- **Topic Mode** (`topic`): Questions generated from AI general knowledge on any subject.
+Includes suggested model answers. Robust JSON repair logic handles truncated LLM outputs with up to 3 automatic retries.
+
+🎙️ **Podcast Generator (`/generate-podcast`)**
+Converts PDF content into a natural conversational podcast between two personas:
+- **Person A (Host)**: Asks insightful questions — voice: OpenAI `echo`.
+- **Person B (Expert)**: Provides in-depth explanations — voice: OpenAI `nova`.
+Gemini generates the dialogue script; OpenAI TTS converts each line to speech; pydub merges all segments with natural pauses.
+
+---
+
+## <a name="architecture">🏗️ Architecture</a>
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   FastAPI Application                │
-│                      (index.py)                      │
-├───────────────┬─────────────────┬────────────────────┤
-│  Chat / RAG   │  Quiz Module    │  Podcast Module    │
-│  ─────────    │  ───────────    │  ──────────────    │
-│  agent_core   │  PDF Extractor  │  podcast_generator │
-│  (LangChain   │  DOCX Extractor │  (Gemini script +  │
-│   Agent)      │  Shuffle/DL     │   OpenAI TTS)      │
-└───────┬───────┴────────┬────────┴──────────┬─────────┘
-        │                │                   │
-        ▼                ▼                   ▼
-  Google Gemini     PyMuPDF /          Google Gemini +
-  OpenAI Embed.     python-docx        OpenAI TTS
-  FAISS + BM25      ReportLab
-  Tavily Search
+┌──────────────────────────────────────────────────────────┐
+│                   FastAPI Application                    │
+│                       (index.py)                         │
+├──────────────────┬───────────────────┬───────────────────┤
+│   Chat / RAG     │   Quiz Module     │  Podcast Module   │
+│  ─────────────   │  ─────────────    │  ─────────────    │
+│  IngestPipeline  │  extract_pdf_data │ PodcastGenerator  │
+│  QAPipeline      │  extract_docx_data│ (Gemini script +  │
+│  (LangChain      │  shuffle/download │  OpenAI TTS)      │
+│   Agent)         │                   │                   │
+└────────┬─────────┴──────────┬────────┴─────────┬─────────┘
+         │                    │                  │
+         ▼                    ▼                  ▼
+   Google Gemini         PyMuPDF /         Google Gemini +
+   OpenAI Embed.         python-docx       OpenAI TTS
+   FAISS + BM25          ReportLab         pydub
+   Tavily Search
 ```
 
 ### Session Management
 
 Sessions are stored **in-memory** as a Python dictionary keyed by a UUID. Each session holds:
-- The compiled `AgentExecutor` instance.
+- The compiled `AgentExecutor` instance (LangChain agent).
 - The raw text chunks (used for podcast and essay generation).
-- The full `chat_history` as LangChain `HumanMessage`/`AIMessage` objects.
+- The full `chat_history` as `HumanMessage`/`AIMessage` objects.
 - A list of processed filenames.
 
-> ⚠️ Sessions are not persisted across server restarts.
+> ⚠️ Sessions are **not persisted** across server restarts. For production, consider Redis or a database-backed session store.
 
 ---
 
-## Tech Stack
-
-| Category | Technology |
-|---|---|
-| **Web Framework** | [FastAPI](https://fastapi.tiangolo.com/) |
-| **LLM Orchestration** | [LangChain](https://www.langchain.com/) |
-| **Primary LLM** | Google Gemini 2.5 Flash (`langchain-google-genai`) |
-| **Embeddings** | OpenAI `text-embedding-3-small` |
-| **Vector Store** | FAISS (via `langchain-community`) |
-| **Keyword Search** | BM25 Retriever |
-| **Web Search** | Tavily Search API |
-| **PDF Parsing** | PyMuPDF (`fitz`), pdfminer, pdfplumber |
-| **DOCX Parsing** | python-docx |
-| **PDF Generation** | ReportLab |
-| **TTS** | OpenAI TTS (`tts-1-hd`) |
-| **Audio Processing** | pydub + FFmpeg |
-| **Script Generation** | Google Gemini (`google-generativeai`) |
-| **ASGI Server** | Uvicorn |
-| **Deployment** | Vercel (Python Serverless) |
-
----
-
-## Project Structure
+## <a name="project-structure">🗂️ Project Structure</a>
 
 ```
-backend/
-├── index.py              # Main FastAPI application; all API routes, request/response models,
-│                         # PDF/DOCX extraction logic, and session management
-├── agent_core.py         # LangChain agent setup: document loading, text splitting,
-│                         # FAISS vector store, hybrid retriever, agent executor,
-│                         # and essay question generation logic
-├── podcast_generator.py  # PodcastGenerator class: Gemini dialogue creation + OpenAI TTS
-├── prompt_template.py    # All LLM prompt templates (agent system prompt,
-│                         # RAG essay prompt, topic essay prompt)
-├── requirements.txt      # Full Python dependency list (pinned versions)
-├── vercel.json           # Vercel deployment configuration
-├── .env                  # Environment variables (NOT committed to version control)
-└── uploads/              # Temporary directory for quiz file uploads (auto-created)
+rag-api/
+├── index.py                  # FastAPI entry point — all routes, session management, Pydantic models
+├── agent_core.py             # LangChain agent setup (legacy): document loading, FAISS, hybrid retriever
+├── podcast_generator.py      # PodcastGenerator: Gemini dialogue + OpenAI TTS + pydub merge
+├── prompt_template.py        # All LLM prompt templates (agent system, RAG essay, topic essay)
+├── config.py                 # RAG configuration (chunk_size, top_k, similarity thresholds)
+├── requirements.txt          # Python dependencies
+├── vercel.json               # Vercel serverless deployment config
+├── .env                      # Environment variables (not committed)
+│
+├── pipelines/                # High-level pipeline orchestration
+│   ├── ingest_pipeline.py    # Raw file → chunk → embed → FAISS index
+│   └── qa_pipeline.py        # Question → hybrid search → rerank → Gemini answer
+│
+├── ingestion/                # Pre-retrieval: document loading & preparation
+│   ├── loaders.py            # Load PDF, Word, URL content
+│   ├── cleaners.py           # Strip noise, HTML tags, extra whitespace
+│   └── chunkers.py           # Recursive & semantic text chunking
+│
+├── indexing/                 # Embedding & vector store
+│   ├── embeddings.py         # OpenAI embedding model configuration
+│   └── vector_store.py       # FAISS vector store interface
+│
+├── retrieval/                # Advanced retrieval strategies
+│   ├── query_router.py       # Route questions to the correct data source
+│   ├── query_transform.py    # Query expansion, HyDE, sub-question decomposition
+│   └── search_engine.py      # Hybrid search (FAISS vector + BM25 keyword)
+│
+├── post_processing/          # Post-retrieval processing
+│   ├── reranker.py           # Cross-encoder reranking of retrieved chunks
+│   └── context_compress.py   # Filter noise and compress context window
+│
+├── generation/               # LLM response generation
+│   ├── llm_factory.py        # Initialize and manage LLM instances (GPT, Gemini)
+│   ├── prompts.py            # Prompt templates (system, few-shot)
+│   └── output_parsers.py     # Force structured JSON output from LLM
+│
+├── quiz/                     # Quiz extraction, shuffling, and download
+│   └── __init__.py           # extract_pdf_data, extract_docx_data, shuffle, download
+│
+└── uploads/                  # Temporary upload directory (auto-created at runtime)
 ```
 
 ---
 
-## API Endpoints
-
-### Core
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Health check — confirms the API is running |
-| `GET` | `/api/health` | Secondary health check for the quiz API |
-
-### Document Chat (RAG)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/upload-documents` | Upload PDF files, process them, and create a chat session |
-| `POST` | `/chat` | Send a chat message to the AI agent within an existing session |
-| `GET` | `/session/{session_id}/info` | Get session metadata (processed files, chat count, agent status) |
-| `GET` | `/session/{session_id}/history` | Retrieve the full chat history for a session |
-| `GET` | `/sessions` | List all active session IDs (debugging) |
-
-### Podcast
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/generate-podcast` | Generate a podcast dialogue and audio from an existing session's PDF content |
-| `GET` | `/audio/{filename}` | Stream / download the generated MP3 audio file |
-
-### Quiz
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/extract-quiz` | Upload a `.pdf` or `.docx` file and extract structured quiz questions |
-| `POST` | `/api/shuffle-quiz` | Shuffle question order and/or answer options in a quiz dataset |
-| `POST` | `/api/download-quiz` | Download a quiz as a formatted `.pdf` or `.docx` file |
-
-### Essay Generation
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/generate-essay-questions` | Generate essay questions from an uploaded document (RAG) or a topic |
-
----
-
-## Getting Started
+## <a name="quick-start">🤸 Quick Start</a>
 
 ### Prerequisites
 
-- Python **3.10+**
-- **FFmpeg** installed and available on your system PATH (required for pydub audio merging)
-- API keys for: Google AI (Gemini), OpenAI, and Tavily Search
+- **Python** 3.10 or higher
+- **FFmpeg** installed and available on PATH (required by pydub for audio merging)
+- API keys for: **Google AI (Gemini)**, **OpenAI**, and **Tavily Search**
 
-### 1. Clone the Repository
+### Installation
+
+**1. Navigate to the rag-api directory**
 
 ```bash
-git clone <your-repo-url>
-cd backend
+cd online-classroom-system/rag-api
 ```
 
-### 2. Create and Activate a Virtual Environment
+**2. Create and activate a virtual environment**
 
 ```bash
 python -m venv venv
@@ -225,84 +211,134 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 3. Install Dependencies
+**3. Install dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+**4. Configure environment variables**
 
-Create a `.env` file in the `backend/` directory (see [Environment Variables](#environment-variables) below).
+```bash
+cp .env.example .env
+```
 
-### 5. Run the Development Server
+Fill in your API keys (see [Environment Variables](#environment-variables) below).
+
+**5. Start the development server**
 
 ```bash
 uvicorn index:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The API will be available at `http://localhost:8000`.
+The API will be available at **`http://localhost:8000`**.
 
-Interactive API documentation (Swagger UI) is available at `http://localhost:8000/docs`.
+Swagger UI (interactive docs): **`http://localhost:8000/docs`**
+
+### Useful Scripts
+
+| Command | Description |
+|---|---|
+| `uvicorn index:app --reload --port 8000` | Start development server with hot-reload |
+| `uvicorn index:app --port 8000` | Start production server |
+| `pip install -r requirements.txt` | Install all dependencies |
+| `pip freeze > requirements.txt` | Update requirements after adding packages |
 
 ---
 
-## Environment Variables
+## <a name="api-overview">🌐 API Overview</a>
 
-Create a `.env` file in the project root with the following variables:
+### Health Check
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | API health check |
+| `GET` | `/api/health` | Secondary health check |
+
+### Document Chat (RAG)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/upload-documents` | Upload PDFs, process and create a chat session |
+| `POST` | `/chat` | Send a message to the AI agent within a session |
+| `GET` | `/session/{session_id}/info` | Get session metadata (files, message count, status) |
+| `GET` | `/session/{session_id}/history` | Retrieve full chat history for a session |
+| `GET` | `/sessions` | List all active session IDs |
+
+### Quiz
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/extract-quiz` | Upload `.pdf` or `.docx` and extract quiz questions |
+| `POST` | `/api/shuffle-quiz` | Shuffle question and/or answer option order |
+| `POST` | `/api/download-quiz` | Download quiz as formatted `.pdf` or `.docx` |
+
+### Essay Generation
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/generate-essay-questions` | Generate essay questions from document (RAG) or topic |
+
+### Podcast
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/generate-podcast` | Generate podcast audio from an existing session's content |
+| `GET` | `/audio/{filename}` | Stream or download the generated MP3 audio file |
+
+---
+
+## <a name="environment-variables">📌 Environment Variables</a>
+
+Create a `.env` file in the `rag-api/` directory (copy from `.env.example`):
 
 ```env
-# ===============================
-# AI APIs (Required)
-# ===============================
-
-# Primary Google API Key (Gemini LLM + Embeddings)
+# ── AI APIs (Required) ────────────────────────────────────────
+# Google Gemini — LLM for Q&A, essay generation, podcast scripting
 GOOGLE_API_KEY=your_google_api_key_here
 
-# Backup Google API Key (used automatically if primary is missing)
+# Backup Google API Key (auto-used if primary is empty)
 GOOGLE_API_KEY_BACKUP=your_backup_google_api_key_here
 
-# OpenAI API Key (Embeddings + TTS)
+# OpenAI — Embeddings (text-embedding-3-small) + TTS (tts-1-hd)
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Tavily Search API Key (Web search fallback for the agent)
+# Tavily — Web search fallback for the AI agent
 TAVILY_API_KEY=your_tavily_api_key_here
 
-# ===============================
-# Email Configuration (Optional)
-# ===============================
-EMAIL_ADDRESS=your_email@gmail.com
-EMAIL_PASSWORD=your_gmail_app_password
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-
-# ===============================
-# App Configuration (Optional)
-# ===============================
+# ── App Configuration (Optional) ─────────────────────────────
 DEBUG=True
 API_HOST=0.0.0.0
 API_PORT=8000
-VECTOR_STORE_PATH=./vector_stores
 LOG_LEVEL=INFO
 ```
 
-> 🔒 **Never commit your `.env` file to version control.** Add it to `.gitignore`.
+| Variable | Required | Description |
+|---|---|---|
+| `GOOGLE_API_KEY` | ✅ | Google AI Studio key for Gemini LLM |
+| `GOOGLE_API_KEY_BACKUP` | ⚠️ Optional | Fallback key if primary is missing |
+| `OPENAI_API_KEY` | ✅ | OpenAI key for embeddings and TTS |
+| `TAVILY_API_KEY` | ✅ | Tavily key for web search fallback |
+| `DEBUG` | ⚠️ Optional | Enable debug mode (default: `True`) |
+| `API_HOST` | ⚠️ Optional | Server bind address (default: `0.0.0.0`) |
+| `API_PORT` | ⚠️ Optional | Server port (default: `8000`) |
+| `LOG_LEVEL` | ⚠️ Optional | Logging verbosity (default: `INFO`) |
 
-### API Key Sources
+### Where to Get API Keys
 
-| Key | Where to Get It |
+| Key | Source |
 |---|---|
 | `GOOGLE_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) |
 | `OPENAI_API_KEY` | [OpenAI Platform](https://platform.openai.com/api-keys) |
 | `TAVILY_API_KEY` | [Tavily AI](https://app.tavily.com/) |
 
+> 🔒 **Never commit your `.env` file to version control.** It is already listed in `.gitignore`.
+
 ---
 
-## Deployment
+## <a name="deployment">🚀 Deployment</a>
 
-This project is configured for deployment on **Vercel** using the Python serverless runtime.
-
-### `vercel.json`
+This service is configured for **Vercel** Python serverless deployment via `vercel.json`:
 
 ```json
 {
@@ -314,31 +350,32 @@ This project is configured for deployment on **Vercel** using the Python serverl
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "index.py"
-    }
+    { "src": "/(.*)", "dest": "index.py" }
   ]
 }
 ```
 
-All routes are forwarded to `index.py` (the FastAPI application). Environment variables must be configured in the Vercel project settings dashboard.
+All requests are forwarded to `index.py`. Set environment variables in the Vercel project settings dashboard.
 
-### CORS Configuration
-
-The API currently allows CORS from the following origins (configurable in `index.py`):
-- `http://localhost:3000` (Next.js / React default)
-- `http://localhost:5173` (Vite default)
-
-Update the `allow_origins` list in the `CORSMiddleware` configuration to add your production frontend domain.
+**CORS Origins** (configurable in `index.py`):
+- `http://localhost:3000` — Next.js frontend
+- `http://localhost:8080` — NestJS backend
+- Update `allow_origins` to include your production domain.
 
 ---
 
-## Notes & Limitations
+## <a name="notes--limitations">📝 Notes & Limitations</a>
 
-- **In-memory sessions**: All session data (agent, chat history, document chunks) is stored in RAM. Sessions are lost on server restart. For production, consider using Redis or a database.
-- **Document chunk limit**: PDF content is truncated to **10,000 characters** for podcast generation and **12,000 characters** for essay generation to avoid token limits.
-- **Supported file types for Quiz Extraction**: `.pdf` and `.docx` only.
+- **In-memory sessions**: All session data (agent, chat history, document chunks) is stored in RAM and lost on server restart. For production, use Redis or a persistent database.
+- **Document chunk limit**: PDF content is truncated to **10,000 characters** for podcast and **12,000 characters** for essay generation to avoid LLM token limits.
+- **Supported file types for Quiz**: `.pdf` and `.docx` only.
 - **Supported file types for Chat**: `.pdf` only.
-- **FFmpeg dependency**: The `podcast_generator.py` file hard-codes a local FFmpeg path for Windows development. Update the `PATH` configuration if running on a different OS or installation path.
-- **Vietnamese language**: The quiz parser, agent prompts, and podcast generator are primarily optimized for Vietnamese-language documents.
+- **FFmpeg dependency**: Required by pydub for audio segment merging. Must be installed and on PATH.
+- **Language**: Quiz parser, agent prompts, and podcast generator are primarily optimized for **Vietnamese-language** documents.
+- **Retry logic**: Essay generation includes up to 3 automatic retries with JSON repair for handling truncated or malformed LLM outputs.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ using FastAPI & LangChain</p>
+</div>
