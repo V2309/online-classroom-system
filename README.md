@@ -1,37 +1,49 @@
-﻿# 🎓 Online Classroom System
+﻿<div align="center">
 
-> Nền tảng lớp học trực tuyến toàn diện — tích hợp video hội nghị, AI hỗ trợ học tập, quản lý bài tập, tài liệu và nhiều tính năng khác.
+# 🎓 Online Classroom System
+
+**A full-featured online learning platform with video conferencing, AI-powered assistance, homework management, real-time collaboration, and more.**
+
+[![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+
+</div>
 
 ---
 
-## 📋 Mục lục
+## 📋 Table of Contents
 
-- [Tổng quan](#-tổng-quan)
-- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-- [Tính năng chính](#-tính-năng-chính)
-- [Tech Stack](#-tech-stack)
-- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
-- [Cài đặt & Chạy](#-cài-đặt--chạy)
-- [Biến môi trường](#-biến-môi-trường)
+- [Overview](#-overview)
+- [System Architecture](#-system-architecture)
+- [Features](#-features)
+- [Technologies & Tools](#-technologies--tools)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [Environment Variables](#-environment-variables)
 - [API Overview](#-api-overview)
 - [Database Schema](#-database-schema)
-- [Luồng xác thực](#-luồng-xác-thực)
+- [Authentication Flow](#-authentication-flow)
+- [Scripts](#-scripts)
 
 ---
 
-## 🔍 Tổng quan
+## 🔍 Overview
 
-**Online Classroom System** là một hệ thống quản lý lớp học trực tuyến đầy đủ chức năng, được xây dựng theo kiến trúc **monorepo** gồm 3 dịch vụ chính:
+**Online Classroom System** is a comprehensive learning management system (LMS) built with a **monorepo** architecture consisting of 3 independent services:
 
-| Service | Mô tả | Port |
+| Service | Description | Port |
 |---|---|---|
-| `online-classroom-ui` | Frontend Next.js | `3000` |
-| `online-classroom-backend` | REST API NestJS | `8081` |
-| `rag-api` | AI / RAG Service FastAPI | `8000` |
+| `online-classroom-ui` | Next.js Frontend (App Router) | `3000` |
+| `online-classroom-backend` | NestJS REST API | `8081` |
+| `rag-api` | FastAPI AI / RAG Service | `8000` |
 
 ---
 
-## 🏗️ Kiến trúc hệ thống
+## 🏗️ System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -68,275 +80,316 @@
 
 ---
 
-## ✨ Tính năng chính
+## ✨ Features
 
-### 👨‍🏫 Quản lý Lớp học
-- Tạo / tham gia lớp học qua mã mời hoặc yêu cầu tham gia
-- Quản lý thành viên (học sinh, giáo viên)
-- Bảng tin lớp học (newsfeed) — đăng bài, like, bình luận
-- Quản lý nhóm trong lớp (group chat, bài tập nhóm)
-- Lịch học & thời khóa biểu trực quan
+### 👨‍🏫 Classroom Management
+- Create / join classes via invite code or join request
+- Member management (students, teachers)
+- Class newsfeed — posts, likes, and comments
+- Group management (group chat, group assignments)
+- Visual class schedule & timetable
 
-### 📹 Video Hội nghị (Stream.io)
-- Tổ chức buổi học / hội nghị trực tuyến thời gian thực
-- Chia sẻ màn hình, bật/tắt mic và camera
-- Phòng hội nghị riêng trong từng lớp
+### 📹 Video Conferencing (Stream.io)
+- Host live online classes and meetings in real time
+- Screen sharing, mic and camera controls
+- Dedicated conference rooms per class
 
-### 📝 Quản lý Bài tập
-- Giáo viên tạo bài tập với hạn nộp, điểm số
-- Học sinh nộp bài (tệp đính kèm)
-- Chấm điểm và phản hồi trực tiếp
-- Bảng điểm tổng hợp (export Excel)
+### 📝 Homework Management
+- Teachers create assignments with deadlines and grades
+- Students submit work with file attachments
+- Grading and direct feedback
+- Score table with Excel export
 
-### 📚 Khóa học & Tài liệu
-- Tạo khóa học với nhiều bài giảng (video, PDF)
-- Theo dõi tiến độ học tập
-- Xem PDF/Word trực tiếp trong trình duyệt
-- Upload tài liệu lên Cloudflare R2 / ImageKit
+### 📚 Courses & Documents
+- Create courses with multiple lessons (video, PDF)
+- Track learning progress per student
+- View PDF/Word files directly in browser
+- Upload documents to Cloudflare R2 / ImageKit
 
-### 🎨 Bảng Vẽ Trực tuyến (Whiteboard)
-- Bảng vẽ cộng tác thời gian thực (tldraw)
-- Lưu và chia sẻ bản vẽ trong lớp học
+### 🎨 Collaborative Whiteboard (tldraw)
+- Real-time collaborative drawing board
+- Save and share whiteboards within a class
 
-### 💬 Chat Thời gian thực
-- Chat riêng giữa các thành viên
-- Chat nhóm trong lớp
-- Thông báo đẩy qua Pusher
+### 💬 Real-time Chat
+- Direct messaging between members
+- Group chat within each class
+- Push notifications via Pusher
 
-### 🤖 AI Tích hợp (RAG API)
-- **Q&A thông minh**: Hỏi đáp dựa trên tài liệu đã tải lên (RAG)
-- **Tạo Quiz tự động**: AI tự sinh câu hỏi trắc nghiệm từ nội dung bài học
-- **Podcast Generator**: Chuyển đổi tài liệu thành audio podcast
-- **Hybrid Search**: Kết hợp tìm kiếm vector (FAISS) + BM25
-- **Hỗ trợ LLM**: OpenAI GPT, Google Gemini, Tavily Web Search
+### 🤖 AI Integration (RAG API)
+- **Smart Q&A**: Answer questions based on uploaded documents (RAG)
+- **Auto Quiz Generation**: AI generates multiple-choice questions from lesson content
+- **Podcast Generator**: Convert documents into audio podcasts
+- **Hybrid Search**: Combines vector search (FAISS) + BM25 keyword search
+- **Multi-LLM Support**: OpenAI GPT, Google Gemini, Tavily Web Search
 
-### 🔔 Thông báo
-- Thông báo thời gian thực cho các hoạt động trong lớp
-- Hệ thống email thông báo (Resend)
+### 🔔 Notifications
+- Real-time notifications for all class activities
+- Transactional email notifications (Resend)
 
 ### 👑 Admin Dashboard
-- Quản lý toàn bộ người dùng hệ thống
-- Theo dõi thống kê, báo cáo
-- Khóa / mở khóa tài khoản
+- Manage all system users
+- View statistics and reports
+- Ban / unban user accounts
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technologies & Tools
 
-### Frontend (`online-classroom-ui`)
-| Công nghệ | Mục đích |
+### Frontend
+
+[![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=flat-square&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Zustand](https://img.shields.io/badge/Zustand-443E38?style=flat-square&logo=zustand&logoColor=white)](https://zustand-demo.pmnd.rs/)
+[![React Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+
+| Technology | Purpose |
 |---|---|
-| **Next.js 14** (App Router) | Framework React |
+| **Next.js 14** (App Router) | React framework |
 | **TypeScript** | Type safety |
 | **TailwindCSS v4** | Styling |
 | **TanStack Query** | Server state management |
 | **Zustand** | Client state management |
 | **React Hook Form + Zod** | Form validation |
-| **Stream.io Video SDK** | Video hội nghị |
-| **Pusher JS** | Realtime events |
-| **tldraw** | Whiteboard |
+| **Stream.io Video SDK** | Video conferencing |
+| **Pusher JS** | Real-time events |
+| **tldraw** | Collaborative whiteboard |
 | **Framer Motion** | Animations |
 | **Recharts** | Charts & analytics |
-| **React Big Calendar** | Lịch học |
+| **React Big Calendar** | Schedule / calendar |
 | **Prisma Client** | Database access |
 | **jose / JWT** | Token handling |
 
-### Backend (`online-classroom-backend`)
-| Công nghệ | Mục đích |
+---
+
+### Backend
+
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat-square&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Passport](https://img.shields.io/badge/Passport.js-34E27A?style=flat-square&logo=passport&logoColor=black)](https://www.passportjs.org/)
+[![Pusher](https://img.shields.io/badge/Pusher-300D4F?style=flat-square&logo=pusher&logoColor=white)](https://pusher.com/)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare_R2-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/products/r2/)
+
+| Technology | Purpose |
 |---|---|
 | **NestJS 11** | Node.js framework |
 | **TypeScript** | Type safety |
-| **Prisma 7** | ORM + Migration |
-| **PostgreSQL** | Cơ sở dữ liệu |
-| **Passport.js + JWT** | Xác thực |
-| **Pusher** | Realtime notifications |
-| **Stream.io Node SDK** | Video call tokens |
-| **AWS SDK / Cloudflare R2** | File storage |
+| **Prisma 7** | ORM + Migrations |
+| **PostgreSQL** | Primary database |
+| **Passport.js + JWT** | Authentication |
+| **Pusher** | Real-time notifications |
+| **Stream.io Node SDK** | Video call token generation |
+| **Cloudflare R2 (AWS SDK)** | File storage |
 | **ImageKit** | Image optimization & CDN |
-| **Resend** | Email transactional |
-| **ExcelJS** | Export Excel |
+| **Resend** | Transactional email |
+| **ExcelJS** | Excel file export |
 | **bcryptjs** | Password hashing |
 
-### AI Service (`rag-api`)
-| Công nghệ | Mục đích |
+---
+
+### AI Service
+
+[![Python](https://img.shields.io/badge/Python_3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![LangChain](https://img.shields.io/badge/LangChain-1C3C3C?style=flat-square&logo=langchain&logoColor=white)](https://www.langchain.com/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat-square&logo=openai&logoColor=white)](https://openai.com/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
+
+| Technology | Purpose |
 |---|---|
 | **FastAPI** | Python web framework |
 | **LangChain** | LLM orchestration |
-| **FAISS** | Vector store |
-| **OpenAI** | LLM & embeddings |
+| **FAISS** | Vector similarity search |
+| **OpenAI GPT** | Primary LLM & embeddings |
 | **Google Gemini** | Alternative LLM |
-| **Tavily** | Web search |
-| **PyMuPDF / python-docx** | Document parsing |
-| **pydub** | Audio processing |
-| **BM25** | Keyword search |
+| **Tavily** | Web search integration |
+| **PyMuPDF / python-docx** | Document parsing (PDF, Word) |
+| **pydub** | Audio processing (podcast) |
+| **rank-bm25** | Keyword-based search |
 
 ---
 
-## 📁 Cấu trúc thư mục
+### DevOps & Infrastructure
+
+[![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white)](https://git-scm.com/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white)](https://cloudflare.com/)
+[![ImageKit](https://img.shields.io/badge/ImageKit-FF6400?style=flat-square&logo=imagekit&logoColor=white)](https://imagekit.io/)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com/)
+
+---
+
+## 📁 Project Structure
 
 ```
 online-classroom-system/
-├── online-classroom-ui/          # Frontend Next.js
+├── online-classroom-ui/              # Next.js Frontend
 │   └── src/
 │       ├── app/
-│       │   ├── (auth)/           # Trang đăng nhập / đăng ký
+│       │   ├── (auth)/               # Authentication pages
 │       │   │   ├── sign-in/
 │       │   │   └── sign-up/
-│       │   ├── (page)/           # Trang chính (yêu cầu đăng nhập)
-│       │   │   ├── overview/     # Dashboard người dùng
-│       │   │   ├── class/        # Danh sách & chi tiết lớp học
+│       │   ├── (page)/               # Protected pages
+│       │   │   ├── overview/         # User dashboard
+│       │   │   ├── class/            # Class list & detail
 │       │   │   │   └── [id]/
-│       │   │   │       ├── newsfeed/    # Bảng tin lớp
-│       │   │   │       ├── homework/    # Bài tập
-│       │   │   │       ├── documents/   # Tài liệu
-│       │   │   │       ├── schedule/    # Lịch học
-│       │   │   │       ├── member/      # Thành viên
-│       │   │   │       ├── groups/      # Nhóm
-│       │   │   │       ├── groupchat/   # Chat nhóm
-│       │   │   │       ├── scoretable/  # Bảng điểm
-│       │   │   │       ├── video/       # Video buổi học
+│       │   │   │       ├── newsfeed/      # Class news feed
+│       │   │   │       ├── homework/      # Assignments
+│       │   │   │       ├── documents/     # Documents
+│       │   │   │       ├── schedule/      # Class schedule
+│       │   │   │       ├── member/        # Members
+│       │   │   │       ├── groups/        # Groups
+│       │   │   │       ├── groupchat/     # Group chat
+│       │   │   │       ├── scoretable/    # Score board
+│       │   │   │       ├── video/         # Recorded videos
 │       │   │   │       └── (whiteboardpage)/ # Whiteboard
-│       │   │   ├── chat/         # Chat cá nhân
-│       │   │   ├── schedule/     # Lịch cá nhân
-│       │   │   └── profile/      # Hồ sơ người dùng
-│       │   ├── (fullpage)/       # Trang toàn màn hình (hội nghị)
+│       │   │   ├── chat/             # Direct messaging
+│       │   │   ├── schedule/         # Personal schedule
+│       │   │   └── profile/          # User profile
+│       │   ├── (fullpage)/           # Full-screen pages (conference)
 │       │   └── (admin)/
-│       │       └── dashboard/    # Admin dashboard
-│       ├── components/           # UI Components dùng chung
-│       ├── hooks/                # Custom React hooks
-│       ├── lib/                  # Utilities, helpers
-│       ├── providers/            # Context providers
-│       ├── services/             # API service calls
-│       ├── stores/               # Zustand stores
-│       └── types/                # TypeScript types
+│       │       └── dashboard/        # Admin dashboard
+│       ├── components/               # Shared UI components
+│       ├── hooks/                    # Custom React hooks
+│       ├── lib/                      # Utilities & helpers
+│       ├── providers/                # Context providers
+│       ├── services/                 # API service layer
+│       ├── stores/                   # Zustand stores
+│       └── types/                    # TypeScript types
 │
-├── online-classroom-backend/     # Backend NestJS
+├── online-classroom-backend/         # NestJS Backend
 │   └── src/
-│       ├── common/               # Decorators, Guards, Interceptors
+│       ├── common/                   # Decorators, Guards, Interceptors
 │       ├── lib/
-│       │   ├── database/         # Prisma module
-│       │   ├── pusher/           # Pusher module
-│       │   └── r2/               # Cloudflare R2 module
+│       │   ├── database/             # Prisma module
+│       │   ├── pusher/               # Pusher module
+│       │   └── r2/                   # Cloudflare R2 module
 │       └── module/
-│           ├── auth/             # Đăng nhập, đăng ký, JWT
-│           ├── user/             # Quản lý người dùng
-│           ├── class/            # Quản lý lớp học
-│           ├── post/             # Bài đăng & bình luận
-│           ├── homework/         # Bài tập
-│           ├── course/           # Khóa học & bài giảng
-│           ├── document/         # Tài liệu
-│           ├── chat/             # Chat
-│           ├── group/            # Nhóm
-│           ├── notification/     # Thông báo
-│           ├── schedule/         # Lịch học
-│           ├── whiteboard/       # Bảng vẽ
-│           ├── upload/           # Upload file
-│           ├── realtime/         # WebSocket / Stream token
-│           ├── mail/             # Email
-│           └── ai/               # AI gateway (proxy to RAG API)
+│           ├── auth/                 # Login, Register, JWT
+│           ├── user/                 # User management
+│           ├── class/                # Class management
+│           ├── post/                 # Posts & comments
+│           ├── homework/             # Assignments
+│           ├── course/               # Courses & lessons
+│           ├── document/             # Documents
+│           ├── chat/                 # Messaging
+│           ├── group/                # Groups
+│           ├── notification/         # Notifications
+│           ├── schedule/             # Schedule
+│           ├── whiteboard/           # Whiteboard
+│           ├── upload/               # File upload
+│           ├── realtime/             # WebSocket / Stream token
+│           ├── mail/                 # Email service
+│           └── ai/                   # AI gateway (proxy to RAG API)
 │
-└── rag-api/                      # AI / RAG Service Python
-    ├── pipelines/                # Luồng ingest & QA
-    ├── ingestion/                # Đọc & làm sạch tài liệu
-    ├── indexing/                 # Embedding & vector store
-    ├── retrieval/                # Tìm kiếm, query transform
-    ├── post_processing/          # Rerank & context compress
-    ├── generation/               # LLM factory & prompts
-    ├── quiz/                     # Tạo quiz tự động
-    ├── index.py                  # FastAPI entry point
-    └── config.py                 # Cấu hình RAG
+└── rag-api/                          # FastAPI AI Service
+    ├── pipelines/                    # Ingest & QA pipelines
+    ├── ingestion/                    # Document loaders & chunkers
+    ├── indexing/                     # Embedding & vector store
+    ├── retrieval/                    # Search & query transform
+    ├── post_processing/              # Reranker & context compressor
+    ├── generation/                   # LLM factory & prompt templates
+    ├── quiz/                         # Auto quiz generation
+    ├── index.py                      # FastAPI entry point
+    └── config.py                     # RAG configuration
 ```
 
 ---
 
-## 🚀 Cài đặt & Chạy
+## 🚀 Getting Started
 
-### Yêu cầu hệ thống
+### Prerequisites
 - **Node.js** >= 20.x
 - **npm** >= 10.x
 - **Python** >= 3.10
 - **PostgreSQL** >= 15
 
-### 1. Clone repository
+### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/V2309/online-classroom-system.git
 cd online-classroom-system
 ```
 
 ---
 
-### 2. Backend (NestJS)
+### 2. Backend (NestJS — Port 8081)
 
 ```bash
 cd online-classroom-backend
 
-# Cài đặt dependencies
+# Install dependencies
 npm install
 
-# Tạo file .env (xem phần Biến môi trường)
+# Copy and configure environment variables
 cp .env.example .env
 
-# Chạy Prisma migration
+# Run database migration
 npm run db:migrate
 
 # Generate Prisma client
 npm run db:generate
 
-# Khởi động development server
+# Start development server
 npm run start:dev
 ```
 
-> Backend sẽ chạy tại: **http://localhost:8081**
+> ✅ Backend runs at: **http://localhost:8081**
 
 ---
 
-### 3. Frontend (Next.js)
+### 3. Frontend (Next.js — Port 3000)
 
 ```bash
 cd online-classroom-ui
 
-# Cài đặt dependencies
+# Install dependencies
 npm install
 
-# Tạo file .env
+# Copy and configure environment variables
 cp .env.example .env
 
-# Khởi động development server
+# Start development server
 npm run dev
 ```
 
-> Frontend sẽ chạy tại: **http://localhost:3000**
+> ✅ Frontend runs at: **http://localhost:3000**
 
 ---
 
-### 4. RAG API (FastAPI)
+### 4. RAG API (FastAPI — Port 8000)
 
 ```bash
 cd rag-api
 
-# Tạo virtual environment
+# Create virtual environment
 python -m venv venv
 
-# Kích hoạt venv
+# Activate venv
 venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Linux/macOS
+# source venv/bin/activate   # Linux / macOS
 
-# Cài đặt dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# Tạo file .env
+# Copy and configure environment variables
 cp .env.example .env
 
-# Khởi động server
+# Start development server
 uvicorn index:app --reload --port 8000
 ```
 
-> RAG API sẽ chạy tại: **http://localhost:8000**
+> ✅ RAG API runs at: **http://localhost:8000**
 
 ---
 
-## 🔐 Biến môi trường
+## 🔐 Environment Variables
 
 ### `online-classroom-backend/.env`
 
@@ -351,11 +404,11 @@ JWT_REFRESH_SECRET=your_jwt_refresh_secret
 # Frontend URL (CORS)
 FRONTEND_URL=http://localhost:3000
 
-# Stream.io (Video Call)
+# Stream.io (Video Conferencing)
 STREAM_API_KEY=your_stream_api_key
 STREAM_API_SECRET=your_stream_api_secret
 
-# Pusher (Realtime)
+# Pusher (Real-time)
 PUSHER_APP_ID=your_pusher_app_id
 PUSHER_KEY=your_pusher_key
 PUSHER_SECRET=your_pusher_secret
@@ -375,18 +428,18 @@ R2_ENDPOINT=https://your_account.r2.cloudflarestorage.com
 # Email (Resend)
 RESEND_API_KEY=your_resend_api_key
 
-# Port
+# Server Port
 PORT=8081
 ```
 
 ### `online-classroom-ui/.env`
 
 ```env
-# Backend API
+# API URLs
 NEXT_PUBLIC_API_URL=http://localhost:8081/api
 NEXT_PUBLIC_RAG_API_URL=http://localhost:8000
 
-# JWT (phải giống Backend)
+# JWT (must match Backend)
 JWT_SECRET_KEY=your_jwt_secret_key
 
 # Stream.io
@@ -419,47 +472,48 @@ TAVILY_API_KEY=your_tavily_api_key
 
 ## 📡 API Overview
 
-Tất cả API backend có prefix `/api/`. Backend chạy tại port `8081`.
+All backend API endpoints are prefixed with `/api/`. Backend runs on port `8081`.
 
-| Module | Method | Endpoint | Mô tả |
+| Module | Method | Endpoint | Description |
 |---|---|---|---|
-| **Auth** | POST | `/api/auth/register` | Đăng ký tài khoản |
-| | POST | `/api/auth/login` | Đăng nhập |
-| | POST | `/api/auth/logout` | Đăng xuất |
-| | POST | `/api/auth/refresh` | Làm mới token |
-| **User** | GET | `/api/user/me` | Thông tin bản thân |
-| | PATCH | `/api/user/:id` | Cập nhật thông tin |
-| **Class** | GET | `/api/class` | Danh sách lớp học |
-| | POST | `/api/class` | Tạo lớp học mới |
-| | GET | `/api/class/:id` | Chi tiết lớp học |
-| | POST | `/api/class/:id/join` | Tham gia lớp học |
-| **Post** | GET | `/api/post/:classId` | Bài đăng trong lớp |
-| | POST | `/api/post` | Tạo bài đăng mới |
-| **Homework** | GET | `/api/homework/:classId` | Danh sách bài tập |
-| | POST | `/api/homework` | Tạo bài tập |
-| | POST | `/api/homework/:id/submit` | Nộp bài |
-| **Course** | GET | `/api/course` | Danh sách khóa học |
-| | POST | `/api/course` | Tạo khóa học |
-| **Document** | GET | `/api/document/:classId` | Tài liệu lớp học |
-| | POST | `/api/document` | Upload tài liệu |
-| **Chat** | GET | `/api/chat` | Danh sách cuộc trò chuyện |
-| | POST | `/api/chat/message` | Gửi tin nhắn |
-| **Schedule** | GET | `/api/schedule/:classId` | Lịch học |
-| | POST | `/api/schedule` | Tạo sự kiện lịch |
-| **Notification** | GET | `/api/notification` | Thông báo của user |
-| **Whiteboard** | GET | `/api/whiteboard/:classId` | Dữ liệu bảng vẽ |
-| | PUT | `/api/whiteboard/:id` | Cập nhật bảng vẽ |
-| **Upload** | POST | `/api/upload/image` | Upload ảnh (ImageKit) |
+| **Auth** | POST | `/api/auth/register` | Register new account |
+| | POST | `/api/auth/login` | Login |
+| | POST | `/api/auth/logout` | Logout |
+| | POST | `/api/auth/refresh` | Refresh access token |
+| **User** | GET | `/api/user/me` | Get current user info |
+| | PATCH | `/api/user/:id` | Update user profile |
+| **Class** | GET | `/api/class` | Get class list |
+| | POST | `/api/class` | Create new class |
+| | GET | `/api/class/:id` | Get class details |
+| | POST | `/api/class/:id/join` | Join a class |
+| **Post** | GET | `/api/post/:classId` | Get class newsfeed |
+| | POST | `/api/post` | Create a post |
+| **Homework** | GET | `/api/homework/:classId` | Get assignments |
+| | POST | `/api/homework` | Create assignment |
+| | POST | `/api/homework/:id/submit` | Submit homework |
+| **Course** | GET | `/api/course` | Get course list |
+| | POST | `/api/course` | Create course |
+| **Document** | GET | `/api/document/:classId` | Get class documents |
+| | POST | `/api/document` | Upload document |
+| **Chat** | GET | `/api/chat` | Get conversations |
+| | POST | `/api/chat/message` | Send a message |
+| **Schedule** | GET | `/api/schedule/:classId` | Get class schedule |
+| | POST | `/api/schedule` | Create schedule event |
+| **Notification** | GET | `/api/notification` | Get user notifications |
+| **Whiteboard** | GET | `/api/whiteboard/:classId` | Get whiteboard data |
+| | PUT | `/api/whiteboard/:id` | Update whiteboard |
+| **Upload** | POST | `/api/upload/image` | Upload image (ImageKit) |
 | | POST | `/api/upload/file` | Upload file (R2) |
-| **Realtime** | GET | `/api/realtime/token` | Lấy Stream.io token |
-| **AI** | POST | `/api/ai/ask` | Hỏi đáp AI (RAG) |
-| | POST | `/api/ai/quiz` | Tạo quiz tự động |
+| **Realtime** | GET | `/api/realtime/token` | Get Stream.io token |
+| **AI** | POST | `/api/ai/ask` | AI Q&A (RAG) |
+| | POST | `/api/ai/quiz` | Generate quiz |
+| | POST | `/api/ai/podcast` | Generate podcast |
 
 ---
 
 ## 🗄️ Database Schema
 
-Hệ thống sử dụng **PostgreSQL** với **Prisma ORM**. Các entity chính:
+The system uses **PostgreSQL** with **Prisma ORM**.
 
 ```
 User
@@ -478,7 +532,7 @@ User
       └── File[]
 
 Class
- ├── Post[]
+ ├── Post[] (with Like[], Comment[])
  ├── Homework[]
  ├── Lesson[]
  ├── Schedule[]
@@ -492,56 +546,59 @@ Course
  │    └── Video[]
  └── CourseView[]
 
-Chat / Message
+Message / Chat
 Notification
+VerificationToken
 ```
 
-> Xem chi tiết schema tại [`online-classroom-backend/prisma/schema.prisma`](./online-classroom-backend/prisma/schema.prisma)
+> 📄 Full schema: [`online-classroom-backend/prisma/schema.prisma`](./online-classroom-backend/prisma/schema.prisma)
 
 ---
 
-## 🔒 Luồng xác thực
+## 🔒 Authentication Flow
 
-Hệ thống sử dụng **JWT** lưu trong **HttpOnly Cookie**:
+The system uses **JWT** stored in **HttpOnly Cookies**:
 
 ```
-1. User POST /api/auth/login (email + password)
-2. Backend xác thực → tạo Access Token (15m) + Refresh Token (7d)
-3. Token được lưu trong HttpOnly Cookie ("session")
-4. Next.js Middleware kiểm tra cookie tại mỗi request
-5. Nếu token hết hạn → tự động gọi POST /api/auth/refresh
-6. Nếu không refresh được → redirect về /sign-in
+1. Client sends POST /api/auth/login  (email + password)
+2. Backend verifies credentials
+3. Issues Access Token (15 min) + Refresh Token (7 days)
+4. Both tokens stored in HttpOnly Cookie ("session")
+5. Next.js Middleware verifies the cookie on every protected request
+6. If access token expires → auto call POST /api/auth/refresh
+7. If refresh fails → redirect to /sign-in and clear cookie
 ```
 
-**Phân quyền:**
-| Role | Mô tả |
+**Roles & Permissions:**
+
+| Role | Description |
 |---|---|
-| `student` | Học sinh — tham gia lớp, nộp bài, xem tài liệu |
-| `teacher` | Giáo viên — tạo lớp, ra bài tập, chấm điểm |
-| `admin` | Quản trị viên — truy cập `/dashboard`, quản lý hệ thống |
+| `student` | Join classes, submit homework, view documents |
+| `teacher` | Create classes, assign homework, grade students |
+| `admin` | Access `/dashboard`, manage all users and system |
 
 ---
 
-## 📦 Scripts hữu ích
+## 📦 Scripts
 
 ### Backend
 ```bash
-npm run start:dev      # Development (hot-reload)
-npm run build          # Build production
-npm run start:prod     # Chạy production
-npm run db:migrate     # Chạy database migration
-npm run db:studio      # Mở Prisma Studio (GUI)
+npm run start:dev      # Start development server (hot-reload)
+npm run build          # Build for production
+npm run start:prod     # Start production server
+npm run db:migrate     # Run database migrations
+npm run db:studio      # Open Prisma Studio (database GUI)
 npm run db:generate    # Generate Prisma client
-npm run test           # Unit tests
-npm run test:e2e       # E2E tests
+npm run test           # Run unit tests
+npm run test:e2e       # Run end-to-end tests
 ```
 
 ### Frontend
 ```bash
-npm run dev            # Development
-npm run build          # Build production
-npm run lint           # Lint code
-npm run test           # Unit tests
+npm run dev            # Start development server
+npm run build          # Build for production
+npm run lint           # Lint source code
+npm run test           # Run unit tests
 ```
 
 ### RAG API
@@ -552,20 +609,22 @@ uvicorn index:app --port 8000            # Production
 
 ---
 
-## 🤝 Đóng góp
+## 🤝 Contributing
 
-1. Fork repository
-2. Tạo branch: `git checkout -b feature/ten-tinh-nang`
-3. Commit: `git commit -m "feat: mô tả tính năng"`
-4. Push: `git push origin feature/ten-tinh-nang`
-5. Tạo Pull Request
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -m "feat: describe your changes"`
+4. Push to the branch: `git push origin feature/your-feature-name`
+5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-Dự án này được phát triển cho mục đích học thuật.
+This project was developed for academic purposes.
 
 ---
 
-<p align="center">Made with ❤️ by the Online Classroom Team</p>
+<div align="center">
+  Made with ❤️ by the Online Classroom Team
+</div>
