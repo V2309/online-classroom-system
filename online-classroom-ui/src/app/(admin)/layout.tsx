@@ -13,7 +13,7 @@ export default async function DashboardLayout({
   // Chuẩn bị object user để truyền xuống (đề phòng user null)
   const userData = user ? {
     username: user.username,
-    email: user.email,
+   
     img: user.img,
     role: user.role
   } : null;

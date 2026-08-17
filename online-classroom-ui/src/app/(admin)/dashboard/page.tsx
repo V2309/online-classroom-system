@@ -5,18 +5,38 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Users, GraduationCap, BookOpen, Activity } from "lucide-react";
-import { 
-  getDashboardStats, 
-  getUserGrowthData, 
-  getClassActivityData, 
-  getOnlineUsersCount 
-} from "@/lib/actions/dashboard.action";
 import UserGrowthChart from "@/components/dashboard/UserGrowthChart";
 import ClassActivityChart from "@/components/dashboard/ClassActivityChart";
 
-/**
- * Component cho một thẻ thống kê (Stat Card)
- */
+const staticStats = {
+  totalStudents: 1250,
+  studentsGrowthPercent: 12.5,
+  totalTeachers: 48,
+  teachersGrowthPercent: 4.2,
+  totalClasses: 36,
+  classesGrowthPercent: 8.1,
+  completedHomeworkPercent: 85,
+};
+
+const staticUserGrowthData = [
+  { name: "Tháng 1", users: 400 },
+  { name: "Tháng 2", users: 600 },
+  { name: "Tháng 3", users: 800 },
+  { name: "Tháng 4", users: 1000 },
+  { name: "Tháng 5", users: 1150 },
+  { name: "Tháng 6", users: 1298 },
+];
+
+const staticClassActivityData = [
+  { name: "T2", classes: 12 },
+  { name: "T3", classes: 18 },
+  { name: "T4", classes: 15 },
+  { name: "T5", classes: 22 },
+  { name: "T6", classes: 20 },
+  { name: "T7", classes: 8 },
+  { name: "CN", classes: 4 },
+];
+
 interface StatCardProps {
   title: string;
   value: string;
@@ -39,43 +59,32 @@ function StatCard({ title, value, description, icon: Icon }: StatCardProps) {
   );
 }
 
-/**
- * Trang Dashboard chính
- */
-export default async function DashboardPage() {
-  // Lấy dữ liệu từ server
-  const [stats, userGrowthData, classActivityData, onlineStats] = await Promise.all([
-    getDashboardStats(),
-    getUserGrowthData(),
-    getClassActivityData(),
-    getOnlineUsersCount()
-  ]);
+export default function DashboardPage() {
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-8">
-
       {/* 1. Phần Thẻ Thống Kê */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Số lượng học sinh"
-          value={stats.totalStudents.toLocaleString()}
-          description={`+${stats.studentsGrowthPercent}% so với tháng trước`}
+          value={staticStats.totalStudents.toLocaleString()}
+          description={`+${staticStats.studentsGrowthPercent}% so với tháng trước`}
           icon={Users}
         />
         <StatCard
           title="Số lượng giáo viên"
-          value={stats.totalTeachers.toLocaleString()}
-          description={`+${stats.teachersGrowthPercent}% so với tháng trước`}
+          value={staticStats.totalTeachers.toLocaleString()}
+          description={`+${staticStats.teachersGrowthPercent}% so với tháng trước`}
           icon={GraduationCap}
         />
         <StatCard
           title="Tổng lớp học"
-          value={stats.totalClasses.toLocaleString()}
-          description={`+${stats.classesGrowthPercent}% so với tháng trước`}
+          value={staticStats.totalClasses.toLocaleString()}
+          description={`+${staticStats.classesGrowthPercent}% so với tháng trước`}
           icon={BookOpen}
         />
         <StatCard
           title="Bài tập hoàn thành"
-          value={stats.completedHomeworkPercent + "%"}
+          value={staticStats.completedHomeworkPercent + "%"}
           description="Tỷ lệ hoàn thành tuần này"
           icon={Activity}
         />
@@ -83,14 +92,13 @@ export default async function DashboardPage() {
 
       {/* 2. Phần Biểu Đồ */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
         {/* Biểu đồ Hoạt động Lớp học */}
         <Card>
           <CardHeader>
             <CardTitle>Hoạt động lớp học (7 ngày gần đây)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ClassActivityChart data={classActivityData} />
+            <ClassActivityChart data={staticClassActivityData} />
           </CardContent>
         </Card>
 
@@ -100,19 +108,10 @@ export default async function DashboardPage() {
             <CardTitle>Tăng trưởng người dùng (6 tháng gần đây)</CardTitle>
           </CardHeader>
           <CardContent>
-            <UserGrowthChart data={userGrowthData} />
+            <UserGrowthChart data={staticUserGrowthData} />
           </CardContent>
         </Card>
       </div>
-
-      {/* 3. Người dùng đang online */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-1">
-        <OnlineUsersCard 
-          totalOnline={onlineStats.onlineCount}
-          yesterdayAccess={onlineStats.yesterdayAccess} 
-          totalAccess={onlineStats.totalAccess}
-        />
-      </div> */}
     </div>
   );
 }

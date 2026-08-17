@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   reactStrictMode: true,
   experimental: {
     esmExternals: true,
@@ -26,17 +27,6 @@ const nextConfig = {
         hostname: "**",
         pathname: "**",
       },
-    ],
-    domains: [
-      "source.unsplash.com",
-      "ik.imagekit.io",
-      "img.youtube.com",
-      "i.ytimg.com",
-      "www.google.com",
-      "google.com",
-      "lh3.googleusercontent.com",
-      "images.unsplash.com",
-      // thêm các domain khác nếu cần
     ],
   },
   // Thêm config cho iframe YouTube embed

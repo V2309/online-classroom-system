@@ -458,7 +458,7 @@ export default function CourseForm({ classCode, folders, course }: CourseFormPro
               <FolderIcon className="w-10 h-10 mx-auto mb-2 text-muted-foreground/40" />
               <p className="font-bold text-sm text-foreground">Khóa học chưa có chương nào</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Nhấn vào nút "Thêm chương mới" để bắt đầu thêm các bài giảng video.
+                Nhấn vào nút &quot;Thêm chương mới&quot; để bắt đầu thêm các bài giảng video.
               </p>
             </div>
           )}

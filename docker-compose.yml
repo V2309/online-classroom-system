@@ -1,0 +1,45 @@
+services:
+  # =========================================================================
+  # 1. Backend Service (NestJS)
+  # =========================================================================
+  backend:
+    build:
+      context: ./online-classroom-backend
+      dockerfile: Dockerfile
+    container_name: online-classroom-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - NODE_ENV=production
+    env_file:
+      - ./online-classroom-backend/.env
+    networks:
+      - classroom-network
+
+  # =========================================================================
+  # 2. Frontend UI Service (Next.js)
+  # =========================================================================
+  ui:
+    build:
+      context: ./online-classroom-ui
+      dockerfile: Dockerfile
+    container_name: online-classroom-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - INTERNAL_API_URL=http://backend:8080/api
+    env_file:
+      - ./online-classroom-ui/.env
+    depends_on:
+      - backend
+    networks:
+      - classroom-network
+
+networks:
+  classroom-network:
+    driver: bridge

@@ -11,7 +11,9 @@ export async function serverFetch<T = any>(
   const cookieStore = cookies();
   const session = cookieStore.get("session")?.value;
 
-  const url = `${process.env.NEXT_PUBLIC_API_URL}${endpoint}`;
+  const baseUrl = (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api").replace(/\/$/, "");
+  const formattedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = `${baseUrl}${formattedEndpoint}`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

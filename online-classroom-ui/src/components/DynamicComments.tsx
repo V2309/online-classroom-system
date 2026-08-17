@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Comments from "./Comments";
+import SimpleComments from "./SimpleComments";
 
 const DynamicComments = ({
   postId,
-  username,
-  classCode,
 }: {
   postId: number;
-  username: string;
+  username?: string;
   classCode?: string;
 }) => {
   const [comments, setComments] = useState<any[]>([]);
@@ -44,25 +42,27 @@ const DynamicComments = ({
     );
   }
 
-  const refreshComments = async () => {
+  const handleAddComment = async (commentText: string) => {
     try {
-      const response = await fetch(`/api/posts/${postId}/comments`);
+      const response = await fetch(`/api/posts/${postId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ desc: commentText }),
+      });
       if (response.ok) {
-        const result = await response.json();
-        setComments(result);
+        const newComment = await response.json();
+        setComments((prev) => [...prev, newComment]);
       }
     } catch (error) {
-      console.error("Error refreshing comments:", error);
+      console.error("Error adding comment:", error);
     }
   };
 
   return (
-    <Comments
+    <SimpleComments
       comments={comments}
+      onAddComment={handleAddComment}
       postId={postId}
-      username={username}
-      classCode={classCode}
-      onCommentSuccess={refreshComments}
     />
   );
 };

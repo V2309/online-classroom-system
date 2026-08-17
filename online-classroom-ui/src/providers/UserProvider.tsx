@@ -44,10 +44,15 @@ export function UserProvider({ children }: UserProviderProps) {
 
 export function useUser(): UserContextType {
   const context = useContext(UserContext);
+  const store = useUserStore();
   if (context === undefined) {
     // Fallback directly to Zustand store if called outside provider
-    const { user, error, loading, refetchUser } = useUserStore();
-    return { user, error, loading, refetchUser };
+    return {
+      user: store.user,
+      error: store.error,
+      loading: store.loading,
+      refetchUser: store.refetchUser,
+    };
   }
   return context;
 }
