@@ -17,12 +17,17 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
-import { CreateClassDto, UpdateClassDto, ClassQueryDto, ClassMembersQueryDto } from './dto/class.dto';
+import {
+  CreateClassDto,
+  UpdateClassDto,
+  ClassQueryDto,
+  ClassMembersQueryDto,
+} from './dto/class.dto';
 
 @Controller('classes')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ClassController {
-  constructor(private readonly classService: ClassService) { }
+  constructor(private readonly classService: ClassService) {}
 
   // ─── GET /classes — danh sách lớp theo role ───────────────────────────────
   @Get()
@@ -53,7 +58,12 @@ export class ClassController {
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: ClassMembersQueryDto,
   ) {
-    return this.classService.getClassMembers(classCode, user.id, user.role, query);
+    return this.classService.getClassMembers(
+      classCode,
+      user.id,
+      user.role,
+      query,
+    );
   }
 
   // ─── DELETE /classes/:code/members/:studentId — xóa học sinh khỏi lớp ─────
@@ -64,14 +74,16 @@ export class ClassController {
     @Param('studentId') studentId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.classService.removeStudentFromClass(classCode, studentId, user.id);
+    return this.classService.removeStudentFromClass(
+      classCode,
+      studentId,
+      user.id,
+    );
   }
 
   // ─── GET /classes/:code ───────────────────────────────────────────────────
   @Get(':code')
-  getClassByCode(
-    @Param('code') classCode: string,
-  ) {
+  getClassByCode(@Param('code') classCode: string) {
     return this.classService.getClassByCode(classCode);
   }
 
@@ -171,4 +183,3 @@ export class ClassController {
     return this.classService.rejectJoinRequest(requestId, user.id);
   }
 }
-

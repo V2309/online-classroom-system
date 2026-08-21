@@ -129,7 +129,8 @@ export class ChatService {
       where: { id: userId },
       select: { id: true, username: true, img: true },
     });
-    if (!user) throw new NotFoundException('Không tìm thấy thông tin người dùng.');
+    if (!user)
+      throw new NotFoundException('Không tìm thấy thông tin người dùng.');
 
     const cls = await this.prisma.class.findUnique({
       where: { class_code: dto.classCode, deleted: false },
@@ -199,7 +200,9 @@ export class ChatService {
     });
 
     if (!message) {
-      throw new ForbiddenException('Không tìm thấy tin nhắn hoặc không có quyền xóa.');
+      throw new ForbiddenException(
+        'Không tìm thấy tin nhắn hoặc không có quyền xóa.',
+      );
     }
 
     await this.prisma.message.delete({
@@ -226,7 +229,9 @@ export class ChatService {
     });
 
     if (!message) {
-      throw new ForbiddenException('Không tìm thấy tin nhắn hoặc không có quyền thu hồi.');
+      throw new ForbiddenException(
+        'Không tìm thấy tin nhắn hoặc không có quyền thu hồi.',
+      );
     }
 
     const updated = await this.prisma.message.update({
@@ -241,7 +246,10 @@ export class ChatService {
       userId,
     });
 
-    return { message: 'Đã thu hồi tin nhắn thành công.', content: updated.content };
+    return {
+      message: 'Đã thu hồi tin nhắn thành công.',
+      content: updated.content,
+    };
   }
 
   // ─── POST /chat/messages/:id/pin — Ghim tin nhắn ──────────────────────────

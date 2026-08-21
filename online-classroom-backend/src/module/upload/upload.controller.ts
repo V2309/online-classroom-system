@@ -28,10 +28,7 @@ export class UploadController {
 
   // ─── GET /upload/r2-file — Stream/tải file từ Cloudflare R2 ───────────────
   @Get('r2-file')
-  async streamR2File(
-    @Query('key') key: string,
-    @Res() res: Response,
-  ) {
+  async streamR2File(@Query('key') key: string, @Res() res: Response) {
     if (!key) {
       throw new BadRequestException('Key file không hợp lệ.');
     }

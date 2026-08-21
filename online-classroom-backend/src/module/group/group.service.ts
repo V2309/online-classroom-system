@@ -25,17 +25,23 @@ export class GroupService {
     if (!cls) throw new NotFoundException('Lớp học không tồn tại.');
 
     if (role === 'teacher') {
-      const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
+      const teacher = await this.prisma.teacher.findUnique({
+        where: { userId },
+      });
       if (!teacher || cls.supervisorId !== teacher.id) {
         throw new ForbiddenException('Bạn không có quyền xem lớp này.');
       }
     } else if (role === 'student') {
-      const student = await this.prisma.student.findUnique({ where: { userId } });
-      if (!student) throw new ForbiddenException('Không tìm thấy thông tin học sinh.');
+      const student = await this.prisma.student.findUnique({
+        where: { userId },
+      });
+      if (!student)
+        throw new ForbiddenException('Không tìm thấy thông tin học sinh.');
       const isMember = await this.prisma.class.findFirst({
         where: { id: cls.id, students: { some: { id: student.id } } },
       });
-      if (!isMember) throw new ForbiddenException('Bạn không thuộc lớp học này.');
+      if (!isMember)
+        throw new ForbiddenException('Bạn không thuộc lớp học này.');
     }
 
     // 1. Lấy tất cả học sinh trong lớp
@@ -155,7 +161,8 @@ export class GroupService {
   // ─── POST /groups — Tạo nhóm mới (teacher only) ───────────────────────────
   async createGroup(userId: string, dto: CreateGroupDto) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể tạo nhóm.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể tạo nhóm.');
 
     const cls = await this.prisma.class.findUnique({
       where: { class_code: dto.classCode, deleted: false },
@@ -208,7 +215,8 @@ export class GroupService {
   // ─── PATCH /groups/:id — Sửa thông tin nhóm ───────────────────────────────
   async updateGroup(groupId: string, userId: string, dto: UpdateGroupDto) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể sửa nhóm.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể sửa nhóm.');
 
     const group = await this.prisma.classGroup.findUnique({
       where: { id: groupId },
@@ -273,7 +281,8 @@ export class GroupService {
   // ─── DELETE /groups/:id — Xóa nhóm ───────────────────────────────────────
   async deleteGroup(groupId: string, userId: string) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể xóa nhóm.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể xóa nhóm.');
 
     const group = await this.prisma.classGroup.findUnique({
       where: { id: groupId },
@@ -293,7 +302,8 @@ export class GroupService {
   // ─── POST /groups/members — Kéo thả cập nhật thành viên ───────────────────
   async updateGroupMembers(userId: string, dto: UpdateGroupMemberDto) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể cập nhật nhóm.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể cập nhật nhóm.');
 
     const cls = await this.prisma.class.findUnique({
       where: { class_code: dto.classCode, deleted: false },
@@ -343,7 +353,10 @@ export class GroupService {
           throw new NotFoundException('Nhóm đích không tồn tại.');
         }
 
-        if (targetGroup.maxSize && targetGroup.members.length >= targetGroup.maxSize) {
+        if (
+          targetGroup.maxSize &&
+          targetGroup.members.length >= targetGroup.maxSize
+        ) {
           throw new BadRequestException(
             `Nhóm đã đầy (tối đa ${targetGroup.maxSize} thành viên).`,
           );
@@ -363,9 +376,16 @@ export class GroupService {
   }
 
   // ─── POST /groups/:id/leader — Chọn nhóm trưởng ──────────────────────────
-  async setGroupLeader(groupId: string, userId: string, dto: SetGroupLeaderDto) {
+  async setGroupLeader(
+    groupId: string,
+    userId: string,
+    dto: SetGroupLeaderDto,
+  ) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có quyền đổi nhóm trưởng.');
+    if (!teacher)
+      throw new ForbiddenException(
+        'Chỉ giáo viên mới có quyền đổi nhóm trưởng.',
+      );
 
     const group = await this.prisma.classGroup.findUnique({
       where: { id: groupId },

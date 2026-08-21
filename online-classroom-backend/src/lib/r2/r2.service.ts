@@ -33,8 +33,11 @@ export class R2Service {
   constructor(private readonly configService: ConfigService) {
     const accountId = this.configService.get<string>('R2_ACCOUNT_ID');
     const accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID');
-    const secretAccessKey = this.configService.get<string>('R2_SECRET_ACCESS_KEY');
-    this.bucketName = this.configService.get<string>('R2_BUCKET_NAME') || 'class-file';
+    const secretAccessKey = this.configService.get<string>(
+      'R2_SECRET_ACCESS_KEY',
+    );
+    this.bucketName =
+      this.configService.get<string>('R2_BUCKET_NAME') || 'class-file';
     this.backendUrl =
       this.configService.get<string>('BACKEND_URL') || 'http://localhost:8080';
     this.publicUrl = this.configService.get<string>('R2_PUBLIC_URL');
@@ -50,7 +53,9 @@ export class R2Service {
       });
       this.logger.log('Cloudflare R2 Client initialized successfully.');
     } else {
-      this.logger.warn('Cloudflare R2 credentials missing in environment config.');
+      this.logger.warn(
+        'Cloudflare R2 credentials missing in environment config.',
+      );
     }
   }
 
@@ -68,7 +73,9 @@ export class R2Service {
     }
 
     if (!this.s3Client) {
-      throw new BadRequestException('Dịch vụ lưu trữ Cloudflare R2 chưa được cấu hình.');
+      throw new BadRequestException(
+        'Dịch vụ lưu trữ Cloudflare R2 chưa được cấu hình.',
+      );
     }
 
     const cleanFileName = file.originalname
@@ -109,7 +116,10 @@ export class R2Service {
     }
   }
 
-  async getPresignedUrl(key: string, expiresInSeconds: number = 7200): Promise<string> {
+  async getPresignedUrl(
+    key: string,
+    expiresInSeconds: number = 7200,
+  ): Promise<string> {
     if (!this.s3Client) {
       throw new BadRequestException('Cloudflare R2 chưa được cấu hình.');
     }
@@ -119,7 +129,9 @@ export class R2Service {
       Key: key,
     });
 
-    return getSignedUrl(this.s3Client, command, { expiresIn: expiresInSeconds });
+    return getSignedUrl(this.s3Client, command, {
+      expiresIn: expiresInSeconds,
+    });
   }
 
   async getFileObject(key: string): Promise<{

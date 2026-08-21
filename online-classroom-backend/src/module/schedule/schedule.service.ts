@@ -110,17 +110,25 @@ export class ScheduleService {
       },
     });
     if (!classExists) {
-      throw new NotFoundException('Lớp học không tồn tại hoặc bạn không có quyền.');
+      throw new NotFoundException(
+        'Lớp học không tồn tại hoặc bạn không có quyền.',
+      );
     }
 
     const startDateTime = new Date(`${dto.date}T${dto.startTime}:00`);
     const endDateTime = new Date(`${dto.date}T${dto.endTime}:00`);
 
     if (endDateTime <= startDateTime) {
-      throw new BadRequestException('Thời gian kết thúc phải sau thời gian bắt đầu.');
+      throw new BadRequestException(
+        'Thời gian kết thúc phải sau thời gian bắt đầu.',
+      );
     }
 
-    const occurrences = this.generateOccurrences(startDateTime, endDateTime, dto);
+    const occurrences = this.generateOccurrences(
+      startDateTime,
+      endDateTime,
+      dto,
+    );
 
     if (occurrences.length === 1) {
       const created = await this.prisma.event.create({
@@ -132,7 +140,11 @@ export class ScheduleService {
           classId: dto.classId,
         },
       });
-      return { success: true, message: 'Tạo lịch học thành công!', data: created };
+      return {
+        success: true,
+        message: 'Tạo lịch học thành công!',
+        data: created,
+      };
     }
 
     await this.prisma.event.createMany({
@@ -170,21 +182,28 @@ export class ScheduleService {
       },
     });
     if (!classExists) {
-      throw new NotFoundException('Lớp học không tồn tại hoặc bạn không có quyền.');
+      throw new NotFoundException(
+        'Lớp học không tồn tại hoặc bạn không có quyền.',
+      );
     }
 
     const startDateTime = new Date(`${dto.date}T${dto.startTime}:00`);
     const endDateTime = new Date(`${dto.date}T${dto.endTime}:00`);
 
     if (endDateTime <= startDateTime) {
-      throw new BadRequestException('Thời gian kết thúc phải sau thời gian bắt đầu.');
+      throw new BadRequestException(
+        'Thời gian kết thúc phải sau thời gian bắt đầu.',
+      );
     }
 
     const meetingLink =
-      dto.meetingLink ||
-      (dto.meetingId ? `/meeting/${dto.meetingId}` : null);
+      dto.meetingLink || (dto.meetingId ? `/meeting/${dto.meetingId}` : null);
 
-    const occurrences = this.generateOccurrences(startDateTime, endDateTime, dto);
+    const occurrences = this.generateOccurrences(
+      startDateTime,
+      endDateTime,
+      dto,
+    );
 
     if (occurrences.length === 1) {
       const created = await this.prisma.event.create({
@@ -225,7 +244,11 @@ export class ScheduleService {
   /**
    * Cập nhật 1 event
    */
-  async updateSingleEvent(userId: string, eventId: number, dto: UpdateScheduleDto) {
+  async updateSingleEvent(
+    userId: string,
+    eventId: number,
+    dto: UpdateScheduleDto,
+  ) {
     const teacher = await this.prisma.teacher.findUnique({
       where: { userId },
     });
@@ -240,7 +263,10 @@ export class ScheduleService {
         },
       },
     });
-    if (!event) throw new NotFoundException('Lịch học không tồn tại hoặc bạn không có quyền.');
+    if (!event)
+      throw new NotFoundException(
+        'Lịch học không tồn tại hoặc bạn không có quyền.',
+      );
 
     const updated = await this.prisma.event.update({
       where: { id: eventId },
@@ -250,7 +276,11 @@ export class ScheduleService {
       },
     });
 
-    return { success: true, message: 'Cập nhật lịch học thành công!', data: updated };
+    return {
+      success: true,
+      message: 'Cập nhật lịch học thành công!',
+      data: updated,
+    };
   }
 
   /**
@@ -314,7 +344,10 @@ export class ScheduleService {
         },
       },
     });
-    if (!event) throw new NotFoundException('Lịch học không tồn tại hoặc bạn không có quyền.');
+    if (!event)
+      throw new NotFoundException(
+        'Lịch học không tồn tại hoặc bạn không có quyền.',
+      );
 
     await this.prisma.event.delete({
       where: { id: eventId },
@@ -542,7 +575,7 @@ export class ScheduleService {
       const startBase = new Date(startDateTime);
 
       while (pushIfValid(s, e)) {
-        let nextDay = new Date(s);
+        const nextDay = new Date(s);
         let foundNext = false;
 
         for (let i = 1; i <= 7 * interval; i++) {

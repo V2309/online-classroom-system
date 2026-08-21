@@ -38,7 +38,9 @@ export class HomeworkService {
       },
     });
     if (!teacher) {
-      throw new ForbiddenException('Chỉ giáo viên mới có quyền thực hiện thao tác này.');
+      throw new ForbiddenException(
+        'Chỉ giáo viên mới có quyền thực hiện thao tác này.',
+      );
     }
     return teacher;
   }
@@ -51,7 +53,9 @@ export class HomeworkService {
       },
     });
     if (!student) {
-      throw new ForbiddenException('Chỉ học sinh mới có quyền thực hiện thao tác này.');
+      throw new ForbiddenException(
+        'Chỉ học sinh mới có quyền thực hiện thao tác này.',
+      );
     }
     return student;
   }
@@ -69,33 +73,47 @@ export class HomeworkService {
     });
 
     if (!classRecord) {
-      throw new BadRequestException('Lớp học không tồn tại hoặc bạn không có quyền quản lý.');
+      throw new BadRequestException(
+        'Lớp học không tồn tại hoặc bạn không có quyền quản lý.',
+      );
     }
 
     const type = dto.type || 'original';
     const startTime = dto.startTime ? new Date(dto.startTime) : null;
-    const endTime = dto.endTime || dto.deadline ? new Date((dto.endTime || dto.deadline)!) : null;
+    const endTime =
+      dto.endTime || dto.deadline
+        ? new Date((dto.endTime || dto.deadline)!)
+        : null;
     const duration = dto.duration || 30;
     const maxAttempts = dto.maxAttempts || dto.attempts || 1;
-    const studentViewPermission = (dto.studentViewPermission as any) || StudentViewPermissionEnum.NO_VIEW;
-    const gradingMethod = (dto.gradingMethod as any) || GradingMethodEnum.FIRST_ATTEMPT;
+    const studentViewPermission =
+      (dto.studentViewPermission as any) || StudentViewPermissionEnum.NO_VIEW;
+    const gradingMethod =
+      (dto.gradingMethod as any) || GradingMethodEnum.FIRST_ATTEMPT;
     const blockViewAfterSubmit = dto.blockViewAfterSubmit || false;
     const isShuffleQuestions = dto.isShuffleQuestions || false;
     const isShuffleAnswers = dto.isShuffleAnswers || false;
 
     return await this.prisma.$transaction(async (tx) => {
-      if (type === 'extracted' && dto.extractedQuestions && dto.extractedQuestions.length > 0) {
+      if (
+        type === 'extracted' &&
+        dto.extractedQuestions &&
+        dto.extractedQuestions.length > 0
+      ) {
         // Tách câu tự động
         const totalPoints =
           dto.points ??
           Math.round(
-            dto.extractedQuestions.reduce((sum, q) => sum + (q.point || 0), 0) * 100,
+            dto.extractedQuestions.reduce((sum, q) => sum + (q.point || 0), 0) *
+              100,
           ) / 100;
 
         const homework = await tx.homework.create({
           data: {
             title: dto.title,
-            description: dto.description || `Bài tập trắc nghiệm tự động có ${dto.extractedQuestions.length} câu hỏi`,
+            description:
+              dto.description ||
+              `Bài tập trắc nghiệm tự động có ${dto.extractedQuestions.length} câu hỏi`,
             type: 'extracted',
             originalFileUrl: dto.originalFileUrl || dto.fileUrl,
             originalFileName: dto.originalFileName || dto.fileName,
@@ -116,9 +134,15 @@ export class HomeworkService {
               ? {
                   attachments: {
                     create: {
-                      name: dto.fileName || dto.originalFileName || 'Tài liệu đề bài',
+                      name:
+                        dto.fileName ||
+                        dto.originalFileName ||
+                        'Tài liệu đề bài',
                       url: dto.fileUrl || dto.originalFileUrl,
-                      type: dto.fileType || dto.originalFileType || 'application/pdf',
+                      type:
+                        dto.fileType ||
+                        dto.originalFileType ||
+                        'application/pdf',
                       size: 0,
                     },
                   },
@@ -141,12 +165,17 @@ export class HomeworkService {
         });
 
         return homework;
-      } else if (type === 'essay' && dto.essayQuestions && dto.essayQuestions.length > 0) {
+      } else if (
+        type === 'essay' &&
+        dto.essayQuestions &&
+        dto.essayQuestions.length > 0
+      ) {
         // Tự luận
         const totalPoints =
           dto.points ??
           Math.round(
-            dto.essayQuestions.reduce((sum, q) => sum + (q.point || 0), 0) * 100,
+            dto.essayQuestions.reduce((sum, q) => sum + (q.point || 0), 0) *
+              100,
           ) / 100;
 
         const homework = await tx.homework.create({
@@ -160,9 +189,18 @@ export class HomeworkService {
                   : `về chủ đề: ${dto.source_name || ''}`
               }`,
             type: 'essay',
-            originalFileUrl: dto.source_type === 'file' ? (dto.originalFileUrl || dto.fileUrl) : undefined,
-            originalFileName: dto.source_type === 'file' ? (dto.originalFileName || dto.fileName) : undefined,
-            originalFileType: dto.source_type === 'file' ? (dto.originalFileType || dto.fileType) : undefined,
+            originalFileUrl:
+              dto.source_type === 'file'
+                ? dto.originalFileUrl || dto.fileUrl
+                : undefined,
+            originalFileName:
+              dto.source_type === 'file'
+                ? dto.originalFileName || dto.fileName
+                : undefined,
+            originalFileType:
+              dto.source_type === 'file'
+                ? dto.originalFileType || dto.fileType
+                : undefined,
             content: JSON.stringify({
               source_type: dto.source_type || 'file',
               source_name: dto.source_name || '',
@@ -183,9 +221,15 @@ export class HomeworkService {
               ? {
                   attachments: {
                     create: {
-                      name: dto.fileName || dto.originalFileName || 'Tài liệu đề bài',
+                      name:
+                        dto.fileName ||
+                        dto.originalFileName ||
+                        'Tài liệu đề bài',
                       url: dto.fileUrl || dto.originalFileUrl,
-                      type: dto.fileType || dto.originalFileType || 'application/pdf',
+                      type:
+                        dto.fileType ||
+                        dto.originalFileType ||
+                        'application/pdf',
                       size: 0,
                     },
                   },
@@ -218,13 +262,16 @@ export class HomeworkService {
           ) / 100;
 
         const fileUrl = dto.fileUrl || dto.originalFileUrl;
-        const fileName = dto.fileName || dto.originalFileName || 'Tài liệu đề bài';
-        const fileType = dto.fileType || dto.originalFileType || 'application/pdf';
+        const fileName =
+          dto.fileName || dto.originalFileName || 'Tài liệu đề bài';
+        const fileType =
+          dto.fileType || dto.originalFileType || 'application/pdf';
 
         const homework = await tx.homework.create({
           data: {
             title: dto.title,
-            description: dto.description || `Bài tập có ${questions.length} câu hỏi`,
+            description:
+              dto.description || `Bài tập có ${questions.length} câu hỏi`,
             type: type,
             originalFileUrl: fileUrl,
             originalFileName: fileName,
@@ -265,8 +312,12 @@ export class HomeworkService {
               answer: q.answer || '',
               point: q.point ? Math.round(q.point * 100) / 100 : undefined,
               homeworkId: homework.id,
-              options: q.options || (type === 'original' ? ['A', 'B', 'C', 'D'] : []),
-              questionType: type === 'original' ? 'manual' : (q.questionType || 'multiple_choice'),
+              options:
+                q.options || (type === 'original' ? ['A', 'B', 'C', 'D'] : []),
+              questionType:
+                type === 'original'
+                  ? 'manual'
+                  : q.questionType || 'multiple_choice',
             })),
           });
         }
@@ -365,15 +416,21 @@ export class HomeworkService {
               answer: q.answer,
               point: q.point ?? undefined,
               options:
-                q.options || (homework.type === 'original' ? ['A', 'B', 'C', 'D'] : []),
+                q.options ||
+                (homework.type === 'original' ? ['A', 'B', 'C', 'D'] : []),
               questionType:
-                homework.type === 'original' ? 'manual' : (q.questionType || 'multiple_choice'),
+                homework.type === 'original'
+                  ? 'manual'
+                  : q.questionType || 'multiple_choice',
             },
           });
         }
       }
 
-      const totalPoints = dto.questions.reduce((sum, q) => sum + (q.point || 0), 0);
+      const totalPoints = dto.questions.reduce(
+        (sum, q) => sum + (q.point || 0),
+        0,
+      );
       await tx.homework.update({
         where: { id: homeworkId },
         data: { points: totalPoints },
@@ -411,11 +468,21 @@ export class HomeworkService {
         ...(dto.endTime ? { endTime: new Date(dto.endTime) } : {}),
         ...(dto.duration ? { duration: dto.duration } : {}),
         ...(dto.maxAttempts ? { maxAttempts: dto.maxAttempts } : {}),
-        ...(dto.studentViewPermission ? { studentViewPermission: dto.studentViewPermission as any } : {}),
-        ...(dto.blockViewAfterSubmit !== undefined ? { blockViewAfterSubmit: dto.blockViewAfterSubmit } : {}),
-        ...(dto.gradingMethod ? { gradingMethod: dto.gradingMethod as any } : {}),
-        ...(dto.isShuffleQuestions !== undefined ? { isShuffleQuestions: dto.isShuffleQuestions } : {}),
-        ...(dto.isShuffleAnswers !== undefined ? { isShuffleAnswers: dto.isShuffleAnswers } : {}),
+        ...(dto.studentViewPermission
+          ? { studentViewPermission: dto.studentViewPermission as any }
+          : {}),
+        ...(dto.blockViewAfterSubmit !== undefined
+          ? { blockViewAfterSubmit: dto.blockViewAfterSubmit }
+          : {}),
+        ...(dto.gradingMethod
+          ? { gradingMethod: dto.gradingMethod as any }
+          : {}),
+        ...(dto.isShuffleQuestions !== undefined
+          ? { isShuffleQuestions: dto.isShuffleQuestions }
+          : {}),
+        ...(dto.isShuffleAnswers !== undefined
+          ? { isShuffleAnswers: dto.isShuffleAnswers }
+          : {}),
       },
     });
 
@@ -492,7 +559,7 @@ export class HomeworkService {
     };
   }
 
-  // ─── 8. POST /homework/:id/submit — Nộp bài (học sinh / làm thử giáo viên) 
+  // ─── 8. POST /homework/:id/submit — Nộp bài (học sinh / làm thử giáo viên)
   async submitHomework(
     homeworkId: number,
     userId: string,
@@ -513,10 +580,15 @@ export class HomeworkService {
     // Xử lý giáo viên làm thử (không lưu DB)
     if (isTeacher) {
       let totalPoints = 0;
-      const questionAnswers: Array<{ questionId: number; answer: string; isCorrect: boolean }> = [];
+      const questionAnswers: Array<{
+        questionId: number;
+        answer: string;
+        isCorrect: boolean;
+      }> = [];
 
       homework.questions.forEach((q) => {
-        const studentAnswer = dto.answers?.[q.id] || dto.answers?.[q.questionNumber || 0];
+        const studentAnswer =
+          dto.answers?.[q.id] || dto.answers?.[q.questionNumber || 0];
         const isCorrect = studentAnswer === q.answer;
         if (isCorrect) {
           totalPoints += q.point || 0;
@@ -555,12 +627,17 @@ export class HomeworkService {
     }
 
     let totalPoints = 0;
-    const questionAnswers: Array<{ questionId: number; answer: string; isCorrect: boolean }> = [];
+    const questionAnswers: Array<{
+      questionId: number;
+      answer: string;
+      isCorrect: boolean;
+    }> = [];
 
     // Nếu là trắc nghiệm thì chấm tự động
     if (homework.type !== 'essay') {
       homework.questions.forEach((q) => {
-        const studentAnswer = dto.answers?.[q.id] || dto.answers?.[q.questionNumber || 0];
+        const studentAnswer =
+          dto.answers?.[q.id] || dto.answers?.[q.questionNumber || 0];
         const isCorrect = studentAnswer === q.answer;
         if (isCorrect) {
           totalPoints += q.point || 0;
@@ -693,7 +770,10 @@ export class HomeworkService {
             score: Number(score),
             feedback: null,
           };
-        } else if (typeof currentContent[qId] === 'object' && currentContent[qId] !== null) {
+        } else if (
+          typeof currentContent[qId] === 'object' &&
+          currentContent[qId] !== null
+        ) {
           currentContent[qId].score = Number(score);
         } else {
           currentContent[qId] = {
@@ -719,7 +799,7 @@ export class HomeworkService {
     };
   }
 
-  // ─── 10. GET /homework/submissions/count — Đếm số lượt làm & điểm tốt nhất 
+  // ─── 10. GET /homework/submissions/count — Đếm số lượt làm & điểm tốt nhất
   async getSubmissionsCount(homeworkId: number, userId: string) {
     const student = await this.getStudent(userId);
 
@@ -743,8 +823,11 @@ export class HomeworkService {
       throw new NotFoundException('Không tìm thấy bài tập.');
     }
 
-    const isExpired = homework.endTime ? new Date() > new Date(homework.endTime) : false;
-    const canViewScore = homework.studentViewPermission !== 'NO_VIEW' || isExpired;
+    const isExpired = homework.endTime
+      ? new Date() > new Date(homework.endTime)
+      : false;
+    const canViewScore =
+      homework.studentViewPermission !== 'NO_VIEW' || isExpired;
 
     let currentSubmission: { id: number; grade: number | null } | null = null;
     if (canViewScore) {
@@ -778,13 +861,17 @@ export class HomeworkService {
 
     return {
       count,
-      bestSubmissionId: canViewScore ? (currentSubmission?.id || null) : null,
-      bestGrade: canViewScore ? (currentSubmission?.grade || null) : null,
+      bestSubmissionId: canViewScore ? currentSubmission?.id || null : null,
+      bestGrade: canViewScore ? currentSubmission?.grade || null : null,
     };
   }
 
   // ─── 11. GET /homework/submissions/detail — Chi tiết bài nộp ──────────────
-  async getSubmissionDetail(query: SubmissionDetailQueryDto, userId: string, role: string) {
+  async getSubmissionDetail(
+    query: SubmissionDetailQueryDto,
+    userId: string,
+    role: string,
+  ) {
     if (query.utid) {
       const submission = await this.prisma.homeworkSubmission.findUnique({
         where: { id: Number(query.utid) },
@@ -843,13 +930,17 @@ export class HomeworkService {
       });
 
       if (!submission) {
-        throw new NotFoundException('Không tìm thấy bài làm nào đã được chấm điểm.');
+        throw new NotFoundException(
+          'Không tìm thấy bài làm nào đã được chấm điểm.',
+        );
       }
 
       return submission;
     }
 
-    throw new BadRequestException('Thiếu thông tin bài làm. Cần utid hoặc homeworkId.');
+    throw new BadRequestException(
+      'Thiếu thông tin bài làm. Cần utid hoặc homeworkId.',
+    );
   }
 
   // ─── 12. GET /homework/:id/teacher-detail — Xem bài nộp của cả lớp (GV) ───
@@ -871,7 +962,9 @@ export class HomeworkService {
     }
 
     if (homework.teacherId !== teacher.id) {
-      throw new ForbiddenException('Bạn không có quyền xem thông tin bài tập này.');
+      throw new ForbiddenException(
+        'Bạn không có quyền xem thông tin bài tập này.',
+      );
     }
 
     const submissions = await this.prisma.homeworkSubmission.findMany({
@@ -951,7 +1044,9 @@ export class HomeworkService {
     });
 
     if (!homework || homework.teacherId !== teacher.id) {
-      throw new ForbiddenException('Bạn không có quyền xuất dữ liệu bài tập này.');
+      throw new ForbiddenException(
+        'Bạn không có quyền xuất dữ liệu bài tập này.',
+      );
     }
 
     const submissions = await this.prisma.homeworkSubmission.findMany({
@@ -970,19 +1065,24 @@ export class HomeworkService {
     });
 
     // Lọc lấy bài nộp cuối cùng của mỗi học sinh
-    const latestSubmissions = submissions.reduce((acc, submission) => {
-      const studentId = submission.studentId;
-      if (
-        !acc[studentId] ||
-        new Date(submission.submittedAt) > new Date(acc[studentId].submittedAt)
-      ) {
-        acc[studentId] = submission;
-      }
-      return acc;
-    }, {} as Record<string, (typeof submissions)[0]>);
+    const latestSubmissions = submissions.reduce(
+      (acc, submission) => {
+        const studentId = submission.studentId;
+        if (
+          !acc[studentId] ||
+          new Date(submission.submittedAt) >
+            new Date(acc[studentId].submittedAt)
+        ) {
+          acc[studentId] = submission;
+        }
+        return acc;
+      },
+      {} as Record<string, (typeof submissions)[0]>,
+    );
 
     const finalSubmissions = Object.values(latestSubmissions).sort(
-      (a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime(),
+      (a, b) =>
+        new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime(),
     );
 
     const workbook = new ExcelJS.Workbook();
@@ -1009,7 +1109,9 @@ export class HomeworkService {
         u?.class_name || '',
         sub.grade ?? '',
         sub.timeSpent ? Math.round(sub.timeSpent / 60) : '',
-        sub.submittedAt ? new Date(sub.submittedAt).toLocaleString('vi-VN') : '',
+        sub.submittedAt
+          ? new Date(sub.submittedAt).toLocaleString('vi-VN')
+          : '',
       ]);
     });
 
@@ -1094,7 +1196,8 @@ export class HomeworkService {
     const classResults = student.classes.map((classInfo) => {
       const homeworksWithHighestGrade = classInfo.homeworks.map((hw) => {
         const isExpired = hw.endTime ? now > new Date(hw.endTime) : false;
-        const canViewScore = hw.studentViewPermission !== 'NO_VIEW' || isExpired;
+        const canViewScore =
+          hw.studentViewPermission !== 'NO_VIEW' || isExpired;
 
         if (hw.submissions.length === 0 || !canViewScore) {
           return {
@@ -1139,8 +1242,7 @@ export class HomeworkService {
           : 0;
 
       const teacherName =
-        classInfo.supervisor?.user?.username ||
-        'Chưa có giáo viên';
+        classInfo.supervisor?.user?.username || 'Chưa có giáo viên';
 
       return {
         className: classInfo.name,
@@ -1173,7 +1275,9 @@ export class HomeworkService {
           where: { class_code: classCode, supervisorId: teacher.id },
         });
         if (!classAccess) {
-          throw new ForbiddenException('Bạn không có quyền truy cập lớp học này.');
+          throw new ForbiddenException(
+            'Bạn không có quyền truy cập lớp học này.',
+          );
         }
       }
     } else if (role === 'student') {
@@ -1188,7 +1292,9 @@ export class HomeworkService {
           },
         });
         if (!classAccess) {
-          throw new ForbiddenException('Bạn không có quyền truy cập lớp học này.');
+          throw new ForbiddenException(
+            'Bạn không có quyền truy cập lớp học này.',
+          );
         }
         currentStudentId = student.id;
       }

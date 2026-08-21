@@ -29,13 +29,18 @@ export class PusherService {
 
   async trigger(channel: string, event: string, data: any): Promise<void> {
     if (!this.pusher) {
-      this.logger.warn(`Pusher is not initialized. Event ${event} on channel ${channel} skipped.`);
+      this.logger.warn(
+        `Pusher is not initialized. Event ${event} on channel ${channel} skipped.`,
+      );
       return;
     }
     try {
       await this.pusher.trigger(channel, event, data);
     } catch (error) {
-      this.logger.error(`Failed to trigger Pusher event ${event} on channel ${channel}:`, error);
+      this.logger.error(
+        `Failed to trigger Pusher event ${event} on channel ${channel}:`,
+        error,
+      );
     }
   }
 

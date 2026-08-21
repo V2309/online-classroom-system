@@ -32,12 +32,14 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly mailService: MailService,
-  ) { }
+  ) {}
 
   /**
    * Gửi lại email xác thực cho user đang đăng nhập
    */
-  async resendVerification(userId: string): Promise<{ success: boolean; message: string }> {
+  async resendVerification(
+    userId: string,
+  ): Promise<{ success: boolean; message: string }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true, username: true, isEmailVerified: true },
@@ -73,7 +75,11 @@ export class AuthService {
     });
 
     // Gửi email qua MailService
-    await this.mailService.sendVerificationEmail(user.email, user.username, token);
+    await this.mailService.sendVerificationEmail(
+      user.email,
+      user.username,
+      token,
+    );
 
     return { success: true, message: 'Đã gửi email xác thực thành công!' };
   }
@@ -81,7 +87,9 @@ export class AuthService {
   /**
    * Xác thực token email
    */
-  async verifyEmail(token: string): Promise<{ success: boolean; message: string }> {
+  async verifyEmail(
+    token: string,
+  ): Promise<{ success: boolean; message: string }> {
     if (!token) {
       throw new BadRequestException('Token xác thực không được để trống.');
     }
@@ -92,12 +100,18 @@ export class AuthService {
     });
 
     if (!tokenRecord) {
-      throw new BadRequestException('Mã xác thực không hợp lệ hoặc đã được sử dụng.');
+      throw new BadRequestException(
+        'Mã xác thực không hợp lệ hoặc đã được sử dụng.',
+      );
     }
 
     if (tokenRecord.expires < new Date()) {
-      await this.prisma.verificationToken.deleteMany({ where: { id: tokenRecord.id } });
-      throw new BadRequestException('Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại email mới.');
+      await this.prisma.verificationToken.deleteMany({
+        where: { id: tokenRecord.id },
+      });
+      throw new BadRequestException(
+        'Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại email mới.',
+      );
     }
 
     // Cập nhật trạng thái xác thực của user và xóa token
@@ -228,7 +242,10 @@ export class AuthService {
     };
   }
 
-  async refreshTokens(userId: string, refreshToken: string): Promise<AuthResult> {
+  async refreshTokens(
+    userId: string,
+    refreshToken: string,
+  ): Promise<AuthResult> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -259,7 +276,9 @@ export class AuthService {
   }
 
   async updateRefreshToken(userId: string, refreshToken: string | null) {
-    const hashedRefreshToken = refreshToken ? await hash(refreshToken, 10) : null;
+    const hashedRefreshToken = refreshToken
+      ? await hash(refreshToken, 10)
+      : null;
     await this.prisma.user.update({
       where: { id: userId },
       data: { hashedRefreshToken },
@@ -268,7 +287,9 @@ export class AuthService {
 
   private async ensureUniqueIdentity(email?: string, phone?: string) {
     if (!email && !phone) {
-      throw new ConflictException('Email hoặc số điện thoại phải được cung cấp.');
+      throw new ConflictException(
+        'Email hoặc số điện thoại phải được cung cấp.',
+      );
     }
 
     if (email) {
@@ -305,13 +326,9 @@ export class AuthService {
         { sub: user.id, username: user.username, role: user.role },
         { expiresIn: '7d' },
       ),
-      this.jwt.signAsync(
-        { sub: user.id },
-        { expiresIn: '30d' },
-      ),
+      this.jwt.signAsync({ sub: user.id }, { expiresIn: '30d' }),
     ]);
 
     return { accessToken, refreshToken, expiresIn: 7 * 24 * 3600 };
   }
 }
-
