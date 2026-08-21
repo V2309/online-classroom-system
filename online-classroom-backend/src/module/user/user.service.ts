@@ -69,9 +69,13 @@ export class UserService {
     if (dto.email !== undefined) {
       const email = dto.email ? dto.email.trim() : null;
       if (email && email !== user.email) {
-        const existing = await this.prisma.user.findUnique({ where: { email } });
+        const existing = await this.prisma.user.findUnique({
+          where: { email },
+        });
         if (existing) {
-          throw new BadRequestException('Email này đã được sử dụng bởi tài khoản khác.');
+          throw new BadRequestException(
+            'Email này đã được sử dụng bởi tài khoản khác.',
+          );
         }
       }
       dataToUpdate.email = email;

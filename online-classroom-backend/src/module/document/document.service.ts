@@ -20,13 +20,19 @@ export class DocumentService {
       where: { userId },
     });
     if (!teacher) {
-      throw new ForbiddenException('Chỉ giáo viên mới có quyền thực hiện thao tác này.');
+      throw new ForbiddenException(
+        'Chỉ giáo viên mới có quyền thực hiện thao tác này.',
+      );
     }
     return teacher;
   }
 
   // ─── Helper: kiểm tra quyền truy cập lớp ─────────────────────────────────
-  private async verifyClassAccess(classCode: string, userId: string, role: string) {
+  private async verifyClassAccess(
+    classCode: string,
+    userId: string,
+    role: string,
+  ) {
     if (role === 'admin') {
       const cls = await this.prisma.class.findFirst({
         where: {
@@ -70,7 +76,9 @@ export class DocumentService {
         },
       });
       if (!cls) {
-        throw new NotFoundException('Không tìm thấy lớp học hoặc bạn chưa tham gia.');
+        throw new NotFoundException(
+          'Không tìm thấy lớp học hoặc bạn chưa tham gia.',
+        );
       }
       return { teacherId: cls.supervisorId, classRoom: cls };
     }
@@ -102,11 +110,7 @@ export class DocumentService {
   }
 
   // ─── GET /documents — Lấy danh sách tài liệu ─────────────────────────────
-  async getDocuments(
-    userId: string,
-    role: string,
-    queryDto: DocumentQueryDto,
-  ) {
+  async getDocuments(userId: string, role: string, queryDto: DocumentQueryDto) {
     const classCode = queryDto.classCode;
     if (classCode) {
       await this.verifyClassAccess(classCode, userId, role);
@@ -195,11 +199,7 @@ export class DocumentService {
   }
 
   // ─── GET /documents/:id — Lấy chi tiết tài liệu & ghi nhận lượt xem ───────
-  async getDocumentDetail(
-    docId: string,
-    userId: string,
-    role: string,
-  ) {
+  async getDocumentDetail(docId: string, userId: string, role: string) {
     const file = await this.prisma.file.findUnique({
       where: { id: docId },
       include: {
@@ -257,18 +257,16 @@ export class DocumentService {
   }
 
   // ─── GET /documents/:id/viewers — Lấy thống kê & danh sách người xem ─────
-  async getDocumentViewers(
-    docId: string,
-    userId: string,
-    role: string,
-  ) {
+  async getDocumentViewers(docId: string, userId: string, role: string) {
     const file = await this.prisma.file.findUnique({
       where: { id: docId },
       select: { classCode: true },
     });
 
     if (!file || !file.classCode) {
-      throw new NotFoundException('Không tìm thấy tài liệu hoặc tài liệu không thuộc lớp học.');
+      throw new NotFoundException(
+        'Không tìm thấy tài liệu hoặc tài liệu không thuộc lớp học.',
+      );
     }
 
     const classCode = file.classCode;
@@ -283,38 +281,40 @@ export class DocumentService {
       },
     });
 
-    const currentStudentUserIds = classInfo?.students.map((s) => s.userId) || [];
+    const currentStudentUserIds =
+      classInfo?.students.map((s) => s.userId) || [];
 
-    const [studentViewsCount, totalViewsCount, allViews] = await this.prisma.$transaction([
-      this.prisma.fileView.count({
-        where: {
-          fileId: docId,
-          userId: { in: currentStudentUserIds },
-        },
-      }),
-      this.prisma.fileView.count({
-        where: {
-          fileId: docId,
-        },
-      }),
-      this.prisma.fileView.findMany({
-        where: {
-          fileId: docId,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              role: true,
+    const [studentViewsCount, totalViewsCount, allViews] =
+      await this.prisma.$transaction([
+        this.prisma.fileView.count({
+          where: {
+            fileId: docId,
+            userId: { in: currentStudentUserIds },
+          },
+        }),
+        this.prisma.fileView.count({
+          where: {
+            fileId: docId,
+          },
+        }),
+        this.prisma.fileView.findMany({
+          where: {
+            fileId: docId,
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                role: true,
+              },
             },
           },
-        },
-        orderBy: {
-          viewedAt: 'desc',
-        },
-      }),
-    ]);
+          orderBy: {
+            viewedAt: 'desc',
+          },
+        }),
+      ]);
 
     const viewers = allViews.map((view) => {
       const isStudent = view.user.role === 'student';
@@ -404,7 +404,10 @@ export class DocumentService {
       throw new NotFoundException('Không tìm thấy tài liệu.');
     }
 
-    if (file.uploadedBy !== teacher.id && file.class?.supervisorId !== teacher.id) {
+    if (
+      file.uploadedBy !== teacher.id &&
+      file.class?.supervisorId !== teacher.id
+    ) {
       throw new ForbiddenException('Bạn không có quyền xóa tài liệu này.');
     }
 

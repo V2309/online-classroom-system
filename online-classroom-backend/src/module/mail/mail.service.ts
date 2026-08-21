@@ -12,7 +12,9 @@ export class MailService {
     if (apiKey) {
       this.resend = new Resend(apiKey);
     } else {
-      this.logger.warn('RESEND_API_KEY is not set. Emails will only be logged.');
+      this.logger.warn(
+        'RESEND_API_KEY is not set. Emails will only be logged.',
+      );
     }
   }
 
@@ -28,11 +30,18 @@ export class MailService {
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
 
-    this.logger.log(`[MailService] Preparing verification email for ${toEmail}: ${verifyUrl}`);
+    this.logger.log(
+      `[MailService] Preparing verification email for ${toEmail}: ${verifyUrl}`,
+    );
 
     if (!this.resend) {
-      this.logger.warn(`[MailService] Mock send verification email to: ${toEmail}. Link: ${verifyUrl}`);
-      return { success: true, message: 'Đã tạo liên kết xác thực (chế độ log)' };
+      this.logger.warn(
+        `[MailService] Mock send verification email to: ${toEmail}. Link: ${verifyUrl}`,
+      );
+      return {
+        success: true,
+        message: 'Đã tạo liên kết xác thực (chế độ log)',
+      };
     }
 
     try {
@@ -58,9 +67,15 @@ export class MailService {
       });
 
       if (error) {
-        this.logger.error('[MailService] Failed to send email via Resend:', error);
+        this.logger.error(
+          '[MailService] Failed to send email via Resend:',
+          error,
+        );
         // Không crash nếu gửi mail gặp lỗi cấu hình domain Resend, vẫn log link để dev test
-        return { success: true, message: 'Đã xử lý yêu cầu gửi email xác thực.' };
+        return {
+          success: true,
+          message: 'Đã xử lý yêu cầu gửi email xác thực.',
+        };
       }
 
       this.logger.log(`[MailService] Email sent successfully: ${data?.id}`);

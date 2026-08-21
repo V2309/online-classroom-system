@@ -62,10 +62,7 @@ export class AiController {
 
   // ─── GET /ai/audio/:filename ───────────────────────────────────────────────
   @Get('audio/:filename')
-  async getAudio(
-    @Param('filename') filename: string,
-    @Res() res: Response,
-  ) {
+  async getAudio(@Param('filename') filename: string, @Res() res: Response) {
     const buffer = await this.aiService.getAudio(filename);
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
@@ -98,10 +95,7 @@ export class AiController {
   // ─── POST /ai/download-quiz ────────────────────────────────────────────────
   @Post('download-quiz')
   @UseGuards(JwtAuthGuard)
-  async downloadQuiz(
-    @Body() dto: DownloadQuizDto,
-    @Res() res: Response,
-  ) {
+  async downloadQuiz(@Body() dto: DownloadQuizDto, @Res() res: Response) {
     const { buffer, contentType, contentDisposition } =
       await this.aiService.downloadQuiz(dto);
     res.setHeader('Content-Type', contentType);

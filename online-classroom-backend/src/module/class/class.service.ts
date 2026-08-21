@@ -19,7 +19,7 @@ function generateClassCode(length = 5): string {
 
 @Injectable()
 export class ClassService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // ─── GET /classes ──────────────────────────────────────────────────────────
   async getClasses(
@@ -33,12 +33,18 @@ export class ClassService {
     const where: any = { deleted: false };
 
     if (role === 'teacher') {
-      const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-      if (!teacher) throw new NotFoundException('Không tìm thấy thông tin giáo viên.');
+      const teacher = await this.prisma.teacher.findUnique({
+        where: { userId },
+      });
+      if (!teacher)
+        throw new NotFoundException('Không tìm thấy thông tin giáo viên.');
       where.supervisorId = teacher.id;
     } else if (role === 'student') {
-      const student = await this.prisma.student.findUnique({ where: { userId } });
-      if (!student) throw new NotFoundException('Không tìm thấy thông tin học sinh.');
+      const student = await this.prisma.student.findUnique({
+        where: { userId },
+      });
+      if (!student)
+        throw new NotFoundException('Không tìm thấy thông tin học sinh.');
 
       if (query.type === 'pending') {
         // Lớp mà học sinh có join request PENDING
@@ -79,7 +85,9 @@ export class ClassService {
 
     let currentClassCount = 0;
     if (role === 'teacher') {
-      const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
+      const teacher = await this.prisma.teacher.findUnique({
+        where: { userId },
+      });
       if (teacher) {
         currentClassCount = await this.prisma.class.count({
           where: { supervisorId: teacher.id, deleted: false },
@@ -109,14 +117,17 @@ export class ClassService {
   // ─── POST /classes ─────────────────────────────────────────────────────────
   async createClass(userId: string, dto: CreateClassDto) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new NotFoundException('Không tìm thấy thông tin giáo viên.');
+    if (!teacher)
+      throw new NotFoundException('Không tìm thấy thông tin giáo viên.');
 
     // Sinh class_code không trùng
     let class_code: string;
     let exists = true;
     do {
       class_code = generateClassCode();
-      const found = await this.prisma.class.findUnique({ where: { class_code } });
+      const found = await this.prisma.class.findUnique({
+        where: { class_code },
+      });
       exists = !!found;
     } while (exists);
 
@@ -136,16 +147,21 @@ export class ClassService {
   // ─── PATCH /classes/:id ────────────────────────────────────────────────────
   async updateClass(classId: number, userId: string, dto: UpdateClassDto) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể sửa lớp.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể sửa lớp.');
 
     const cls = await this.prisma.class.findUnique({ where: { id: classId } });
-    if (!cls || cls.deleted) throw new NotFoundException('Lớp học không tồn tại.');
-    if (cls.supervisorId !== teacher.id) throw new ForbiddenException('Bạn không có quyền sửa lớp này.');
+    if (!cls || cls.deleted)
+      throw new NotFoundException('Lớp học không tồn tại.');
+    if (cls.supervisorId !== teacher.id)
+      throw new ForbiddenException('Bạn không có quyền sửa lớp này.');
 
     let finalGradeId = dto.gradeId;
     if (dto.newGradeLevel && dto.newGradeLevel.trim()) {
       const levelStr = dto.newGradeLevel.trim();
-      let grade = await this.prisma.grade.findUnique({ where: { level: levelStr } });
+      let grade = await this.prisma.grade.findUnique({
+        where: { level: levelStr },
+      });
       if (!grade) {
         grade = await this.prisma.grade.create({ data: { level: levelStr } });
       }
@@ -159,10 +175,13 @@ export class ClassService {
     if (dto.img !== undefined) updateData.img = dto.img;
     if (dto.isProtected !== undefined) updateData.isProtected = dto.isProtected;
     if (dto.isLocked !== undefined) updateData.isLocked = dto.isLocked;
-    if (dto.requiresApproval !== undefined) updateData.requiresApproval = dto.requiresApproval;
+    if (dto.requiresApproval !== undefined)
+      updateData.requiresApproval = dto.requiresApproval;
     if (dto.blockLeave !== undefined) updateData.blockLeave = dto.blockLeave;
-    if (dto.allowGradesView !== undefined) updateData.allowGradesView = dto.allowGradesView;
-    if (dto.supervisorId !== undefined) updateData.supervisorId = dto.supervisorId;
+    if (dto.allowGradesView !== undefined)
+      updateData.allowGradesView = dto.allowGradesView;
+    if (dto.supervisorId !== undefined)
+      updateData.supervisorId = dto.supervisorId;
 
     return this.prisma.class.update({
       where: { id: classId },
@@ -179,11 +198,14 @@ export class ClassService {
   // ─── DELETE /classes/:id (soft delete) ────────────────────────────────────
   async deleteClass(classId: number, userId: string) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể xóa lớp.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể xóa lớp.');
 
     const cls = await this.prisma.class.findUnique({ where: { id: classId } });
-    if (!cls || cls.deleted) throw new NotFoundException('Lớp học không tồn tại.');
-    if (cls.supervisorId !== teacher.id) throw new ForbiddenException('Bạn không có quyền xóa lớp này.');
+    if (!cls || cls.deleted)
+      throw new NotFoundException('Lớp học không tồn tại.');
+    if (cls.supervisorId !== teacher.id)
+      throw new ForbiddenException('Bạn không có quyền xóa lớp này.');
 
     return this.prisma.class.update({
       where: { id: classId },
@@ -194,11 +216,13 @@ export class ClassService {
   // ─── POST /classes/:id/restore ─────────────────────────────────────────────
   async restoreClass(classId: number, userId: string) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể khôi phục lớp.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể khôi phục lớp.');
 
     const cls = await this.prisma.class.findUnique({ where: { id: classId } });
     if (!cls) throw new NotFoundException('Lớp học không tồn tại.');
-    if (cls.supervisorId !== teacher.id) throw new ForbiddenException('Bạn không có quyền khôi phục lớp này.');
+    if (cls.supervisorId !== teacher.id)
+      throw new ForbiddenException('Bạn không có quyền khôi phục lớp này.');
 
     return this.prisma.class.update({
       where: { id: classId },
@@ -209,7 +233,8 @@ export class ClassService {
   // ─── GET /classes/deleted ──────────────────────────────────────────────────
   async getDeletedClasses(userId: string) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể xem lớp đã xóa.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể xem lớp đã xóa.');
 
     return this.prisma.class.findMany({
       where: { supervisorId: teacher.id, deleted: true },
@@ -222,19 +247,24 @@ export class ClassService {
   // ClassJoinRequest dùng classCode (String) + studentId (String)
   async joinClass(classCode: string, userId: string) {
     const student = await this.prisma.student.findUnique({ where: { userId } });
-    if (!student) throw new NotFoundException('Không tìm thấy thông tin học sinh.');
+    if (!student)
+      throw new NotFoundException('Không tìm thấy thông tin học sinh.');
 
     const cls = await this.prisma.class.findUnique({
       where: { class_code: classCode, deleted: false },
       include: { _count: { select: { students: true } } },
     });
-    if (!cls) throw new NotFoundException('Mã lớp không hợp lệ hoặc lớp không tồn tại.');
+    if (!cls)
+      throw new NotFoundException(
+        'Mã lớp không hợp lệ hoặc lớp không tồn tại.',
+      );
 
     // Kiểm tra đã là thành viên
     const isMember = await this.prisma.class.findFirst({
       where: { class_code: classCode, students: { some: { id: student.id } } },
     });
-    if (isMember) throw new ConflictException('Bạn đã là thành viên của lớp này.');
+    if (isMember)
+      throw new ConflictException('Bạn đã là thành viên của lớp này.');
 
     // Kiểm tra sĩ số
     if (cls._count.students >= cls.capacity) {
@@ -245,7 +275,10 @@ export class ClassService {
     const pending = await this.prisma.classJoinRequest.findFirst({
       where: { classCode, studentId: student.id, status: 'PENDING' },
     });
-    if (pending) throw new ConflictException('Bạn đã gửi yêu cầu, đang chờ giáo viên duyệt.');
+    if (pending)
+      throw new ConflictException(
+        'Bạn đã gửi yêu cầu, đang chờ giáo viên duyệt.',
+      );
 
     return this.prisma.classJoinRequest.create({
       data: { classCode, studentId: student.id, status: 'PENDING' },
@@ -255,17 +288,21 @@ export class ClassService {
   // ─── POST /classes/:id/leave ───────────────────────────────────────────────
   async leaveClass(classId: number, userId: string) {
     const student = await this.prisma.student.findUnique({ where: { userId } });
-    if (!student) throw new NotFoundException('Không tìm thấy thông tin học sinh.');
+    if (!student)
+      throw new NotFoundException('Không tìm thấy thông tin học sinh.');
 
     const cls = await this.prisma.class.findUnique({ where: { id: classId } });
-    if (!cls || cls.deleted) throw new NotFoundException('Lớp học không tồn tại.');
+    if (!cls || cls.deleted)
+      throw new NotFoundException('Lớp học không tồn tại.');
 
-    if (cls.blockLeave) throw new ForbiddenException('Giáo viên đã khóa tính năng rời lớp.');
+    if (cls.blockLeave)
+      throw new ForbiddenException('Giáo viên đã khóa tính năng rời lớp.');
 
     const isMember = await this.prisma.class.findFirst({
       where: { id: classId, students: { some: { id: student.id } } },
     });
-    if (!isMember) throw new BadRequestException('Bạn không phải thành viên của lớp này.');
+    if (!isMember)
+      throw new BadRequestException('Bạn không phải thành viên của lớp này.');
 
     await this.prisma.class.update({
       where: { id: classId },
@@ -278,18 +315,23 @@ export class ClassService {
   // ─── GET /classes/:id/join-requests ───────────────────────────────────────
   async getJoinRequests(classId: number, userId: string) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể xem yêu cầu.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể xem yêu cầu.');
 
     const cls = await this.prisma.class.findUnique({ where: { id: classId } });
-    if (!cls || cls.deleted) throw new NotFoundException('Lớp học không tồn tại.');
-    if (cls.supervisorId !== teacher.id) throw new ForbiddenException('Bạn không có quyền xem lớp này.');
+    if (!cls || cls.deleted)
+      throw new NotFoundException('Lớp học không tồn tại.');
+    if (cls.supervisorId !== teacher.id)
+      throw new ForbiddenException('Bạn không có quyền xem lớp này.');
 
     // ClassJoinRequest quan hệ với Class qua classCode
     return this.prisma.classJoinRequest.findMany({
       where: { classCode: cls.class_code ?? undefined, status: 'PENDING' },
       include: {
         student: {
-          include: { user: { select: { username: true, img: true, email: true } } },
+          include: {
+            user: { select: { username: true, img: true, email: true } },
+          },
         },
       },
       orderBy: { createdAt: 'asc' },
@@ -299,13 +341,15 @@ export class ClassService {
   // ─── POST /classes/join-requests/:requestId/approve ───────────────────────
   async approveJoinRequest(requestId: number, userId: string) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể duyệt yêu cầu.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể duyệt yêu cầu.');
 
     const request = await this.prisma.classJoinRequest.findUnique({
       where: { id: requestId },
       include: { class: true },
     });
-    if (!request || request.status !== 'PENDING') throw new NotFoundException('Yêu cầu không tồn tại hoặc đã xử lý.');
+    if (!request || request.status !== 'PENDING')
+      throw new NotFoundException('Yêu cầu không tồn tại hoặc đã xử lý.');
     if (!request.class || request.class.supervisorId !== teacher.id)
       throw new ForbiddenException('Bạn không có quyền duyệt yêu cầu này.');
 
@@ -333,13 +377,15 @@ export class ClassService {
   // ─── POST /classes/join-requests/:requestId/reject ────────────────────────
   async rejectJoinRequest(requestId: number, userId: string) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể từ chối yêu cầu.');
+    if (!teacher)
+      throw new ForbiddenException('Chỉ giáo viên mới có thể từ chối yêu cầu.');
 
     const request = await this.prisma.classJoinRequest.findUnique({
       where: { id: requestId },
       include: { class: true },
     });
-    if (!request || request.status !== 'PENDING') throw new NotFoundException('Yêu cầu không tồn tại hoặc đã xử lý.');
+    if (!request || request.status !== 'PENDING')
+      throw new NotFoundException('Yêu cầu không tồn tại hoặc đã xử lý.');
     if (!request.class || request.class.supervisorId !== teacher.id)
       throw new ForbiddenException('Bạn không có quyền từ chối yêu cầu này.');
 
@@ -479,9 +525,16 @@ export class ClassService {
   }
 
   // ─── DELETE /classes/:code/members/:studentId — Xóa học sinh khỏi lớp ───────
-  async removeStudentFromClass(classCode: string, studentId: string, userId: string) {
+  async removeStudentFromClass(
+    classCode: string,
+    studentId: string,
+    userId: string,
+  ) {
     const teacher = await this.prisma.teacher.findUnique({ where: { userId } });
-    if (!teacher) throw new ForbiddenException('Chỉ giáo viên mới có thể xóa học sinh khỏi lớp.');
+    if (!teacher)
+      throw new ForbiddenException(
+        'Chỉ giáo viên mới có thể xóa học sinh khỏi lớp.',
+      );
 
     const cls = await this.prisma.class.findUnique({
       where: { class_code: classCode, deleted: false },
@@ -503,5 +556,3 @@ export class ClassService {
     return { message: 'Đã xóa học sinh khỏi lớp học thành công.' };
   }
 }
-
-

@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { RealtimeService } from './realtime.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -25,7 +18,8 @@ export class RealtimeController {
     @Req() req: Request,
   ) {
     const socketId = body?.socket_id || (req.body && req.body.socket_id);
-    const channelName = body?.channel_name || (req.body && req.body.channel_name);
+    const channelName =
+      body?.channel_name || (req.body && req.body.channel_name);
 
     return this.realtimeService.authenticatePusher(user, socketId, channelName);
   }

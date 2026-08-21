@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Put,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, UseGuards } from '@nestjs/common';
 import { WhiteboardService } from './whiteboard.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SaveWhiteboardDto } from './dto/whiteboard.dto';

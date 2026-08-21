@@ -44,13 +44,19 @@ export class CourseService {
       where: { userId },
     });
     if (!teacher) {
-      throw new ForbiddenException('Chỉ giáo viên mới có quyền thực hiện thao tác này.');
+      throw new ForbiddenException(
+        'Chỉ giáo viên mới có quyền thực hiện thao tác này.',
+      );
     }
     return teacher;
   }
 
   // ─── Helper: kiểm tra quyền truy cập lớp ─────────────────────────────────
-  private async verifyClassAccess(classCode: string, userId: string, role: string) {
+  private async verifyClassAccess(
+    classCode: string,
+    userId: string,
+    role: string,
+  ) {
     if (role === 'teacher') {
       const teacher = await this.prisma.teacher.findUnique({
         where: { userId },
@@ -81,7 +87,9 @@ export class CourseService {
         },
       });
       if (!cls) {
-        throw new NotFoundException('Không tìm thấy lớp học hoặc bạn chưa tham gia.');
+        throw new NotFoundException(
+          'Không tìm thấy lớp học hoặc bạn chưa tham gia.',
+        );
       }
       return { teacherId: cls.supervisorId, classRoom: cls };
     }
@@ -93,7 +101,9 @@ export class CourseService {
     let uniqueSlug = baseSlug;
     let count = 1;
 
-    while (await this.prisma.video.findUnique({ where: { slug: uniqueSlug } })) {
+    while (
+      await this.prisma.video.findUnique({ where: { slug: uniqueSlug } })
+    ) {
       uniqueSlug = `${baseSlug}-${count++}`;
     }
     return uniqueSlug;
@@ -132,48 +142,49 @@ export class CourseService {
       }
     }
 
-    const [courses, count, folders, allCoursesCount] = await this.prisma.$transaction([
-      this.prisma.course.findMany({
-        where: whereQuery,
-        include: {
-          videos: { orderBy: { orderIndex: 'asc' } },
-          folder: true,
-          teacher: {
-            include: {
-              user: {
-                select: { username: true, img: true },
+    const [courses, count, folders, allCoursesCount] =
+      await this.prisma.$transaction([
+        this.prisma.course.findMany({
+          where: whereQuery,
+          include: {
+            videos: { orderBy: { orderIndex: 'asc' } },
+            folder: true,
+            teacher: {
+              include: {
+                user: {
+                  select: { username: true, img: true },
+                },
+              },
+            },
+            _count: { select: { videos: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+          skip,
+        }),
+        this.prisma.course.count({ where: whereQuery }),
+        this.prisma.folder.findMany({
+          where: {
+            classCode,
+          },
+          include: {
+            _count: {
+              select: {
+                courses: {
+                  where: { isActive: true },
+                },
               },
             },
           },
-          _count: { select: { videos: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip,
-      }),
-      this.prisma.course.count({ where: whereQuery }),
-      this.prisma.folder.findMany({
-        where: {
-          classCode,
-        },
-        include: {
-          _count: {
-            select: {
-              courses: {
-                where: { isActive: true },
-              },
-            },
+          orderBy: { createdAt: 'asc' },
+        }),
+        this.prisma.course.count({
+          where: {
+            classCode,
+            isActive: true,
           },
-        },
-        orderBy: { createdAt: 'asc' },
-      }),
-      this.prisma.course.count({
-        where: {
-          classCode,
-          isActive: true,
-        },
-      }),
-    ]);
+        }),
+      ]);
 
     return {
       courses,
@@ -303,7 +314,11 @@ export class CourseService {
 
       // Tạo Chapters và Videos
       if (dto.chapters && Array.isArray(dto.chapters)) {
-        for (let chapterIndex = 0; chapterIndex < dto.chapters.length; chapterIndex++) {
+        for (
+          let chapterIndex = 0;
+          chapterIndex < dto.chapters.length;
+          chapterIndex++
+        ) {
           const chapterDto = dto.chapters[chapterIndex];
           if (chapterDto.title?.trim()) {
             const chapter = await tx.chapter.create({
@@ -317,15 +332,23 @@ export class CourseService {
             });
 
             if (chapterDto.videos && Array.isArray(chapterDto.videos)) {
-              for (let videoIndex = 0; videoIndex < chapterDto.videos.length; videoIndex++) {
+              for (
+                let videoIndex = 0;
+                videoIndex < chapterDto.videos.length;
+                videoIndex++
+              ) {
                 const videoDto = chapterDto.videos[videoIndex];
                 if (videoDto.title?.trim() && videoDto.url?.trim()) {
-                  const videoThumbnailUrl = extractYouTubeThumbnail(videoDto.url);
+                  const videoThumbnailUrl = extractYouTubeThumbnail(
+                    videoDto.url,
+                  );
                   if (!autoThumbnailUrl && videoThumbnailUrl) {
                     autoThumbnailUrl = videoThumbnailUrl;
                   }
 
-                  const videoSlug = await this.generateUniqueVideoSlug(videoDto.title);
+                  const videoSlug = await this.generateUniqueVideoSlug(
+                    videoDto.title,
+                  );
 
                   await tx.video.create({
                     data: {
@@ -374,7 +397,8 @@ export class CourseService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      let finalFolderId = dto.folderId !== undefined ? dto.folderId : existingCourse.folderId;
+      let finalFolderId =
+        dto.folderId !== undefined ? dto.folderId : existingCourse.folderId;
 
       // Xử lý tạo folder mới nếu có
       if (!dto.folderId && dto.newFolderName && dto.newFolderName.trim()) {
@@ -408,7 +432,11 @@ export class CourseService {
         await tx.video.deleteMany({ where: { courseId } });
         await tx.chapter.deleteMany({ where: { courseId } });
 
-        for (let chapterIndex = 0; chapterIndex < dto.chapters.length; chapterIndex++) {
+        for (
+          let chapterIndex = 0;
+          chapterIndex < dto.chapters.length;
+          chapterIndex++
+        ) {
           const chapterDto = dto.chapters[chapterIndex];
           if (chapterDto.title?.trim()) {
             const chapter = await tx.chapter.create({
@@ -422,15 +450,23 @@ export class CourseService {
             });
 
             if (chapterDto.videos && Array.isArray(chapterDto.videos)) {
-              for (let videoIndex = 0; videoIndex < chapterDto.videos.length; videoIndex++) {
+              for (
+                let videoIndex = 0;
+                videoIndex < chapterDto.videos.length;
+                videoIndex++
+              ) {
                 const videoDto = chapterDto.videos[videoIndex];
                 if (videoDto.title?.trim() && videoDto.url?.trim()) {
-                  const videoThumbnailUrl = extractYouTubeThumbnail(videoDto.url);
+                  const videoThumbnailUrl = extractYouTubeThumbnail(
+                    videoDto.url,
+                  );
                   if (!autoThumbnailUrl && videoThumbnailUrl) {
                     autoThumbnailUrl = videoThumbnailUrl;
                   }
 
-                  const videoSlug = await this.generateUniqueVideoSlug(videoDto.title);
+                  const videoSlug = await this.generateUniqueVideoSlug(
+                    videoDto.title,
+                  );
 
                   await tx.video.create({
                     data: {
@@ -457,7 +493,10 @@ export class CourseService {
         where: { id: courseId },
         data: {
           title: dto.title ?? existingCourse.title,
-          description: dto.description !== undefined ? dto.description : existingCourse.description,
+          description:
+            dto.description !== undefined
+              ? dto.description
+              : existingCourse.description,
           thumbnailUrl:
             dto.thumbnailUrl || autoThumbnailUrl || existingCourse.thumbnailUrl,
           folderId: finalFolderId,
@@ -487,7 +526,11 @@ export class CourseService {
   }
 
   // ─── POST /courses/:id/move — Di chuyển khóa học vào folder (Teacher) ────
-  async moveCourseToFolder(courseId: string, userId: string, dto: MoveCourseDto) {
+  async moveCourseToFolder(
+    courseId: string,
+    userId: string,
+    dto: MoveCourseDto,
+  ) {
     await this.getTeacherByUserId(userId);
 
     const course = await this.prisma.course.findFirst({
@@ -498,7 +541,9 @@ export class CourseService {
     if (!course) throw new NotFoundException('Không tìm thấy khóa học.');
 
     const targetFolderId =
-      dto.newFolderId === 'unassigned' || !dto.newFolderId ? null : dto.newFolderId;
+      dto.newFolderId === 'unassigned' || !dto.newFolderId
+        ? null
+        : dto.newFolderId;
 
     await this.prisma.course.update({
       where: { id: courseId },
@@ -547,7 +592,9 @@ export class CourseService {
       data: {
         name: dto.name ? dto.name.trim() : folder.name,
         description:
-          dto.description !== undefined ? dto.description?.trim() || null : folder.description,
+          dto.description !== undefined
+            ? dto.description?.trim() || null
+            : folder.description,
         color: dto.color ?? folder.color,
       },
     });

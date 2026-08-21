@@ -49,7 +49,9 @@ export class UploadService {
     }
 
     if (!this.imagekit) {
-      throw new BadRequestException('Dịch vụ lưu trữ ImageKit chưa được cấu hình.');
+      throw new BadRequestException(
+        'Dịch vụ lưu trữ ImageKit chưa được cấu hình.',
+      );
     }
 
     try {

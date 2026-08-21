@@ -5,7 +5,10 @@ import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
-export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+export class JwtRefreshStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh',
+) {
   constructor(config: ConfigService) {
     const secret = config.get<string>('JWT_SECRET_KEY');
     if (!secret) {
@@ -23,7 +26,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
     });
   }
 
-  async validate(req: Request, payload: any) {
+  validate(req: Request, payload: { sub: string }) {
     const refreshToken =
       req.cookies?.refreshToken ||
       req.headers.authorization?.replace('Bearer ', '').trim();

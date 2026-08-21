@@ -27,7 +27,9 @@ export class RealtimeService {
       this.streamClient = new StreamClient(apiKey, apiSecret);
       this.logger.log('GetStream Client initialized successfully.');
     } else {
-      this.logger.warn('GetStream credentials missing. Video calls will be unavailable.');
+      this.logger.warn(
+        'GetStream credentials missing. Video calls will be unavailable.',
+      );
     }
   }
 

@@ -94,7 +94,9 @@ export class PostService {
   async deletePost(postId: number, userId: string, userRole: string) {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
-      include: { class: { select: { supervisor: { select: { userId: true } } } } },
+      include: {
+        class: { select: { supervisor: { select: { userId: true } } } },
+      },
     });
 
     if (!post) {
@@ -102,8 +104,7 @@ export class PostService {
     }
 
     const isAuthor = post.userId === userId;
-    const isTeacherSupervisor =
-      post.class?.supervisor?.userId === userId;
+    const isTeacherSupervisor = post.class?.supervisor?.userId === userId;
     const isAdmin = userRole === 'admin';
 
     if (!isAuthor && !isTeacherSupervisor && !isAdmin) {
@@ -114,10 +115,7 @@ export class PostService {
     await this.prisma.$transaction([
       this.prisma.like.deleteMany({
         where: {
-          OR: [
-            { postId },
-            { post: { parentPostId: postId } },
-          ],
+          OR: [{ postId }, { post: { parentPostId: postId } }],
         },
       }),
       this.prisma.post.deleteMany({ where: { parentPostId: postId } }),
