@@ -36,7 +36,9 @@ export class MoMoGateway implements IPaymentGateway {
     );
   }
 
-  async createPaymentUrl(params: PaymentInitParams): Promise<PaymentInitResult> {
+  async createPaymentUrl(
+    params: PaymentInitParams,
+  ): Promise<PaymentInitResult> {
     const requestId = `${params.orderCode}_${Date.now()}`;
     const orderId = `${params.orderCode}_${Date.now()}`;
     const orderInfo = params.description;
@@ -73,7 +75,9 @@ export class MoMoGateway implements IPaymentGateway {
       signature,
     };
 
-    this.logger.log(`Calling MoMo Create Order: ${JSON.stringify(requestBody)}`);
+    this.logger.log(
+      `Calling MoMo Create Order: ${JSON.stringify(requestBody)}`,
+    );
 
     try {
       const response = await fetch(this.endpoint, {
@@ -103,6 +107,7 @@ export class MoMoGateway implements IPaymentGateway {
   }
 
   async verifyCallback(data: any): Promise<VerifyCallbackResult> {
+    await Promise.resolve();
     try {
       const {
         partnerCode,

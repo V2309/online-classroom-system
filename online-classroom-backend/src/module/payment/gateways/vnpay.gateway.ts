@@ -29,8 +29,10 @@ export class VNPayGateway implements IPaymentGateway {
     });
   }
 
-
-  async createPaymentUrl(params: PaymentInitParams): Promise<PaymentInitResult> {
+  async createPaymentUrl(
+    params: PaymentInitParams,
+  ): Promise<PaymentInitResult> {
+    await Promise.resolve();
     const orderId = `${params.orderCode}_${Date.now()}`;
     const cleanOrderInfo = (params.description || 'Thanh toan goi DoCus')
       .normalize('NFD')
@@ -38,7 +40,6 @@ export class VNPayGateway implements IPaymentGateway {
       .replace(/[^a-zA-Z0-9]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-
 
     try {
       const paymentUrl = this.vnpayInstance.buildPaymentUrl({
@@ -65,8 +66,10 @@ export class VNPayGateway implements IPaymentGateway {
   }
 
   async verifyCallback(data: any): Promise<VerifyCallbackResult> {
+    await Promise.resolve();
     try {
       // Chỉ lấy các trường bắt đầu bằng vnp_ để tính toán chữ ký số chính xác
+
       const cleanData: Record<string, any> = {};
       for (const key in data) {
         if (key.startsWith('vnp_')) {
@@ -74,13 +77,18 @@ export class VNPayGateway implements IPaymentGateway {
         }
       }
 
-      const verifyResult: VerifyReturnUrl =
-        this.vnpayInstance.verifyReturnUrl(cleanData as any);
+      const verifyResult: VerifyReturnUrl = this.vnpayInstance.verifyReturnUrl(
+        cleanData as any,
+      );
 
-
-      const appTransId = String(verifyResult.vnp_TxnRef || cleanData.vnp_TxnRef || '');
-      const amount = Number(verifyResult.vnp_Amount || cleanData.vnp_Amount || 0);
-      const isSuccess = verifyResult.isSuccess && (cleanData.vnp_ResponseCode === '00');
+      const appTransId = String(
+        verifyResult.vnp_TxnRef || cleanData.vnp_TxnRef || '',
+      );
+      const amount = Number(
+        verifyResult.vnp_Amount || cleanData.vnp_Amount || 0,
+      );
+      const isSuccess =
+        verifyResult.isSuccess && cleanData.vnp_ResponseCode === '00';
       const isVerified = verifyResult.isVerified;
 
       this.logger.log(
@@ -102,10 +110,13 @@ export class VNPayGateway implements IPaymentGateway {
         isValid: true,
         isSuccess,
         appTransId,
-        gatewayTransId: String(verifyResult.vnp_TransactionNo || cleanData.vnp_TransactionNo || ''),
+        gatewayTransId: String(
+          verifyResult.vnp_TransactionNo || cleanData.vnp_TransactionNo || '',
+        ),
         amount,
         rawResponse: cleanData,
-        message: verifyResult.message || (isSuccess ? 'Thành công' : 'Thất bại'),
+        message:
+          verifyResult.message || (isSuccess ? 'Thành công' : 'Thất bại'),
       };
     } catch (error) {
       this.logger.error(`Error verifying VNPay callback: ${error.message}`);
@@ -119,5 +130,4 @@ export class VNPayGateway implements IPaymentGateway {
       };
     }
   }
-
 }

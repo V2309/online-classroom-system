@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 # 🎓 Online Classroom System
 
@@ -20,6 +20,7 @@
 - [Overview](#-overview)
 - [System Architecture](#-system-architecture)
 - [Features](#-features)
+- [Subscription & Payment](#-subscription--payment)
 - [Technologies & Tools](#-technologies--tools)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
@@ -28,6 +29,7 @@
 - [Database Schema](#-database-schema)
 - [Authentication Flow](#-authentication-flow)
 - [Scripts](#-scripts)
+
 
 ---
 
@@ -130,6 +132,27 @@
 - Manage all system users
 - View statistics and reports
 - Ban / unban user accounts
+
+---
+
+## 💎 Subscription & Payment
+
+The platform features a complete SaaS subscription tier model with **3 payment gateways** commonly used in Vietnam:
+
+### 🌟 Subscription Tiers
+| Tier | Pricing (Monthly / Yearly) | Key Privileges |
+|---|---|---|
+| **FREE** | 0 VND | Up to 5 classes, standard homework & quiz, interactive whiteboard |
+| **PRO** | 1.000 VND / 10.000 VND | Unlimited classes & students, unlimited AI Quiz & Podcast generator, priority video rooms |
+| **PREMIUM** | 2.000 VND / 20.000 VND | All Pro features, Cloudflare R2 high-speed storage, 24/7 dedicated support |
+
+### 🚀 Payment Gateways & Security
+- **VNPAY Sandbox**: HMAC-SHA512 checksum via official `vnpay` SDK. Supports VNPAY-QR, 40+ domestic ATM cards (NCB test card), and International Visa/MasterCard.
+- **ZaloPay Sandbox**: HMAC-SHA256 checksum (App ID: 2553). Supports ZaloPay Wallet QR and Visa test simulation.
+- **MoMo Sandbox**: HMAC-SHA256 OpenAPI v3 standard integration (`captureWallet`).
+- **Instant Activation**: Automatic IPN Webhook & Return URL verification with transaction consistency, extending user subscription dates (+30 or +365 days) immediately.
+- **UI Enhancements**: Dynamic illuminated avatar rings and VIP badges across Navigation and Header.
+
 
 ---
 
@@ -428,8 +451,24 @@ R2_ENDPOINT=https://your_account.r2.cloudflarestorage.com
 # Email (Resend)
 RESEND_API_KEY=your_resend_api_key
 
+# Payment Gateways (Sandbox)
+ZALOPAY_APP_ID=2553
+ZALOPAY_KEY1=PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL
+ZALOPAY_KEY2=kLtgPl8HHhfvMuD2wKfgccY4YqZatOKd
+ZALOPAY_ENDPOINT=https://sb-openapi.zalopay.vn/v2/create
+
+MOMO_PARTNER_CODE=your_momo_partner_code
+MOMO_ACCESS_KEY=your_momo_access_key
+MOMO_SECRET_KEY=your_momo_secret_key
+MOMO_ENDPOINT=https://test-payment.momo.vn/v2/gateway/api/create
+
+VNPAY_TMN_CODE=your_vnpay_tmn_code
+VNPAY_HASH_SECRET=your_vnpay_hash_secret
+VNPAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+
 # Server Port
 PORT=8081
+
 ```
 
 ### `online-classroom-ui/.env`
@@ -502,6 +541,13 @@ All backend API endpoints are prefixed with `/api/`. Backend runs on port `8081`
 | **Notification** | GET | `/api/notification` | Get user notifications |
 | **Whiteboard** | GET | `/api/whiteboard/:classId` | Get whiteboard data |
 | | PUT | `/api/whiteboard/:id` | Update whiteboard |
+| **Payment** | GET | `/api/payment/plans` | Get subscription plan tiers & pricing |
+| | POST | `/api/payment/create-subscription` | Create payment order (VNPAY, ZaloPay, MoMo) |
+| | GET/POST | `/api/payment/vnpay/callback` | VNPAY IPN webhook handler |
+| | POST | `/api/payment/zalopay/callback` | ZaloPay IPN webhook handler |
+| | POST | `/api/payment/momo/callback` | MoMo IPN webhook handler |
+| | POST | `/api/payment/verify-return` | Verify browser redirect & auto-activate plan |
+| | GET | `/api/payment/order-status/:orderId` | Check order status & user plan |
 | **Upload** | POST | `/api/upload/image` | Upload image (ImageKit) |
 | | POST | `/api/upload/file` | Upload file (R2) |
 | **Realtime** | GET | `/api/realtime/token` | Get Stream.io token |
@@ -516,7 +562,7 @@ All backend API endpoints are prefixed with `/api/`. Backend runs on port `8081`
 The system uses **PostgreSQL** with **Prisma ORM**.
 
 ```
-User
+User (plan: FREE | PRO | PREMIUM, planExpiresAt)
  ├── Student (1-1)
  │    ├── Class[] (many-many)
  │    ├── Attendance[]
@@ -524,12 +570,18 @@ User
  │    ├── HomeworkSubmission[]
  │    └── ClassGroupMember[]
  │
- └── Teacher (1-1)
-      ├── Class[] (many-many)
-      ├── Subject[]
-      ├── Lesson[]
-      ├── Homework[]
-      └── File[]
+ ├── Teacher (1-1)
+ │    ├── Class[] (many-many)
+ │    ├── Subject[]
+ │    ├── Lesson[]
+ │    ├── Homework[]
+ │    └── File[]
+ │
+ ├── Order[] (1-n)
+ │    └── Payment[] (1-n, provider: VNPAY | ZALOPAY | MOMO)
+ │
+ └── Subscription[] (1-n)
+
 
 Class
  ├── Post[] (with Like[], Comment[])

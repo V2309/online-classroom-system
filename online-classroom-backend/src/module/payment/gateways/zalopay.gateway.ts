@@ -49,7 +49,9 @@ export class ZaloPayGateway implements IPaymentGateway {
     return `${yy}${mm}${dd}_${cleanCode}`;
   }
 
-  async createPaymentUrl(params: PaymentInitParams): Promise<PaymentInitResult> {
+  async createPaymentUrl(
+    params: PaymentInitParams,
+  ): Promise<PaymentInitResult> {
     const appTransId = this.generateAppTransId(params.orderCode);
     const appTime = Date.now();
     const appUser = params.userId || 'docus_user';
@@ -105,7 +107,9 @@ export class ZaloPayGateway implements IPaymentGateway {
 
       if (resData.return_code !== 1) {
         throw new Error(
-          resData.return_message || resData.sub_return_message || 'ZaloPay Error',
+          resData.return_message ||
+            resData.sub_return_message ||
+            'ZaloPay Error',
         );
       }
 
@@ -123,8 +127,10 @@ export class ZaloPayGateway implements IPaymentGateway {
   }
 
   async verifyCallback(data: any): Promise<VerifyCallbackResult> {
+    await Promise.resolve();
     try {
-      const dataStr = typeof data.data === 'string' ? data.data : JSON.stringify(data.data);
+      const dataStr =
+        typeof data.data === 'string' ? data.data : JSON.stringify(data.data);
       const reqMac = data.mac;
 
       const expectedMac = crypto
@@ -133,7 +139,9 @@ export class ZaloPayGateway implements IPaymentGateway {
         .digest('hex');
 
       if (reqMac !== expectedMac) {
-        this.logger.warn(`ZaloPay Callback Invalid MAC: expected ${expectedMac}, received ${reqMac}`);
+        this.logger.warn(
+          `ZaloPay Callback Invalid MAC: expected ${expectedMac}, received ${reqMac}`,
+        );
         return {
           isValid: false,
           isSuccess: false,
@@ -144,7 +152,8 @@ export class ZaloPayGateway implements IPaymentGateway {
         };
       }
 
-      const parsedData = typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
+      const parsedData =
+        typeof data.data === 'string' ? JSON.parse(data.data) : data.data;
 
       return {
         isValid: true,
