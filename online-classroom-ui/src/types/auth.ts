@@ -36,6 +36,8 @@ export interface UserProfile {
   img?: string | null;
   createdAt?: string;
   isEmailVerified?: boolean;
+  plan?: 'FREE' | 'PRO' | 'PREMIUM';
+  planExpiresAt?: string | null;
 }
 
 export interface UpdateProfileRequest {

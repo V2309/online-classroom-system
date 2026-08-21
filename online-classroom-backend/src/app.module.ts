@@ -20,6 +20,7 @@ import { RealtimeModule } from './module/realtime/realtime.module';
 import { R2Module } from './lib/r2/r2.module';
 import { HomeworkModule } from './module/homework/homework.module';
 import { AiModule } from './module/ai/ai.module';
+import { PaymentModule } from './module/payment/payment.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { AiModule } from './module/ai/ai.module';
     RealtimeModule,
     HomeworkModule,
     AiModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

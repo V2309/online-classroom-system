@@ -21,6 +21,8 @@ import {
   LayoutDashboard,
   LineChart,
 } from "lucide-react";
+import { PricingSection } from "@/components/pricing/PricingSection";
+
 
 // Lazy-load YouTube component
 const LazyYouTube = dynamic(() => import("@/components/LazyYoutube"), {
@@ -497,88 +499,8 @@ export default function Home() {
         </section>
 
         {/* ── PRICING SECTION ── */}
-        <section id="pricing" className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto space-y-3 mb-12 sm:mb-16">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-accent/60 border border-primary/20 text-primary rounded-full font-bold text-xs">
-              Gói dịch vụ
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-heading font-bold text-foreground tracking-tight">
-              Bảng giá đơn giản & minh bạch
-            </h2>
-          </div>
+        <PricingSection />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-            {/* Free Plan */}
-            <div className="bg-white rounded-3xl p-8 border border-border shadow-sm flex flex-col justify-between space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-xl font-heading font-bold text-foreground">Gói Miễn phí</h3>
-                <p className="text-xs sm:text-sm text-secondary">
-                  Hoàn hảo cho giáo viên cá nhân và lớp học quy mô vừa.
-                </p>
-                <div className="pt-2">
-                  <span className="text-4xl font-heading font-bold text-foreground">0đ</span>
-                  <span className="text-xs text-muted-foreground ml-1">/ vĩnh viễn</span>
-                </div>
-                <div className="space-y-2.5 pt-4 border-t border-border/60">
-                  {[
-                    "Quản lý tối đa 10 lớp học",
-                    "Không giới hạn số lượng bài tập",
-                    "Tích hợp bảng trắng & phòng họp",
-                    "Báo cáo điểm số cơ bản",
-                  ].map((feat) => (
-                    <div key={feat} className="flex items-center gap-2 text-xs sm:text-sm text-foreground">
-                      <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
-                      <span>{feat}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <Link
-                href="/sign-up"
-                className="w-full py-3 px-4 bg-muted hover:bg-muted/80 text-foreground font-semibold rounded-2xl text-center text-xs sm:text-sm transition-all"
-              >
-                Bắt đầu miễn phí
-              </Link>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="bg-white rounded-3xl p-8 border-2 border-primary shadow-md relative flex flex-col justify-between space-y-6">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider shadow-sm">
-                Phổ biến nhất
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-xl font-heading font-bold text-foreground">Gói Chuyên nghiệp</h3>
-                <p className="text-xs sm:text-sm text-secondary">
-                  Dành cho trường học và tổ chức giáo dục quy mô lớn.
-                </p>
-                <div className="pt-2">
-                  <span className="text-4xl font-heading font-bold text-primary">Liên hệ</span>
-                  <span className="text-xs text-muted-foreground ml-1">/ hỗ trợ 24/7</span>
-                </div>
-                <div className="space-y-2.5 pt-4 border-t border-border/60">
-                  {[
-                    "Mọi tính năng của gói Miễn phí",
-                    "Không giới hạn số lớp học & học sinh",
-                    "Phân tích chuyên sâu & xuất dữ liệu",
-                    "Tùy chỉnh thương hiệu riêng",
-                    "Hỗ trợ kỹ thuật ưu tiên 24/7",
-                  ].map((feat) => (
-                    <div key={feat} className="flex items-center gap-2 text-xs sm:text-sm text-foreground font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
-                      <span>{feat}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <Link
-                href="/sign-up"
-                className="w-full py-3 px-4 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold rounded-2xl text-center text-xs sm:text-sm transition-all shadow-sm active:scale-95"
-              >
-                Đăng ký tư vấn
-              </Link>
-            </div>
-          </div>
-        </section>
 
         {/* ── CTA BANNER ── */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

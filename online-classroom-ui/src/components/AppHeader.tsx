@@ -71,23 +71,64 @@ export default function AppHeader() {
         {/* User Profile Capsule */}
         <div className="relative" ref={menuRef}>
           <div
-            className="flex items-center gap-2.5 p-1.5 px-2.5 cursor-pointer rounded-full bg-card hover:bg-muted transition-colors border border-border shadow-2xs"
+            className="flex items-center gap-2.5 p-1.5 pr-3 cursor-pointer rounded-full bg-card hover:bg-muted transition-all border border-border shadow-2xs group"
             onClick={() => setOpenMenu((prev) => !prev)}
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex-shrink-0 aspect-square ring-2 ring-primary/20 shadow-2xs">
-              <Image
-                path={user?.img || "/avatar.png"}
-                alt="Avatar"
-                w={80}
-                h={80}
-                className="w-full h-full rounded-full object-cover"
-              />
+            {/* Avatar with dynamic Plan Ring & Corner Badge */}
+            <div className="relative flex-shrink-0">
+              <div
+                className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden aspect-square transition-all ${
+                  user?.plan === "PREMIUM"
+                    ? "ring-2 ring-amber-500 shadow-amber-500/20 shadow-md"
+                    : user?.plan === "PRO"
+                    ? "ring-2 ring-blue-500 shadow-blue-500/20 shadow-md"
+                    : "ring-2 ring-primary/20"
+                }`}
+              >
+                <Image
+                  path={user?.img || "/avatar.png"}
+                  alt="Avatar"
+                  w={80}
+                  h={80}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              </div>
+
+              {/* Corner mini badge on avatar */}
+              {user?.plan === "PREMIUM" ? (
+                <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[8px] font-black px-1.5 py-0.2 rounded-full border-2 border-background shadow-xs">
+                  VIP
+                </span>
+              ) : user?.plan === "PRO" ? (
+                <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded-full border-2 border-background shadow-xs">
+                  PRO
+                </span>
+              ) : null}
             </div>
-            <span className="text-xs sm:text-sm font-semibold text-foreground max-w-[120px] truncate hidden md:inline">
-              {user?.username as string}
-            </span>
+
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-semibold text-foreground max-w-[120px] truncate">
+                {user?.username as string}
+              </span>
+
+              {/* Plan pill badge next to username */}
+              {user?.plan === "PREMIUM" ? (
+                <span className="text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded-full shadow-xs flex items-center gap-0.5">
+                  👑 VIP
+                </span>
+              ) : user?.plan === "PRO" ? (
+                <span className="text-[10px] font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-xs flex items-center gap-0.5">
+                  💎 PRO
+                </span>
+              ) : (
+                <span className="text-[10px] font-medium bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
+                  FREE
+                </span>
+              )}
+            </div>
+
             <svg
-              className="w-3.5 h-3.5 text-muted-foreground hidden md:inline"
+              className="w-3.5 h-3.5 text-muted-foreground hidden md:inline group-hover:translate-y-0.5 transition-transform"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -97,12 +138,32 @@ export default function AppHeader() {
           </div>
 
           {openMenu && (
-            <div className="absolute right-0 mt-2 w-60 bg-card rounded-2xl shadow-xl border border-border py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150 text-foreground">
-              <div className="px-4 py-3 border-b border-border">
-                <p className="text-sm font-bold text-foreground truncate">{user?.username}</p>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">
+            <div className="absolute right-0 mt-2 w-64 bg-card rounded-2xl shadow-xl border border-border py-2 z-50 animate-in fade-in zoom-in-95 duration-150 text-foreground">
+              <div className="px-4 py-3 border-b border-border space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-foreground truncate">{user?.username}</p>
+                  {user?.plan === "PREMIUM" ? (
+                    <span className="text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                      👑 PREMIUM
+                    </span>
+                  ) : user?.plan === "PRO" ? (
+                    <span className="text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full">
+                      💎 PRO
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                      FREE
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
                   {role === "teacher" ? "Giáo viên" : "Học sinh"}
                 </p>
+                {user?.planExpiresAt && (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    Hạn gói: {new Date(user.planExpiresAt).toLocaleDateString("vi-VN")}
+                  </p>
+                )}
               </div>
               <Link
                 href="/profile"
@@ -110,6 +171,16 @@ export default function AppHeader() {
                 onClick={() => setOpenMenu(false)}
               >
                 Hồ sơ cá nhân
+              </Link>
+              <Link
+                href="/pricing"
+                className="flex items-center justify-between px-4 py-2.5 text-sm text-primary hover:bg-primary/10 transition-colors font-semibold"
+                onClick={() => setOpenMenu(false)}
+              >
+                <span>{user?.plan && user.plan !== "FREE" ? "⭐ Quản lý / Gia hạn gói" : "💎 Nâng cấp tài khoản"}</span>
+                <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">
+                  {user?.plan === "PREMIUM" ? "VIP" : "PRO"}
+                </span>
               </Link>
               <Link
                 href="/settings"
@@ -120,7 +191,7 @@ export default function AppHeader() {
               </Link>
               <div className="border-t border-border my-1" />
               <button
-                className="block w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors font-medium"
+                className="block w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors font-medium cursor-pointer"
                 onClick={handleLogout}
               >
                 Đăng xuất
@@ -128,6 +199,7 @@ export default function AppHeader() {
             </div>
           )}
         </div>
+
       </div>
     </header>
   );

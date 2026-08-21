@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { Lock, Mail, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect") || searchParams.get("redirect_url");
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,6 +28,11 @@ export default function SignInPage() {
       const role = authData.user?.role;
       window.dispatchEvent(new CustomEvent("user-logged-in"));
 
+      if (redirectUrl) {
+        router.push(redirectUrl);
+        return;
+      }
+
       if (role === "admin") router.push("/dashboard");
       else if (role === "teacher") router.push("/class");
       else if (role === "student") router.push("/overview");
@@ -40,6 +48,7 @@ export default function SignInPage() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
@@ -215,20 +224,34 @@ export default function SignInPage() {
 
           {/* Footer link to sign up */}
           <div className="mt-6 text-center space-y-3">
-            <Link
-              href="/sign-up"
-              className="block w-full py-3 px-4 bg-muted/60 hover:bg-muted border border-border/80 text-foreground font-semibold rounded-2xl transition-all text-xs sm:text-sm text-center shadow-2xs"
-            >
-              Chưa có tài khoản? Đăng ký ngay
-            </Link>
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
-              Bằng cách đăng nhập, bạn đồng ý với{" "}
-              <span className="text-primary font-semibold">Điều khoản dịch vụ</span> và{" "}
-              <span className="text-primary font-semibold">Chính sách bảo mật</span>.
-            </p>
+              <Link
+                href={redirectUrl ? `/sign-up?redirect=${encodeURIComponent(redirectUrl)}` : "/sign-up"}
+                className="block w-full py-3 px-4 bg-muted/60 hover:bg-muted border border-border/80 text-foreground font-semibold rounded-2xl transition-all text-xs sm:text-sm text-center shadow-2xs"
+              >
+                Chưa có tài khoản? Đăng ký ngay
+              </Link>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Bằng cách đăng nhập, bạn đồng ý với{" "}
+                <span className="text-primary font-semibold">Điều khoản dịch vụ</span> và{" "}
+                <span className="text-primary font-semibold">Chính sách bảo mật</span>.
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <SignInContent />
+    </Suspense>
   );
 }
