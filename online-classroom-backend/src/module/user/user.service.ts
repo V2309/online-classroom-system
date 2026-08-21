@@ -34,6 +34,8 @@ export class UserService {
         isBanned: true,
         isEmailVerified: true,
         isPhoneVerified: true,
+        plan: true,
+        planExpiresAt: true,
         createdAt: true,
       },
     });
@@ -109,6 +111,8 @@ export class UserService {
         img: true,
         isEmailVerified: true,
         isPhoneVerified: true,
+        plan: true,
+        planExpiresAt: true,
         createdAt: true,
       },
     });

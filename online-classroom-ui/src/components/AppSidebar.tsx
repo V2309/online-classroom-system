@@ -136,14 +136,15 @@ export default function AppSidebar() {
 
       {/* Bottom section: Upgrade Plan Button */}
       <div className="pt-4 border-t border-border/60">
-        <button
-          onClick={() => {}}
-          className="w-full py-2.5 px-4 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold text-sm rounded-full transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
+        <Link
+          href="/pricing"
+          className="w-full py-2.5 px-4 bg-primary hover:bg-primary-hover text-primary-foreground font-semibold text-sm rounded-full transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95 group"
         >
-          <ArrowUpCircle className="w-4 h-4" />
+          <ArrowUpCircle className="w-4 h-4 transition-transform group-hover:scale-110" />
           <span>Upgrade Plan</span>
-        </button>
+        </Link>
       </div>
     </aside>
+
   );
 }
