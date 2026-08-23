@@ -64,7 +64,6 @@ jobs:
     needs: build-and-push # Chờ build xong mới deploy
     environment:
       name: production
-      url: https://${{ secrets.AZURE_WEBAPP_NAME }}.azurewebsites.net
 
     steps:
       - name: Log in to Azure
