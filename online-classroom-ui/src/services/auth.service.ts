@@ -7,19 +7,53 @@ export const authService = {
   // Trả về AuthData (đã unwrap bởi interceptor)
   async signup(data: SignupRequest): Promise<AuthData> {
     const response = await api.post<AuthData>('/auth/signup', data);
-    return response.data;
+    const authData = response.data;
+    if (authData?.accessToken) {
+      try {
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: authData.accessToken }),
+        });
+      } catch (err) {
+        console.error('Failed to sync session cookie:', err);
+      }
+    }
+    return authData;
   },
 
   // Đăng nhập
   // Trả về AuthData (đã unwrap bởi interceptor)
   async login(data: LoginRequest): Promise<AuthData> {
     const response = await api.post<AuthData>('/auth/login', data);
-    return response.data;
+    const authData = response.data;
+    if (authData?.accessToken) {
+      try {
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: authData.accessToken }),
+        });
+      } catch (err) {
+        console.error('Failed to sync session cookie:', err);
+      }
+    }
+    return authData;
   },
 
-  // Đăng xuất — BE xóa cookie, không cần FE tự xử lý cookie
+  // Đăng xuất — BE xóa cookie và FE xóa session cookie
   async logout(): Promise<void> {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Bỏ qua lỗi BE nếu có khi logout
+    } finally {
+      try {
+        await fetch('/api/auth/session', { method: 'DELETE' });
+      } catch (err) {
+        console.error('Failed to clear session cookie:', err);
+      }
+    }
   },
 
   // Lấy thông tin user đang đăng nhập
