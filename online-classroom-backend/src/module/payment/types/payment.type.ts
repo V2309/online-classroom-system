@@ -37,4 +37,3 @@ export const PLAN_PRICES = {
     YEARLY: 20000,
   },
 };
-
