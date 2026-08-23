@@ -4,6 +4,7 @@ import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-toastify/dist/ReactToastify.css";
+import { GoogleAuthProvider } from "@/providers/GoogleAuthProvider";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "vietnamese"],
@@ -32,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${jakarta.variable} ${literata.variable}`}>
       <body className={`${jakarta.className} antialiased`}>
-        {children}
+        <GoogleAuthProvider>
+          {children}
+        </GoogleAuthProvider>
 
         <ToastContainer
           position="bottom-right"

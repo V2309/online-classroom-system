@@ -6,9 +6,11 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 import * as crypto from 'crypto';
+import { OAuth2Client } from 'google-auth-library';
 import { UserRole } from '../../generated/prisma/enums';
 import { PrismaService } from '../../lib/database/prisma.service';
 import { MailService } from '../mail/mail.service';
@@ -28,11 +30,17 @@ export interface AuthResult extends AuthTokens {
 
 @Injectable()
 export class AuthService {
+  private googleClient: OAuth2Client;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly mailService: MailService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    this.googleClient = new OAuth2Client(googleClientId);
+  }
 
   /**
    * Gửi lại email xác thực cho user đang đăng nhập
@@ -211,6 +219,142 @@ export class AuthService {
     const isMatch = await compare(dto.password, user.password);
     if (!isMatch) {
       throw new UnauthorizedException('Mật khẩu không đúng.');
+    }
+
+    return this.buildAuthResult(user);
+  }
+
+  async googleLogin(
+    idToken: string,
+    selectedRole?: UserRole,
+  ): Promise<AuthResult> {
+    const googleClientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    let payload: any;
+
+    try {
+      if (idToken.startsWith('ya29.')) {
+        // Google OAuth2 Access Token
+        const response = await fetch(
+          'https://www.googleapis.com/oauth2/v3/userinfo',
+          {
+            headers: { Authorization: `Bearer ${idToken}` },
+          },
+        );
+        if (!response.ok) {
+          throw new Error('Google OAuth Token không hợp lệ hoặc đã hết hạn.');
+        }
+        payload = await response.json();
+      } else {
+        // Google ID Token (JWT)
+        const ticket = await this.googleClient.verifyIdToken({
+          idToken,
+          audience: googleClientId || undefined,
+        });
+        payload = ticket.getPayload();
+      }
+    } catch (err: any) {
+      throw new UnauthorizedException(
+        `Xác thực Google Token thất bại: ${err?.message || 'Token không hợp lệ'}`,
+      );
+    }
+
+    if (!payload || !payload.email) {
+      throw new BadRequestException('Không tìm thấy thông tin email từ tài khoản Google.');
+    }
+
+    const { email, name, picture, sub: googleId } = payload;
+
+    // 1. Kiểm tra xem User đã tồn tại trong DB theo googleId hoặc email
+    let user = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(googleId ? [{ googleId }] : []),
+          { email },
+        ],
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        phone: true,
+        img: true,
+        role: true,
+        isBanned: true,
+      },
+    });
+
+    if (user) {
+      if (user.isBanned) {
+        throw new ForbiddenException('Tài khoản đã bị khóa.');
+      }
+
+      // Cập nhật googleId, trạng thái emailVerified và avatar nếu chưa có
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId: googleId || undefined,
+          emailVerified: true,
+          isEmailVerified: true,
+          img: user.img || picture || null,
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          phone: true,
+          img: true,
+          role: true,
+          isBanned: true,
+        },
+      });
+    } else {
+      // 2. Tạo User mới nếu chưa tồn tại với vai trò được chỉ định
+      const assignedRole =
+        selectedRole === UserRole.teacher ? UserRole.teacher : UserRole.student;
+
+      user = await this.prisma.$transaction(async (tx) => {
+        const newUser = await tx.user.create({
+          data: {
+            username: name || email.split('@')[0],
+            email,
+            googleId: googleId || null,
+            img: picture || null,
+            role: assignedRole,
+            emailVerified: true,
+            isEmailVerified: true,
+            class_name: '',
+            schoolname: '',
+            birthday: new Date('2000-01-01'),
+            address: '',
+          },
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            phone: true,
+            img: true,
+            role: true,
+            isBanned: true,
+          },
+        });
+
+        // Tạo bản ghi tương ứng với vai trò
+        if (assignedRole === UserRole.teacher) {
+          await tx.teacher.create({
+            data: {
+              userId: newUser.id,
+            },
+          });
+        } else {
+          await tx.student.create({
+            data: {
+              userId: newUser.id,
+            },
+          });
+        }
+
+        return newUser;
+      });
     }
 
     return this.buildAuthResult(user);
