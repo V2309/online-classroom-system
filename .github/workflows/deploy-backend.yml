@@ -9,7 +9,7 @@ on:
   workflow_dispatch: # Cho phép chạy thủ công trên GitHub UI
 
 env:
-  IMAGE_NAME: ${{ secrets.ACR_LOGIN_SERVER }}/online-classroom-backend
+  IMAGE_NAME: onlineclassroomacr.azurecr.io/online-classroom-backend
 
 jobs:
   # =========================================================================
