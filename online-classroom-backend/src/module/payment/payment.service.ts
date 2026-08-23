@@ -96,7 +96,8 @@ export class PaymentService {
       gateway = this.vnPayGateway;
     }
 
-    const cycleText = dto.billingCycle === BillingCycle.YEARLY ? 'nam' : 'thang';
+    const cycleText =
+      dto.billingCycle === BillingCycle.YEARLY ? 'nam' : 'thang';
     const planText = dto.plan === PlanType.PREMIUM ? 'Premium' : 'Pro';
     const description = `DoCus - Nang cap goi ${planText} (${cycleText})`;
 
@@ -299,12 +300,18 @@ export class PaymentService {
 
   // ─── Xác thực Return URL từ Browser (Dành cho môi trường Localhost & IPN) ───
   async verifyPaymentReturn(query: Record<string, any>) {
-    this.logger.log(`Verifying Payment Return from browser: ${JSON.stringify(query)}`);
+    this.logger.log(
+      `Verifying Payment Return from browser: ${JSON.stringify(query)}`,
+    );
 
     // 1. Kiểm tra nếu là VNPay
     if (query.vnp_ResponseCode !== undefined) {
       const verifyResult = await this.vnPayGateway.verifyCallback(query);
-      if (verifyResult.isValid && verifyResult.isSuccess && verifyResult.appTransId) {
+      if (
+        verifyResult.isValid &&
+        verifyResult.isSuccess &&
+        verifyResult.appTransId
+      ) {
         await this.activateOrderSubscription(
           verifyResult.appTransId,
           verifyResult.gatewayTransId,
@@ -315,9 +322,16 @@ export class PaymentService {
     }
 
     // 2. Kiểm tra nếu là MoMo
-    if (query.resultCode !== undefined && (query.orderId !== undefined || query.requestId !== undefined)) {
+    if (
+      query.resultCode !== undefined &&
+      (query.orderId !== undefined || query.requestId !== undefined)
+    ) {
       const verifyResult = await this.moMoGateway.verifyCallback(query);
-      if (verifyResult.isValid && verifyResult.isSuccess && verifyResult.appTransId) {
+      if (
+        verifyResult.isValid &&
+        verifyResult.isSuccess &&
+        verifyResult.appTransId
+      ) {
         await this.activateOrderSubscription(
           verifyResult.appTransId,
           verifyResult.gatewayTransId,
@@ -331,7 +345,6 @@ export class PaymentService {
   }
 
   // ─── Lấy trạng thái Order (cho trang kết quả Frontend) ────────────────────
-
 
   async getOrderStatus(orderId: string, userId: string) {
     const order = await this.prisma.order.findFirst({

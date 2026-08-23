@@ -45,7 +45,8 @@ export class PaymentController {
         {
           id: 'PRO',
           name: 'Gói Chuyên nghiệp',
-          description: 'Dành cho giáo viên và học sinh muốn học tập chuyên sâu.',
+          description:
+            'Dành cho giáo viên và học sinh muốn học tập chuyên sâu.',
           isPopular: true,
           prices: PLAN_PRICES.PRO,
           features: [
@@ -120,7 +121,6 @@ export class PaymentController {
   handleVNPayCallbackPost(@Body() body: any) {
     return this.paymentService.handleVNPayCallback(body);
   }
-
 
   /**
    * POST /payment/verify-return — Xác thực dữ liệu trả về từ trình duyệt (Localhost & Webhook)

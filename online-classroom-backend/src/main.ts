@@ -43,10 +43,15 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor(new Reflector()));
 
   // Cấu hình CORS
-  // Chỉ cho phép frontend có URL bằng FRONTEND_URL
-  // credentials: true cho phép gửi cookie và thông tin xác thực
+  // Chấp nhận cả localhost (dev) và production URL
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean); // Loại bỏ undefined nếu env chưa set
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: allowedOrigins,
     credentials: true,
   });
 
