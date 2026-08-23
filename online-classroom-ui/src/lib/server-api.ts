@@ -17,7 +17,12 @@ export async function serverFetch<T = any>(
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(session ? { Cookie: `session=${session}` } : {}),
+    ...(session
+      ? {
+          Cookie: `session=${session}`,
+          Authorization: `Bearer ${session}`,
+        }
+      : {}),
     ...((options.headers as Record<string, string>) || {}),
   };
 
