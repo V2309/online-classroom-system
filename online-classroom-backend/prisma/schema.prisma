@@ -24,6 +24,7 @@ model User {
   img        String?
   email      String?  @unique
   phone      String?  @unique
+  googleId   String?  @unique
   role       UserRole @default(student)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt @default(now())

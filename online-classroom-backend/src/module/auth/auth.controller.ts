@@ -15,6 +15,7 @@ import { JwtRefreshGuard } from '../../common/guards/jwt-refresh.guard';
 import { AuthService } from './auth.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { GoogleLoginDto } from './dto/google-login.dto';
 import type { AuthenticatedUser } from './strategies/jwt.strategy';
 
 @Controller('auth')
@@ -40,6 +41,19 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.login(dto);
+    this.setSessionCookie(res, result.accessToken);
+    this.setRefreshTokenCookie(res, result.refreshToken);
+
+    return result;
+  }
+
+  @Post('google')
+  @HttpCode(200)
+  async googleLogin(
+    @Body() dto: GoogleLoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.googleLogin(dto.idToken, dto.role);
     this.setSessionCookie(res, result.accessToken);
     this.setRefreshTokenCookie(res, result.refreshToken);
 

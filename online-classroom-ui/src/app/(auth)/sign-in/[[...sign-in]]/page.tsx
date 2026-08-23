@@ -5,6 +5,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/services/auth.service";
 import { Lock, Mail, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
 
 function SignInContent() {
   const router = useRouter();
@@ -12,7 +13,23 @@ function SignInContent() {
   const redirectUrl = searchParams.get("redirect") || searchParams.get("redirect_url");
 
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function handleAuthSuccess(authData: any) {
+    const role = authData.user?.role;
+    window.dispatchEvent(new CustomEvent("user-logged-in"));
+
+    if (redirectUrl) {
+      router.push(redirectUrl);
+      return;
+    }
+
+    if (role === "admin") router.push("/dashboard");
+    else if (role === "teacher") router.push("/class");
+    else if (role === "student") router.push("/overview");
+    else router.push("/");
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,18 +42,7 @@ function SignInContent() {
 
     try {
       const authData = await authService.login({ email, password });
-      const role = authData.user?.role;
-      window.dispatchEvent(new CustomEvent("user-logged-in"));
-
-      if (redirectUrl) {
-        router.push(redirectUrl);
-        return;
-      }
-
-      if (role === "admin") router.push("/dashboard");
-      else if (role === "teacher") router.push("/class");
-      else if (role === "student") router.push("/overview");
-      else router.push("/");
+      handleAuthSuccess(authData);
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
@@ -48,6 +54,31 @@ function SignInContent() {
       setLoading(false);
     }
   }
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setError(null);
+      setGoogleLoading(true);
+      try {
+        const token = tokenResponse.access_token;
+        const authData = await authService.googleLogin(token);
+        handleAuthSuccess(authData);
+      } catch (err: any) {
+        setError(
+          err.response?.data?.message ||
+            err.response?.data?.error ||
+            err.message ||
+            "Đăng nhập bằng Google thất bại. Vui lòng thử lại."
+        );
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: (err) => {
+      console.error("Google Login Error:", err);
+      setError("Đăng nhập bằng Google đã bị hủy hoặc xảy ra lỗi.");
+    },
+  });
 
 
   return (
@@ -210,16 +241,26 @@ function SignInContent() {
           {/* Google button */}
           <button
             type="button"
-            onClick={() => console.log("Đăng nhập Google")}
-            className="w-full py-3 px-4 bg-card hover:bg-muted border border-border text-foreground font-semibold rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2.5 text-xs sm:text-sm active:scale-95 cursor-pointer"
+            disabled={loading || googleLoading}
+            onClick={() => loginWithGoogle()}
+            className="w-full py-3 px-4 bg-card hover:bg-muted border border-border text-foreground font-semibold rounded-2xl transition-all shadow-2xs flex items-center justify-center gap-2.5 text-xs sm:text-sm active:scale-95 cursor-pointer disabled:opacity-50"
           >
-            <svg viewBox="0 0 24 24" width={18} height={18}>
-              <path d="M18.977 4.322L16 7.3c-1.023-.838-2.326-1.35-3.768-1.35-2.69 0-4.95 1.73-5.74 4.152l-3.44-2.635c1.656-3.387 5.134-5.705 9.18-5.705 2.605 0 4.93.977 6.745 2.56z" fill="#EA4335" />
-              <path d="M6.186 12c0 .66.102 1.293.307 1.89L3.05 16.533C2.38 15.17 2 13.63 2 12s.38-3.173 1.05-4.533l3.443 2.635c-.204.595-.307 1.238-.307 1.898z" fill="#FBBC05" />
-              <path d="M18.893 19.688c-1.786 1.667-4.168 2.55-6.66 2.55-4.048 0-7.526-2.317-9.18-5.705l3.44-2.635c.79 2.42 3.05 4.152 5.74 4.152 1.32 0 2.474-.308 3.395-.895l3.265 2.533z" fill="#34A853" />
-              <path d="M22 12c0 3.34-1.22 5.948-3.107 7.688l-3.265-2.53c1.07-.67 1.814-1.713 2.093-3.063h-5.488V10.14h9.535c.14.603.233 1.255.233 1.86z" fill="#4285F4" />
-            </svg>
-            <span>Đăng nhập với Google</span>
+            {googleLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span>Đang kết nối Google...</span>
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" width={18} height={18}>
+                  <path d="M18.977 4.322L16 7.3c-1.023-.838-2.326-1.35-3.768-1.35-2.69 0-4.95 1.73-5.74 4.152l-3.44-2.635c1.656-3.387 5.134-5.705 9.18-5.705 2.605 0 4.93.977 6.745 2.56z" fill="#EA4335" />
+                  <path d="M6.186 12c0 .66.102 1.293.307 1.89L3.05 16.533C2.38 15.17 2 13.63 2 12s.38-3.173 1.05-4.533l3.443 2.635c-.204.595-.307 1.238-.307 1.898z" fill="#FBBC05" />
+                  <path d="M18.893 19.688c-1.786 1.667-4.168 2.55-6.66 2.55-4.048 0-7.526-2.317-9.18-5.705l3.44-2.635c.79 2.42 3.05 4.152 5.74 4.152 1.32 0 2.474-.308 3.395-.895l3.265 2.533z" fill="#34A853" />
+                  <path d="M22 12c0 3.34-1.22 5.948-3.107 7.688l-3.265-2.53c1.07-.67 1.814-1.713 2.093-3.063h-5.488V10.14h9.535c.14.603.233 1.255.233 1.86z" fill="#4285F4" />
+                </svg>
+                <span>Đăng nhập với Google</span>
+              </>
+            )}
           </button>
 
           {/* Footer link to sign up */}

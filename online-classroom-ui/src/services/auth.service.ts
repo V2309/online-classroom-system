@@ -41,6 +41,28 @@ export const authService = {
     return authData;
   },
 
+  // Đăng nhập / Đăng ký với Google
+  // Trả về AuthData (đã unwrap bởi interceptor)
+  async googleLogin(idToken: string, role?: string): Promise<AuthData> {
+    const response = await api.post<AuthData>('/auth/google', {
+      idToken,
+      ...(role ? { role } : {}),
+    });
+    const authData = response.data;
+    if (authData?.accessToken) {
+      try {
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: authData.accessToken }),
+        });
+      } catch (err) {
+        console.error('Failed to sync session cookie:', err);
+      }
+    }
+    return authData;
+  },
+
   // Đăng xuất — BE xóa cookie và FE xóa session cookie
   async logout(): Promise<void> {
     try {

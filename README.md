@@ -448,6 +448,9 @@ R2_SECRET_ACCESS_KEY=your_r2_secret_key
 R2_BUCKET_NAME=your_bucket_name
 R2_ENDPOINT=https://your_account.r2.cloudflarestorage.com
 
+# Google OAuth & Identity Services
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+
 # Email (Resend)
 RESEND_API_KEY=your_resend_api_key
 
@@ -477,6 +480,9 @@ PORT=8081
 # API URLs
 NEXT_PUBLIC_API_URL=http://localhost:8081/api
 NEXT_PUBLIC_RAG_API_URL=http://localhost:8000
+
+# Google OAuth
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 
 # JWT (must match Backend)
 JWT_SECRET_KEY=your_jwt_secret_key
@@ -515,10 +521,13 @@ All backend API endpoints are prefixed with `/api/`. Backend runs on port `8081`
 
 | Module | Method | Endpoint | Description |
 |---|---|---|---|
-| **Auth** | POST | `/api/auth/register` | Register new account |
-| | POST | `/api/auth/login` | Login |
-| | POST | `/api/auth/logout` | Logout |
+| **Auth** | POST | `/api/auth/signup` | Register new account |
+| | POST | `/api/auth/login` | Login with email/phone & password |
+| | POST | `/api/auth/google` | Login / Register with Google OAuth token & role |
+| | POST | `/api/auth/logout` | Logout & clear session cookie |
 | | POST | `/api/auth/refresh` | Refresh access token |
+| | POST | `/api/auth/resend-verification` | Resend verification email |
+| | GET/POST | `/api/auth/verify-email` | Verify email token |
 | **User** | GET | `/api/user/me` | Get current user info |
 | | PATCH | `/api/user/:id` | Update user profile |
 | **Class** | GET | `/api/class` | Get class list |
@@ -562,7 +571,7 @@ All backend API endpoints are prefixed with `/api/`. Backend runs on port `8081`
 The system uses **PostgreSQL** with **Prisma ORM**.
 
 ```
-User (plan: FREE | PRO | PREMIUM, planExpiresAt)
+User (plan: FREE | PRO | PREMIUM, planExpiresAt, googleId)
  ├── Student (1-1)
  │    ├── Class[] (many-many)
  │    ├── Attendance[]
@@ -607,27 +616,69 @@ VerificationToken
 
 ---
 
-## 🔒 Authentication Flow
+## 🔒 Authentication & Session Flow
 
-The system uses **JWT** stored in **HttpOnly Cookies**:
+The system supports both **Credentials Authentication** and **Google OAuth 2.0 Identity Services**, managed via a **BFF (Backend For Frontend) Cookie Session Architecture**:
 
+### 1. Traditional Credentials Auth
+1. Client submits email/phone and password to `POST /api/auth/login`.
+2. Backend verifies credentials and issues `accessToken` (7 days) and `refreshToken` (30 days).
+3. Frontend syncs the session via Next.js Route Handler `POST /api/auth/session` into an `HttpOnly`, `SameSite=Lax`, `Secure` cookie on the frontend domain.
+4. Next.js Middleware and SSR validate this cookie on protected routes.
+
+### 2. Google OAuth 2.0 Integration
 ```
-1. Client sends POST /api/auth/login  (email + password)
-2. Backend verifies credentials
-3. Issues Access Token (15 min) + Refresh Token (7 days)
-4. Both tokens stored in HttpOnly Cookie ("session")
-5. Next.js Middleware verifies the cookie on every protected request
-6. If access token expires → auto call POST /api/auth/refresh
-7. If refresh fails → redirect to /sign-in and clear cookie
+User clicks "Đăng nhập / Đăng ký bằng Google"
+        ↓
+Google Identity Popup (OAuth 2.0 Token / ID Token)
+        ↓
+Frontend receives Google Token & sends to POST /api/auth/google
+        ↓
+Backend verifies token signature with Google Auth Library
+        ↓
+┌────────────────────────────────────────────────────────┐
+│ User exists in Database (by googleId or email)?        │
+└────────────────────────────────────────────────────────┘
+       ↓ YES                                    ↓ NO
+       ↓                                        ↓
+Update avatar & emailVerified             Create User with selected role
+       ↓                                  (Student or Teacher) + Profile
+Issue JWT access & refresh tokens                ↓
+       ↓                                  Issue JWT access & refresh tokens
+       └──────────────────┬─────────────────────┘
+                          ↓
+Frontend stores 'session' cookie on Vercel domain (/api/auth/session)
+                          ↓
+Redirects user to role dashboard (/overview for student, /class for teacher)
 ```
 
 **Roles & Permissions:**
 
-| Role | Description |
-|---|---|
-| `student` | Join classes, submit homework, view documents |
-| `teacher` | Create classes, assign homework, grade students |
-| `admin` | Access `/dashboard`, manage all users and system |
+| Role | Default Redirect | Description |
+|---|---|---|
+| `student` | `/overview` | Join classes, submit homework, view documents, AI chat |
+| `teacher` | `/class` | Create classes, assign homework, grade submissions, manage courses |
+| `admin` | `/dashboard` | Access admin analytics, manage all users, classes, and system settings |
+
+---
+
+## 🚀 Production Deployment
+
+### 1. Frontend Deployment (Vercel)
+- Deploy `online-classroom-ui` directly on **Vercel**.
+- Configure Environment Variables on Vercel Dashboard:
+  - `NEXT_PUBLIC_API_URL`: `https://your-backend.azurewebsites.net/api`
+  - `JWT_SECRET_KEY`: Same JWT Secret Key as Backend.
+  - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Your Google OAuth Client ID.
+
+### 2. Backend Deployment (Azure App Service)
+- Deploy `online-classroom-backend` to **Azure App Service (Node.js 20 LTS Linux)**.
+- Integrated automated CI/CD via GitHub Actions workflow (`.github/workflows/deploy-backend.yml`).
+- Configure Application Settings in Azure Portal:
+  - `DATABASE_URL`: PostgreSQL connection string.
+  - `JWT_SECRET_KEY`: Secret string used for signing JWTs.
+  - `FRONTEND_URL`: `https://docusonline.vercel.app`
+  - `GOOGLE_CLIENT_ID`: Your Google OAuth Client ID.
 
 ---
 
