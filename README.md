@@ -117,21 +117,38 @@
 - Group chat within each class
 - Push notifications via Pusher
 
-### 🤖 AI Integration (RAG API)
-- **Smart Q&A**: Answer questions based on uploaded documents (RAG)
-- **Auto Quiz Generation**: AI generates multiple-choice questions from lesson content
-- **Podcast Generator**: Convert documents into audio podcasts
-- **Hybrid Search**: Combines vector search (FAISS) + BM25 keyword search
-- **Multi-LLM Support**: OpenAI GPT, Google Gemini, Tavily Web Search
+### 🤖 AI Integration & Smart Tools (RAG API)
+- **Document Q&A (RAG)**: Chat with uploaded PDF documents using LangChain + vector search
+- **Auto Quiz & Exam Extraction**: Automatically parse and extract multiple-choice questions from PDF / Word documents
+- **Exam Shuffling & Export**: Randomize questions and answer choices for anti-cheat and export directly to PDF / DOCX
+- **Essay Question Generator**: Generate customized essay questions, sample answers, and grading rubrics
+- **Podcast Generator**: Convert document content into conversational audio podcasts
+- **Multi-LLM Engine**: Support for OpenAI GPT, Google Gemini, and Tavily Web Search
+
+### ✍️ Exam & Homework Management
+- **Multiple Choice & Essay Exams**: Full support for both automatic grading (quizzes) and detailed manual grading with rubrics (essays)
+- **Homework Assignment**: Teachers assign homework with deadlines, attachments, and maximum scores
+- **Student Submissions**: Online submission with multiple file uploads and realtime countdown timer
+- **Gradebook & Export**: Detailed score analytics, student progress tracking, and Excel export
+
+### 🔐 Authentication & Presence
+- **Google OAuth 2.0 Single Sign-On**: One-click Google login/signup with role selection (Teacher / Student)
+- **JWT & Role-Based Access Control (RBAC)**: Secure authorization for Admin, Teacher, and Student roles
+- **Real-time User Presence**: Live online/offline status tracking across classrooms and chat channels via Pusher
+
+### 💬 Quick Contact & Live Support Widget
+- **Speed Dial Contact Bubble**: Floating quick-access widget on the landing page with smooth expand/collapse animations
+- **Multi-Channel Support**: Instant connection to Hotline call (`tel:`), Zalo chat (`zalo.me`), and Facebook Messenger (`m.me`)
+- **Integrated Mini Live Chat**: Interactive customer service drawer with FAQ suggestions and auto-responder
 
 ### 🔔 Notifications
 - Real-time notifications for all class activities
 - Transactional email notifications (Resend)
 
 ### 👑 Admin Dashboard
-- Manage all system users
-- View statistics and reports
-- Ban / unban user accounts
+- Manage all system users, classes, and roles
+- View system-wide statistics, revenue, and active analytics
+- Ban / unban user accounts and system configuration
 
 ---
 
