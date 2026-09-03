@@ -1,7 +1,4 @@
-import {
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../lib/database/prisma.service';
 import { CourseService } from './course.service';
@@ -99,7 +96,7 @@ describe('CourseService', () => {
       const capturedCourseData: any[] = [];
       const capturedVideoData: any[] = [];
 
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           folder: { findFirst: jest.fn().mockResolvedValue(null) },
           course: {
@@ -134,7 +131,7 @@ describe('CourseService', () => {
             ],
           },
         ],
-      } as any);
+      });
 
       expect(capturedVideoData[0].thumbnailUrl).toBe(
         `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
@@ -148,7 +145,7 @@ describe('CourseService', () => {
 
       const capturedVideoData: any[] = [];
 
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           folder: { findFirst: jest.fn().mockResolvedValue(null) },
           course: {
@@ -175,7 +172,7 @@ describe('CourseService', () => {
             videos: [{ title: 'Video', url: 'https://example.com/video.mp4' }],
           },
         ],
-      } as any);
+      });
 
       expect(capturedVideoData[0].thumbnailUrl).toBeNull();
     });
@@ -196,17 +193,20 @@ describe('CourseService', () => {
     it('tạo khóa học thành công', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           folder: { findFirst: jest.fn().mockResolvedValue(null) },
-          course: { create: jest.fn().mockResolvedValue(mockCourse), update: jest.fn() },
+          course: {
+            create: jest.fn().mockResolvedValue(mockCourse),
+            update: jest.fn(),
+          },
           chapter: { create: jest.fn() },
           video: { create: jest.fn() },
         };
         return cb(tx);
       });
 
-      const result = await service.createCourse(mockTeacher.userId, dto as any);
+      const result = await service.createCourse(mockTeacher.userId, dto);
 
       expect(result).toEqual(mockCourse);
     });
@@ -214,24 +214,24 @@ describe('CourseService', () => {
     it('throw ForbiddenException khi userId không phải teacher', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
-      await expect(service.createCourse('student-user', dto as any)).rejects.toThrow(
-        ForbiddenException,
-      );
-      await expect(service.createCourse('student-user', dto as any)).rejects.toThrow(
-        'Chỉ giáo viên mới có quyền thực hiện thao tác này.',
-      );
+      await expect(
+        service.createCourse('student-user', dto as any),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.createCourse('student-user', dto as any),
+      ).rejects.toThrow('Chỉ giáo viên mới có quyền thực hiện thao tác này.');
     });
 
     it('throw NotFoundException khi classCode không tồn tại', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findFirst.mockResolvedValue(null);
 
-      await expect(service.createCourse(mockTeacher.userId, dto as any)).rejects.toThrow(
-        NotFoundException,
-      );
-      await expect(service.createCourse(mockTeacher.userId, dto as any)).rejects.toThrow(
-        'Không tìm thấy lớp học.',
-      );
+      await expect(
+        service.createCourse(mockTeacher.userId, dto as any),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.createCourse(mockTeacher.userId, dto as any),
+      ).rejects.toThrow('Không tìm thấy lớp học.');
     });
 
     it('tạo folder mới nếu newFolderName được cung cấp và chưa tồn tại', async () => {
@@ -240,24 +240,29 @@ describe('CourseService', () => {
         newFolderName: 'Folder Mới',
         newFolderColor: '#FF5733',
       };
-      const mockFolderCreate = jest.fn().mockResolvedValue({ id: 'new-folder-id', name: 'Folder Mới' });
+      const mockFolderCreate = jest
+        .fn()
+        .mockResolvedValue({ id: 'new-folder-id', name: 'Folder Mới' });
 
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           folder: {
             findFirst: jest.fn().mockResolvedValue(null), // chưa tồn tại
             create: mockFolderCreate,
           },
-          course: { create: jest.fn().mockResolvedValue(mockCourse), update: jest.fn() },
+          course: {
+            create: jest.fn().mockResolvedValue(mockCourse),
+            update: jest.fn(),
+          },
           chapter: { create: jest.fn() },
           video: { create: jest.fn() },
         };
         return cb(tx);
       });
 
-      await service.createCourse(mockTeacher.userId, dtoWithNewFolder as any);
+      await service.createCourse(mockTeacher.userId, dtoWithNewFolder);
 
       expect(mockFolderCreate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -276,20 +281,23 @@ describe('CourseService', () => {
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
 
       const mockFolderCreate = jest.fn();
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           folder: {
             findFirst: jest.fn().mockResolvedValue(mockFolder), // đã tồn tại
             create: mockFolderCreate,
           },
-          course: { create: jest.fn().mockResolvedValue(mockCourse), update: jest.fn() },
+          course: {
+            create: jest.fn().mockResolvedValue(mockCourse),
+            update: jest.fn(),
+          },
           chapter: { create: jest.fn() },
           video: { create: jest.fn() },
         };
         return cb(tx);
       });
 
-      await service.createCourse(mockTeacher.userId, dtoWithExistingFolderName as any);
+      await service.createCourse(mockTeacher.userId, dtoWithExistingFolderName);
 
       // Không tạo folder mới
       expect(mockFolderCreate).not.toHaveBeenCalled();
@@ -306,7 +314,12 @@ describe('CourseService', () => {
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
 
-      const result = await service.getCourseById('course-id-1', 'CLS01', mockTeacher.userId, 'teacher');
+      const result = await service.getCourseById(
+        'course-id-1',
+        'CLS01',
+        mockTeacher.userId,
+        'teacher',
+      );
 
       expect(result).toEqual(mockCourse);
     });
@@ -316,7 +329,12 @@ describe('CourseService', () => {
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
 
-      const result = await service.getCourseById('course-id-1', 'CLS01', mockStudent.userId, 'student');
+      const result = await service.getCourseById(
+        'course-id-1',
+        'CLS01',
+        mockStudent.userId,
+        'student',
+      );
 
       expect(result).toEqual(mockCourse);
     });
@@ -327,10 +345,20 @@ describe('CourseService', () => {
       mockPrisma.course.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.getCourseById('nonexistent', 'CLS01', mockTeacher.userId, 'teacher'),
+        service.getCourseById(
+          'nonexistent',
+          'CLS01',
+          mockTeacher.userId,
+          'teacher',
+        ),
       ).rejects.toThrow(NotFoundException);
       await expect(
-        service.getCourseById('nonexistent', 'CLS01', mockTeacher.userId, 'teacher'),
+        service.getCourseById(
+          'nonexistent',
+          'CLS01',
+          mockTeacher.userId,
+          'teacher',
+        ),
       ).rejects.toThrow('Không tìm thấy khóa học.');
     });
 
@@ -339,7 +367,12 @@ describe('CourseService', () => {
       mockPrisma.class.findFirst.mockResolvedValue(null); // student không trong lớp
 
       await expect(
-        service.getCourseById('course-id-1', 'CLS01', mockStudent.userId, 'student'),
+        service.getCourseById(
+          'course-id-1',
+          'CLS01',
+          mockStudent.userId,
+          'student',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -355,7 +388,7 @@ describe('CourseService', () => {
       const updatedCourse = { ...mockCourse, title: 'Toán Nâng Cao' };
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           folder: { findFirst: jest.fn().mockResolvedValue(null) },
           course: { update: jest.fn().mockResolvedValue(updatedCourse) },
@@ -365,7 +398,11 @@ describe('CourseService', () => {
         return cb(tx);
       });
 
-      const result = await service.updateCourse('course-id-1', mockTeacher.userId, updateDto as any);
+      const result = await service.updateCourse(
+        'course-id-1',
+        mockTeacher.userId,
+        updateDto,
+      );
 
       expect(result.title).toBe('Toán Nâng Cao');
     });
@@ -383,10 +420,18 @@ describe('CourseService', () => {
       mockPrisma.course.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.updateCourse('nonexistent', mockTeacher.userId, updateDto as any),
+        service.updateCourse(
+          'nonexistent',
+          mockTeacher.userId,
+          updateDto as any,
+        ),
       ).rejects.toThrow(NotFoundException);
       await expect(
-        service.updateCourse('nonexistent', mockTeacher.userId, updateDto as any),
+        service.updateCourse(
+          'nonexistent',
+          mockTeacher.userId,
+          updateDto as any,
+        ),
       ).rejects.toThrow('Không tìm thấy khóa học.');
     });
   });
@@ -401,7 +446,10 @@ describe('CourseService', () => {
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
       mockPrisma.course.delete.mockResolvedValue(mockCourse);
 
-      const result = await service.deleteCourse('course-id-1', mockTeacher.userId);
+      const result = await service.deleteCourse(
+        'course-id-1',
+        mockTeacher.userId,
+      );
 
       expect(result.message).toBe('Đã xóa khóa học thành công.');
       expect(mockPrisma.course.delete).toHaveBeenCalledWith({
@@ -412,9 +460,9 @@ describe('CourseService', () => {
     it('throw ForbiddenException khi không phải teacher', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
-      await expect(service.deleteCourse('course-id-1', 'invalid')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.deleteCourse('course-id-1', 'invalid'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('throw NotFoundException khi khóa học không tồn tại', async () => {
@@ -435,12 +483,15 @@ describe('CourseService', () => {
     it('di chuyển khóa học vào folder thành công', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
-      mockPrisma.course.update.mockResolvedValue({ ...mockCourse, folderId: 'folder-id-1' });
+      mockPrisma.course.update.mockResolvedValue({
+        ...mockCourse,
+        folderId: 'folder-id-1',
+      });
 
       const result = await service.moveCourseToFolder(
         'course-id-1',
         mockTeacher.userId,
-        { newFolderId: 'folder-id-1' },
+        { newFolderId: 'folder-id-1', classCode: 'CLS01' },
       );
 
       expect(result.message).toBe('Đã di chuyển khóa học thành công.');
@@ -452,13 +503,15 @@ describe('CourseService', () => {
     it('di chuyển ra ngoài folder (unassigned) → folderId = null', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.course.findFirst.mockResolvedValue(mockCourse);
-      mockPrisma.course.update.mockResolvedValue({ ...mockCourse, folderId: null });
+      mockPrisma.course.update.mockResolvedValue({
+        ...mockCourse,
+        folderId: null,
+      });
 
-      await service.moveCourseToFolder(
-        'course-id-1',
-        mockTeacher.userId,
-        { newFolderId: 'unassigned' },
-      );
+      await service.moveCourseToFolder('course-id-1', mockTeacher.userId, {
+        newFolderId: 'unassigned',
+        classCode: 'CLS01',
+      });
 
       expect(mockPrisma.course.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { folderId: null } }),
@@ -469,7 +522,10 @@ describe('CourseService', () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.moveCourseToFolder('course-id-1', 'invalid', { newFolderId: 'f-1' }),
+        service.moveCourseToFolder('course-id-1', 'invalid', {
+          newFolderId: 'f-1',
+          classCode: 'CLS01',
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -478,7 +534,10 @@ describe('CourseService', () => {
       mockPrisma.course.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.moveCourseToFolder('nonexistent', mockTeacher.userId, { newFolderId: 'f-1' }),
+        service.moveCourseToFolder('nonexistent', mockTeacher.userId, {
+          newFolderId: 'f-1',
+          classCode: 'CLS01',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -488,14 +547,18 @@ describe('CourseService', () => {
   // ─────────────────────────────────────────────────────────────────────────────
 
   describe('createFolder()', () => {
-    const folderDto = { name: 'Chương 1', classCode: 'CLS01', color: '#FF0000' };
+    const folderDto = {
+      name: 'Chương 1',
+      classCode: 'CLS01',
+      color: '#FF0000',
+    };
 
     it('tạo folder thành công', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
       mockPrisma.folder.create.mockResolvedValue(mockFolder);
 
-      const result = await service.createFolder(mockTeacher.userId, folderDto as any);
+      const result = await service.createFolder(mockTeacher.userId, folderDto);
 
       expect(result).toEqual(mockFolder);
       expect(mockPrisma.folder.create).toHaveBeenCalledWith(
@@ -512,9 +575,9 @@ describe('CourseService', () => {
     it('throw ForbiddenException khi không phải teacher', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
-      await expect(service.createFolder('invalid', folderDto as any)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.createFolder('invalid', folderDto as any),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('throw NotFoundException khi classCode không tồn tại', async () => {
@@ -543,7 +606,11 @@ describe('CourseService', () => {
       mockPrisma.folder.findFirst.mockResolvedValue(mockFolder);
       mockPrisma.folder.update.mockResolvedValue(updatedFolder);
 
-      const result = await service.updateFolder('folder-id-1', mockTeacher.userId, updateDto as any);
+      const result = await service.updateFolder(
+        'folder-id-1',
+        mockTeacher.userId,
+        updateDto,
+      );
 
       expect(result.name).toBe('Chương 2 Updated');
       expect(mockPrisma.folder.update).toHaveBeenCalledWith(
@@ -564,10 +631,18 @@ describe('CourseService', () => {
       mockPrisma.folder.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.updateFolder('nonexistent', mockTeacher.userId, updateDto as any),
+        service.updateFolder(
+          'nonexistent',
+          mockTeacher.userId,
+          updateDto as any,
+        ),
       ).rejects.toThrow(NotFoundException);
       await expect(
-        service.updateFolder('nonexistent', mockTeacher.userId, updateDto as any),
+        service.updateFolder(
+          'nonexistent',
+          mockTeacher.userId,
+          updateDto as any,
+        ),
       ).rejects.toThrow('Không tìm thấy thư mục.');
     });
   });
@@ -591,7 +666,10 @@ describe('CourseService', () => {
         });
       });
 
-      const result = await service.deleteFolder('folder-id-1', mockTeacher.userId);
+      const result = await service.deleteFolder(
+        'folder-id-1',
+        mockTeacher.userId,
+      );
 
       expect(result.message).toContain('Chương 1');
       expect(result.message).toContain('Tất cả');
@@ -607,9 +685,9 @@ describe('CourseService', () => {
     it('throw ForbiddenException khi không phải teacher', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
-      await expect(service.deleteFolder('folder-id-1', 'invalid')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.deleteFolder('folder-id-1', 'invalid'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('throw NotFoundException khi folder không tồn tại', async () => {
@@ -635,7 +713,11 @@ describe('CourseService', () => {
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
       mockPrisma.folder.findMany.mockResolvedValue([mockFolder]);
 
-      const result = await service.getClassFolders('CLS01', mockTeacher.userId, 'teacher');
+      const result = await service.getClassFolders(
+        'CLS01',
+        mockTeacher.userId,
+        'teacher',
+      );
 
       expect(result).toEqual([mockFolder]);
       expect(mockPrisma.folder.findMany).toHaveBeenCalledWith(
@@ -648,7 +730,11 @@ describe('CourseService', () => {
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
       mockPrisma.folder.findMany.mockResolvedValue([mockFolder]);
 
-      const result = await service.getClassFolders('CLS01', mockStudent.userId, 'student');
+      const result = await service.getClassFolders(
+        'CLS01',
+        mockStudent.userId,
+        'student',
+      );
 
       expect(result).toEqual([mockFolder]);
     });

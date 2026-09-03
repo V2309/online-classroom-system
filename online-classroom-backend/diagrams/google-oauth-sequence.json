@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Google OAuth 2.0 Authentication Sequence",
+    "output": "online-classroom-backend/diagrams/google-oauth-sequence.html",
+    "viewBox": [1080, 620],
+    "animation": "trace",
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "full-auth-flow",
+        "label": "Full OAuth 2.0 Flow",
+        "focus": ["user", "frontend", "google", "backend", "database"],
+        "note": "End-to-end authentication lifecycle from Google Sign-In to BFF session cookie issuance."
+      },
+      {
+        "id": "token-verification",
+        "label": "Token Verification & DB Sync",
+        "focus": ["frontend", "google", "backend", "database"],
+        "note": "Backend validates Google ID token cryptographic signature and resolves user identity in Neon Postgres."
+      },
+      {
+        "id": "session-management",
+        "label": "BFF Cookie & Session",
+        "focus": ["backend", "frontend", "user"],
+        "note": "Issues JWT access/refresh tokens and stores them in a secure HttpOnly session cookie on the Vercel domain."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "User",
+      "sublabel": "Browser Client"
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "brand": "vercel",
+      "label": "Next.js",
+      "sublabel": "Vercel Platform"
+    },
+    {
+      "id": "google",
+      "type": "security",
+      "label": "Google",
+      "sublabel": "Identity Services"
+    },
+    {
+      "id": "backend",
+      "type": "backend",
+      "brand": "docker",
+      "label": "NestJS",
+      "sublabel": "Azure Container"
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "brand": "neon",
+      "label": "Neon",
+      "sublabel": "Serverless Postgres"
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 270,
+      "label": "1. Client OAuth Consent"
+    },
+    {
+      "from": 280,
+      "to": 440,
+      "label": "2. Token Verification & DB Upsert"
+    },
+    {
+      "from": 450,
+      "to": 515,
+      "label": "3. JWT Issuance & BFF Session"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-click-login",
+      "from": "user",
+      "to": "frontend",
+      "y": 160,
+      "label": "Click \"Sign in with Google\"",
+      "variant": "default"
+    },
+    {
+      "id": "msg-open-popup",
+      "from": "frontend",
+      "to": "google",
+      "y": 192,
+      "label": "Trigger Google OAuth Popup",
+      "variant": "emphasis"
+    },
+    {
+      "id": "msg-consent",
+      "from": "google",
+      "to": "user",
+      "y": 224,
+      "label": "Select Account & Grant Consent",
+      "variant": "default"
+    },
+    {
+      "id": "msg-return-id-token",
+      "from": "google",
+      "to": "frontend",
+      "y": 256,
+      "label": "Return Google ID Token (Credential)",
+      "variant": "return"
+    },
+    {
+      "id": "msg-post-google",
+      "from": "frontend",
+      "to": "backend",
+      "y": 295,
+      "label": "POST /api/auth/google (idToken)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "msg-verify-google",
+      "from": "backend",
+      "to": "google",
+      "y": 328,
+      "label": "Verify token signature (Google Auth Library)",
+      "variant": "security"
+    },
+    {
+      "id": "msg-google-payload",
+      "from": "google",
+      "to": "backend",
+      "y": 360,
+      "label": "Valid Token Payload (email, name, sub)",
+      "variant": "return"
+    },
+    {
+      "id": "msg-query-db",
+      "from": "backend",
+      "to": "database",
+      "y": 392,
+      "label": "Find/Upsert User & Role Profile (Prisma)",
+      "variant": "default"
+    },
+    {
+      "id": "msg-db-user",
+      "from": "database",
+      "to": "backend",
+      "y": 424,
+      "label": "User Record (Student / Teacher)",
+      "variant": "return"
+    },
+    {
+      "id": "msg-return-jwt",
+      "from": "backend",
+      "to": "frontend",
+      "y": 462,
+      "label": "200 OK: { user, accessToken, refreshToken }",
+      "variant": "return"
+    },
+    {
+      "id": "msg-set-cookie-redirect",
+      "from": "frontend",
+      "to": "user",
+      "y": 498,
+      "label": "Set HttpOnly Session Cookie & Redirect to Dashboard",
+      "variant": "security"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "frontend",
+      "from": 160,
+      "to": 505,
+      "type": "frontend"
+    },
+    {
+      "participant": "google",
+      "from": 192,
+      "to": 260,
+      "type": "security"
+    },
+    {
+      "participant": "backend",
+      "from": 295,
+      "to": 468,
+      "type": "backend"
+    },
+    {
+      "participant": "google",
+      "from": 328,
+      "to": 365,
+      "type": "security"
+    },
+    {
+      "participant": "database",
+      "from": 392,
+      "to": 430,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Client OAuth Flow",
+      "items": [
+        "Google Identity Services popup prevents full-page redirect",
+        "Client receives cryptographically signed ID Token from Google"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Backend Verification",
+      "items": [
+        "NestJS verifies token signature with Google Auth Library",
+        "Resolves or creates student/teacher role profile in Neon DB"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "BFF Cookie Security",
+      "items": [
+        "Issues JWT accessToken (7d) & refreshToken (30d)",
+        "Stored in HttpOnly Secure SameSite=Lax cookie to mitigate XSS"
+      ]
+    }
+  ]
+}

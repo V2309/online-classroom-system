@@ -7,6 +7,7 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../lib/database/prisma.service';
 import { ClassService } from './class.service';
+import { CreateClassDto } from './dto/class.dto';
 
 // ─── Mock data ───────────────────────────────────────────────────────────────
 
@@ -18,7 +19,7 @@ const mockClass = {
   name: 'Toán 10A1',
   class_code: 'ABC12',
   capacity: 40,
-  gradeId: 'grade-1',
+  gradeId: 1,
   supervisorId: mockTeacher.id,
   deleted: false,
   deletedAt: null,
@@ -73,7 +74,11 @@ describe('ClassService', () => {
   // ─────────────────────────────────────────────────────────────────────────────
 
   describe('createClass()', () => {
-    const dto = { name: 'Toán 10A1', capacity: 40, gradeId: 'grade-1', img: null };
+    const dto: CreateClassDto = {
+      name: 'Toán 10A1',
+      capacity: 40,
+      gradeId: 1,
+    };
 
     it('tạo lớp thành công khi teacher tồn tại', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
@@ -118,14 +123,18 @@ describe('ClassService', () => {
 
       expect(result).toEqual(mockClass);
       expect(mockPrisma.class.findUnique).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { class_code: 'ABC12', deleted: false } }),
+        expect.objectContaining({
+          where: { class_code: 'ABC12', deleted: false },
+        }),
       );
     });
 
     it('throw NotFoundException khi không tìm thấy lớp', async () => {
       mockPrisma.class.findUnique.mockResolvedValue(null);
 
-      await expect(service.getClassByCode('XXXXX')).rejects.toThrow(NotFoundException);
+      await expect(service.getClassByCode('XXXXX')).rejects.toThrow(
+        NotFoundException,
+      );
       await expect(service.getClassByCode('XXXXX')).rejects.toThrow(
         'Lớp học không tồn tại.',
       );
@@ -142,7 +151,10 @@ describe('ClassService', () => {
     it('cập nhật lớp thành công khi teacher là chủ lớp', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findUnique.mockResolvedValue(mockClass);
-      mockPrisma.class.update.mockResolvedValue({ ...mockClass, name: 'Toán 10A1 Updated' });
+      mockPrisma.class.update.mockResolvedValue({
+        ...mockClass,
+        name: 'Toán 10A1 Updated',
+      });
 
       const result = await service.updateClass(1, mockTeacher.userId, dto);
 
@@ -161,9 +173,9 @@ describe('ClassService', () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findUnique.mockResolvedValue(null);
 
-      await expect(service.updateClass(999, mockTeacher.userId, dto)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.updateClass(999, mockTeacher.userId, dto),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throw ForbiddenException khi teacher không phải chủ lớp', async () => {
@@ -181,11 +193,14 @@ describe('ClassService', () => {
 
     it('throw NotFoundException khi lớp đã bị xóa (deleted = true)', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
-      mockPrisma.class.findUnique.mockResolvedValue({ ...mockClass, deleted: true });
+      mockPrisma.class.findUnique.mockResolvedValue({
+        ...mockClass,
+        deleted: true,
+      });
 
-      await expect(service.updateClass(1, mockTeacher.userId, dto)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.updateClass(1, mockTeacher.userId, dto),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -197,7 +212,10 @@ describe('ClassService', () => {
     it('soft delete lớp thành công (deleted = true)', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findUnique.mockResolvedValue(mockClass);
-      mockPrisma.class.update.mockResolvedValue({ ...mockClass, deleted: true });
+      mockPrisma.class.update.mockResolvedValue({
+        ...mockClass,
+        deleted: true,
+      });
 
       const result = await service.deleteClass(1, mockTeacher.userId);
 
@@ -213,7 +231,9 @@ describe('ClassService', () => {
     it('throw ForbiddenException khi không phải teacher', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
-      await expect(service.deleteClass(1, 'invalid')).rejects.toThrow(ForbiddenException);
+      await expect(service.deleteClass(1, 'invalid')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('throw ForbiddenException khi teacher không phải chủ lớp', async () => {
@@ -239,7 +259,10 @@ describe('ClassService', () => {
       const deletedClass = { ...mockClass, deleted: true };
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findUnique.mockResolvedValue(deletedClass);
-      mockPrisma.class.update.mockResolvedValue({ ...deletedClass, deleted: false });
+      mockPrisma.class.update.mockResolvedValue({
+        ...deletedClass,
+        deleted: false,
+      });
 
       const result = await service.restoreClass(1, mockTeacher.userId);
 
@@ -254,16 +277,18 @@ describe('ClassService', () => {
     it('throw ForbiddenException khi không phải teacher', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(null);
 
-      await expect(service.restoreClass(1, 'invalid')).rejects.toThrow(ForbiddenException);
+      await expect(service.restoreClass(1, 'invalid')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('throw NotFoundException khi lớp không tồn tại', async () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.class.findUnique.mockResolvedValue(null);
 
-      await expect(service.restoreClass(999, mockTeacher.userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.restoreClass(999, mockTeacher.userId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throw ForbiddenException khi teacher không phải chủ lớp', async () => {
@@ -304,19 +329,21 @@ describe('ClassService', () => {
     it('throw NotFoundException khi student không tồn tại', async () => {
       mockPrisma.student.findUnique.mockResolvedValue(null);
 
-      await expect(service.joinClass('ABC12', 'invalid')).rejects.toThrow(NotFoundException);
+      await expect(service.joinClass('ABC12', 'invalid')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throw NotFoundException khi mã lớp không hợp lệ', async () => {
       mockPrisma.student.findUnique.mockResolvedValue(mockStudent);
       mockPrisma.class.findUnique.mockResolvedValue(null);
 
-      await expect(service.joinClass('XXXXX', mockStudent.userId)).rejects.toThrow(
-        NotFoundException,
-      );
-      await expect(service.joinClass('XXXXX', mockStudent.userId)).rejects.toThrow(
-        'Mã lớp không hợp lệ hoặc lớp không tồn tại.',
-      );
+      await expect(
+        service.joinClass('XXXXX', mockStudent.userId),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.joinClass('XXXXX', mockStudent.userId),
+      ).rejects.toThrow('Mã lớp không hợp lệ hoặc lớp không tồn tại.');
     });
 
     it('throw ConflictException khi student đã là thành viên', async () => {
@@ -324,12 +351,12 @@ describe('ClassService', () => {
       mockPrisma.class.findUnique.mockResolvedValue(mockClass);
       mockPrisma.class.findFirst.mockResolvedValue(mockClass); // đã là thành viên
 
-      await expect(service.joinClass('ABC12', mockStudent.userId)).rejects.toThrow(
-        ConflictException,
-      );
-      await expect(service.joinClass('ABC12', mockStudent.userId)).rejects.toThrow(
-        'Bạn đã là thành viên của lớp này.',
-      );
+      await expect(
+        service.joinClass('ABC12', mockStudent.userId),
+      ).rejects.toThrow(ConflictException);
+      await expect(
+        service.joinClass('ABC12', mockStudent.userId),
+      ).rejects.toThrow('Bạn đã là thành viên của lớp này.');
     });
 
     it('throw BadRequestException khi lớp đã đầy', async () => {
@@ -338,26 +365,29 @@ describe('ClassService', () => {
       mockPrisma.class.findUnique.mockResolvedValue(fullClass);
       mockPrisma.class.findFirst.mockResolvedValue(null); // chưa là thành viên
 
-      await expect(service.joinClass('ABC12', mockStudent.userId)).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(service.joinClass('ABC12', mockStudent.userId)).rejects.toThrow(
-        'Lớp học đã đầy.',
-      );
+      await expect(
+        service.joinClass('ABC12', mockStudent.userId),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.joinClass('ABC12', mockStudent.userId),
+      ).rejects.toThrow('Lớp học đã đầy.');
     });
 
     it('throw ConflictException khi đã có PENDING request', async () => {
       mockPrisma.student.findUnique.mockResolvedValue(mockStudent);
       mockPrisma.class.findUnique.mockResolvedValue(mockClass);
       mockPrisma.class.findFirst.mockResolvedValue(null);
-      mockPrisma.classJoinRequest.findFirst.mockResolvedValue({ id: 1, status: 'PENDING' });
+      mockPrisma.classJoinRequest.findFirst.mockResolvedValue({
+        id: 1,
+        status: 'PENDING',
+      });
 
-      await expect(service.joinClass('ABC12', mockStudent.userId)).rejects.toThrow(
-        ConflictException,
-      );
-      await expect(service.joinClass('ABC12', mockStudent.userId)).rejects.toThrow(
-        'Bạn đã gửi yêu cầu, đang chờ giáo viên duyệt.',
-      );
+      await expect(
+        service.joinClass('ABC12', mockStudent.userId),
+      ).rejects.toThrow(ConflictException);
+      await expect(
+        service.joinClass('ABC12', mockStudent.userId),
+      ).rejects.toThrow('Bạn đã gửi yêu cầu, đang chờ giáo viên duyệt.');
     });
   });
 
@@ -385,7 +415,9 @@ describe('ClassService', () => {
     it('throw NotFoundException khi student không tồn tại', async () => {
       mockPrisma.student.findUnique.mockResolvedValue(null);
 
-      await expect(service.leaveClass(1, 'invalid')).rejects.toThrow(NotFoundException);
+      await expect(service.leaveClass(1, 'invalid')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throw NotFoundException khi lớp không tồn tại', async () => {
@@ -466,9 +498,9 @@ describe('ClassService', () => {
       mockPrisma.teacher.findUnique.mockResolvedValue(mockTeacher);
       mockPrisma.classJoinRequest.findUnique.mockResolvedValue(null);
 
-      await expect(service.approveJoinRequest(999, mockTeacher.userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.approveJoinRequest(999, mockTeacher.userId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throw NotFoundException khi request không phải PENDING', async () => {
@@ -478,12 +510,12 @@ describe('ClassService', () => {
         status: 'APPROVED',
       });
 
-      await expect(service.approveJoinRequest(1, mockTeacher.userId)).rejects.toThrow(
-        NotFoundException,
-      );
-      await expect(service.approveJoinRequest(1, mockTeacher.userId)).rejects.toThrow(
-        'Yêu cầu không tồn tại hoặc đã xử lý.',
-      );
+      await expect(
+        service.approveJoinRequest(1, mockTeacher.userId),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.approveJoinRequest(1, mockTeacher.userId),
+      ).rejects.toThrow('Yêu cầu không tồn tại hoặc đã xử lý.');
     });
 
     it('throw ForbiddenException khi teacher không phải chủ lớp trong request', async () => {
@@ -505,12 +537,12 @@ describe('ClassService', () => {
         _count: { students: 5 }, // đầy
       });
 
-      await expect(service.approveJoinRequest(1, mockTeacher.userId)).rejects.toThrow(
-        BadRequestException,
-      );
-      await expect(service.approveJoinRequest(1, mockTeacher.userId)).rejects.toThrow(
-        'Lớp đã đầy, không thể thêm học sinh.',
-      );
+      await expect(
+        service.approveJoinRequest(1, mockTeacher.userId),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.approveJoinRequest(1, mockTeacher.userId),
+      ).rejects.toThrow('Lớp đã đầy, không thể thêm học sinh.');
     });
   });
 
@@ -558,9 +590,9 @@ describe('ClassService', () => {
         status: 'REJECTED',
       });
 
-      await expect(service.rejectJoinRequest(1, mockTeacher.userId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.rejectJoinRequest(1, mockTeacher.userId),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -601,7 +633,11 @@ describe('ClassService', () => {
       mockPrisma.class.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.removeStudentFromClass('XXXXX', mockStudent.id, mockTeacher.userId),
+        service.removeStudentFromClass(
+          'XXXXX',
+          mockStudent.id,
+          mockTeacher.userId,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -654,7 +690,10 @@ describe('ClassService', () => {
 
   describe('getGrades()', () => {
     it('trả về danh sách khối lớp', async () => {
-      const grades = [{ id: 'g1', level: '10' }, { id: 'g2', level: '11' }];
+      const grades = [
+        { id: 'g1', level: '10' },
+        { id: 'g2', level: '11' },
+      ];
       mockPrisma.grade.findMany.mockResolvedValue(grades);
 
       const result = await service.getGrades();

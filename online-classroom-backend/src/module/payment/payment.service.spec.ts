@@ -1,7 +1,4 @@
-import {
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -147,7 +144,10 @@ describe('PaymentService', () => {
       mockMoMoGateway.createPaymentUrl.mockResolvedValue(mockGatewayResult);
       mockPrisma.payment.create.mockResolvedValue(momoPayment);
 
-      const result = await service.createSubscriptionPayment(mockUser.id, momoDto);
+      const result = await service.createSubscriptionPayment(
+        mockUser.id,
+        momoDto,
+      );
 
       expect(result.payUrl).toBe('https://zalopay.vn/pay?token=xxx');
       expect(mockMoMoGateway.createPaymentUrl).toHaveBeenCalled();
@@ -158,9 +158,15 @@ describe('PaymentService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.order.create.mockResolvedValue(mockOrder);
       mockVNPayGateway.createPaymentUrl.mockResolvedValue(mockGatewayResult);
-      mockPrisma.payment.create.mockResolvedValue({ ...mockPayment, provider: PaymentProvider.VNPAY });
+      mockPrisma.payment.create.mockResolvedValue({
+        ...mockPayment,
+        provider: PaymentProvider.VNPAY,
+      });
 
-      const result = await service.createSubscriptionPayment(mockUser.id, vnpayDto);
+      const result = await service.createSubscriptionPayment(
+        mockUser.id,
+        vnpayDto,
+      );
 
       expect(mockVNPayGateway.createPaymentUrl).toHaveBeenCalled();
     });
@@ -189,7 +195,11 @@ describe('PaymentService', () => {
         plan: PlanType.PREMIUM,
         billingCycle: BillingCycle.YEARLY,
       };
-      const premiumOrder = { ...mockOrder, plan: PlanType.PREMIUM, totalAmount: 20000 };
+      const premiumOrder = {
+        ...mockOrder,
+        plan: PlanType.PREMIUM,
+        totalAmount: 20000,
+      };
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
       mockPrisma.order.create.mockResolvedValue(premiumOrder);
       mockZaloPayGateway.createPaymentUrl.mockResolvedValue(mockGatewayResult);
@@ -231,7 +241,10 @@ describe('PaymentService', () => {
     it('throw BadRequestException khi plan hoặc billingCycle không hợp lệ', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(mockUser);
 
-      const invalidDto = { ...dto, billingCycle: 'INVALID_CYCLE' as BillingCycle };
+      const invalidDto = {
+        ...dto,
+        billingCycle: 'INVALID_CYCLE' as BillingCycle,
+      };
 
       await expect(
         service.createSubscriptionPayment(mockUser.id, invalidDto),
@@ -262,14 +275,14 @@ describe('PaymentService', () => {
         },
       };
       mockPrisma.payment.findFirst.mockResolvedValue(paymentWithOrder);
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
-        await cb({
+      mockPrisma.$transaction.mockImplementation((cb: any) =>
+        cb({
           payment: { update: jest.fn() },
           order: { update: jest.fn() },
           user: { update: jest.fn() },
           subscription: { upsert: jest.fn() },
-        });
-      });
+        }),
+      );
 
       const result = await service.handleZaloPayCallback({ data: 'mock_data' });
 
@@ -285,7 +298,9 @@ describe('PaymentService', () => {
         rawResponse: {},
       });
 
-      const result = await service.handleZaloPayCallback({ data: 'invalid_data' });
+      const result = await service.handleZaloPayCallback({
+        data: 'invalid_data',
+      });
 
       expect(result.return_code).toBe(-1);
       expect(result.return_message).toBe('Invalid MAC');
@@ -330,14 +345,14 @@ describe('PaymentService', () => {
         },
       };
       mockPrisma.payment.findFirst.mockResolvedValue(paymentWithOrder);
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
-        await cb({
+      mockPrisma.$transaction.mockImplementation((cb: any) =>
+        cb({
           payment: { update: jest.fn() },
           order: { update: jest.fn() },
           user: { update: jest.fn() },
           subscription: { upsert: jest.fn() },
-        });
-      });
+        }),
+      );
 
       const result = await service.handleMoMoCallback({ resultCode: 0 });
 
@@ -383,16 +398,18 @@ describe('PaymentService', () => {
         },
       };
       mockPrisma.payment.findFirst.mockResolvedValue(paymentWithOrder);
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
-        await cb({
+      mockPrisma.$transaction.mockImplementation((cb: any) =>
+        cb({
           payment: { update: jest.fn() },
           order: { update: jest.fn() },
           user: { update: jest.fn() },
           subscription: { upsert: jest.fn() },
-        });
-      });
+        }),
+      );
 
-      const result = await service.handleVNPayCallback({ vnp_ResponseCode: '00' });
+      const result = await service.handleVNPayCallback({
+        vnp_ResponseCode: '00',
+      });
 
       expect(result.RspCode).toBe('00');
       expect(result.Message).toBe('Confirm Success');
@@ -406,7 +423,9 @@ describe('PaymentService', () => {
         rawResponse: {},
       });
 
-      const result = await service.handleVNPayCallback({ vnp_ResponseCode: '01' });
+      const result = await service.handleVNPayCallback({
+        vnp_ResponseCode: '01',
+      });
 
       expect(result.RspCode).toBe('97');
       expect(result.Message).toBe('Invalid Checksum');
@@ -436,7 +455,11 @@ describe('PaymentService', () => {
     });
 
     it('trả về payment = null khi đơn hàng chưa có payment', async () => {
-      const orderWithoutPayment = { ...mockOrder, payments: [], user: mockUser };
+      const orderWithoutPayment = {
+        ...mockOrder,
+        payments: [],
+        user: mockUser,
+      };
       mockPrisma.order.findFirst.mockResolvedValue(orderWithoutPayment);
 
       const result = await service.getOrderStatus(mockOrder.id, mockUser.id);

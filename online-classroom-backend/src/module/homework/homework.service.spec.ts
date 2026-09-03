@@ -132,7 +132,7 @@ describe('HomeworkService', () => {
       mockPrisma.class.findFirst.mockResolvedValue(mockClass);
 
       const createdHw = { ...mockHomework };
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           homework: { create: jest.fn().mockResolvedValue(createdHw) },
           question: { createMany: jest.fn() },
@@ -144,7 +144,7 @@ describe('HomeworkService', () => {
         ...baseDto,
         type: 'original',
         questions: [],
-      } as any);
+      });
 
       expect(result.title).toBe('Bài kiểm tra Toán');
     });
@@ -157,7 +157,7 @@ describe('HomeworkService', () => {
       const mockCreate = jest.fn().mockResolvedValue(extractedHw);
       const mockCreateMany = jest.fn();
 
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         return cb({
           homework: { create: mockCreate },
           question: { createMany: mockCreateMany },
@@ -183,7 +183,7 @@ describe('HomeworkService', () => {
             point: 5,
           },
         ],
-      } as any);
+      });
 
       expect(mockCreateMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -203,7 +203,7 @@ describe('HomeworkService', () => {
       const mockCreate = jest.fn().mockResolvedValue(essayHw);
       const mockCreateMany = jest.fn();
 
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         return cb({
           homework: { create: mockCreate },
           question: { createMany: mockCreateMany },
@@ -221,7 +221,7 @@ describe('HomeworkService', () => {
             point: 10,
           },
         ],
-      } as any);
+      });
 
       expect(mockCreateMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -249,7 +249,9 @@ describe('HomeworkService', () => {
       ).rejects.toThrow(BadRequestException);
       await expect(
         service.createHomework(mockTeacher.userId, baseDto as any),
-      ).rejects.toThrow('Lớp học không tồn tại hoặc bạn không có quyền quản lý.');
+      ).rejects.toThrow(
+        'Lớp học không tồn tại hoặc bạn không có quyền quản lý.',
+      );
     });
   });
 
@@ -261,7 +263,11 @@ describe('HomeworkService', () => {
     it('trả về bài tập theo id', async () => {
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
 
-      const result = await service.getHomeworkById(1, mockTeacher.userId, 'teacher');
+      const result = await service.getHomeworkById(
+        1,
+        mockTeacher.userId,
+        'teacher',
+      );
 
       expect(result).toEqual(mockHomework);
       expect(mockPrisma.homework.findUnique).toHaveBeenCalledWith(
@@ -295,7 +301,9 @@ describe('HomeworkService', () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toBe('Đã xóa bài tập thành công.');
-      expect(mockPrisma.homework.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(mockPrisma.homework.delete).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
     });
 
     it('throw ForbiddenException khi không phải teacher', async () => {
@@ -320,12 +328,12 @@ describe('HomeworkService', () => {
       mockPrisma.teacher.findFirst.mockResolvedValue(otherTeacher);
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
 
-      await expect(
-        service.deleteHomework(1, 'other-user'),
-      ).rejects.toThrow(ForbiddenException);
-      await expect(
-        service.deleteHomework(1, 'other-user'),
-      ).rejects.toThrow('Bạn không có quyền xóa bài tập này.');
+      await expect(service.deleteHomework(1, 'other-user')).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(service.deleteHomework(1, 'other-user')).rejects.toThrow(
+        'Bạn không có quyền xóa bài tập này.',
+      );
     });
   });
 
@@ -337,7 +345,11 @@ describe('HomeworkService', () => {
     const settingsDto = { title: 'Bài kiểm tra Updated', duration: 60 };
 
     it('cập nhật cấu hình bài tập thành công', async () => {
-      const updatedHw = { ...mockHomework, title: 'Bài kiểm tra Updated', duration: 60 };
+      const updatedHw = {
+        ...mockHomework,
+        title: 'Bài kiểm tra Updated',
+        duration: 60,
+      };
       mockPrisma.teacher.findFirst.mockResolvedValue(mockTeacher);
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
       mockPrisma.homework.update.mockResolvedValue(updatedHw);
@@ -345,7 +357,7 @@ describe('HomeworkService', () => {
       const result = await service.updateHomeworkSettings(
         1,
         mockTeacher.userId,
-        settingsDto as any,
+        settingsDto,
       );
 
       expect(result.title).toBe('Bài kiểm tra Updated');
@@ -365,7 +377,11 @@ describe('HomeworkService', () => {
       mockPrisma.homework.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.updateHomeworkSettings(999, mockTeacher.userId, settingsDto as any),
+        service.updateHomeworkSettings(
+          999,
+          mockTeacher.userId,
+          settingsDto as any,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -390,14 +406,23 @@ describe('HomeworkService', () => {
   describe('updateHomeworkQuestions()', () => {
     const questionsDto = {
       questions: [
-        { id: 1, questionNumber: 1, content: 'Câu 1 Updated', answer: 'B', point: 5 },
+        {
+          id: 1,
+          questionNumber: 1,
+          content: 'Câu 1 Updated',
+          answer: 'B',
+          point: 5,
+        },
       ],
     };
 
     it('cập nhật câu hỏi thành công', async () => {
       mockPrisma.teacher.findFirst.mockResolvedValue(mockTeacher);
-      mockPrisma.homework.findUnique.mockResolvedValue({ ...mockHomework, questions: [] });
-      mockPrisma.$transaction.mockImplementation(async (cb: any) => {
+      mockPrisma.homework.findUnique.mockResolvedValue({
+        ...mockHomework,
+        questions: [],
+      });
+      mockPrisma.$transaction.mockImplementation((cb: any) => {
         const tx = {
           question: { update: jest.fn() },
           homework: { update: jest.fn() },
@@ -408,7 +433,7 @@ describe('HomeworkService', () => {
       const result = await service.updateHomeworkQuestions(
         1,
         mockTeacher.userId,
-        questionsDto as any,
+        questionsDto,
       );
 
       expect(result.success).toBe(true);
@@ -427,7 +452,11 @@ describe('HomeworkService', () => {
       mockPrisma.homework.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.updateHomeworkQuestions(999, mockTeacher.userId, questionsDto as any),
+        service.updateHomeworkQuestions(
+          999,
+          mockTeacher.userId,
+          questionsDto as any,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -441,11 +470,14 @@ describe('HomeworkService', () => {
       mockPrisma.student.findFirst.mockResolvedValue(mockStudent);
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
       mockPrisma.homeworkSubmission.findFirst.mockResolvedValue(null); // chưa có draft
-      mockPrisma.homeworkSubmission.create.mockResolvedValue({ ...mockSubmission, id: 99 });
+      mockPrisma.homeworkSubmission.create.mockResolvedValue({
+        ...mockSubmission,
+        id: 99,
+      });
 
       const result = await service.saveDraft(1, mockStudent.userId, {
         answers: { 1: 'A' },
-      } as any);
+      });
 
       expect(result.submissionId).toBe(99);
       expect(mockPrisma.homeworkSubmission.create).toHaveBeenCalled();
@@ -455,12 +487,15 @@ describe('HomeworkService', () => {
       mockPrisma.student.findFirst.mockResolvedValue(mockStudent);
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
       mockPrisma.homeworkSubmission.findFirst.mockResolvedValue(mockSubmission); // đã có draft
-      mockPrisma.homeworkSubmission.update.mockResolvedValue({ ...mockSubmission, id: 10 });
+      mockPrisma.homeworkSubmission.update.mockResolvedValue({
+        ...mockSubmission,
+        id: 10,
+      });
 
       const result = await service.saveDraft(1, mockStudent.userId, {
         answers: { 1: 'A', 2: 'B' },
         isPartial: true,
-      } as any);
+      });
 
       expect(result.submissionId).toBe(10);
       expect(result.message).toBe('Đã lưu bản nháp');
@@ -493,9 +528,14 @@ describe('HomeworkService', () => {
     it('teacher làm thử → không lưu DB, trả về kết quả tức thì', async () => {
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
 
-      const result = await service.submitHomework(1, mockTeacher.userId, 'teacher', {
-        answers: { 1: 'A', 2: 'B' }, // cả 2 đúng
-      } as any);
+      const result = await service.submitHomework(
+        1,
+        mockTeacher.userId,
+        'teacher',
+        {
+          answers: { 1: 'A', 2: 'B' }, // cả 2 đúng
+        },
+      );
 
       expect(result.isTeacher).toBe(true);
       expect(result.message).toContain('không lưu vào hệ thống');
@@ -505,10 +545,15 @@ describe('HomeworkService', () => {
     it('teacher làm thử — tính đúng số điểm', async () => {
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
 
-      const result = await service.submitHomework(1, mockTeacher.userId, 'teacher', {
-        answers: { 1: 'A', 2: 'C' }, // câu 1 đúng (A), câu 2 sai (đáp án B)
-        role: 'teacher',
-      } as any);
+      const result = await service.submitHomework(
+        1,
+        mockTeacher.userId,
+        'teacher',
+        {
+          answers: { 1: 'A', 2: 'C' }, // câu 1 đúng (A), câu 2 sai (đáp án B)
+          role: 'teacher',
+        },
+      );
 
       expect(result.totalPoints).toBe(2.5); // chỉ câu 1 đúng
     });
@@ -523,9 +568,14 @@ describe('HomeworkService', () => {
         grade: 5,
       });
 
-      const result = await service.submitHomework(1, mockStudent.userId, 'student', {
-        answers: { 1: 'A', 2: 'B' }, // cả 2 đúng = 5 điểm
-      } as any);
+      const result = await service.submitHomework(
+        1,
+        mockStudent.userId,
+        'student',
+        {
+          answers: { 1: 'A', 2: 'B' }, // cả 2 đúng = 5 điểm
+        },
+      );
 
       expect(result.grade).toBe(5); // 2.5 + 2.5
       expect(result.message).toBe('Nộp bài thành công');
@@ -545,10 +595,14 @@ describe('HomeworkService', () => {
       mockPrisma.homeworkSubmission.count.mockResolvedValue(1); // đã nộp 1 lần (maxAttempts = 1)
 
       await expect(
-        service.submitHomework(1, mockStudent.userId, 'student', { answers: {} } as any),
+        service.submitHomework(1, mockStudent.userId, 'student', {
+          answers: {},
+        } as any),
       ).rejects.toThrow(BadRequestException);
       await expect(
-        service.submitHomework(1, mockStudent.userId, 'student', { answers: {} } as any),
+        service.submitHomework(1, mockStudent.userId, 'student', {
+          answers: {},
+        } as any),
       ).rejects.toThrow('Đã hết lượt làm bài.');
     });
 
@@ -563,12 +617,19 @@ describe('HomeworkService', () => {
         grade: null,
       });
 
-      const result = await service.submitHomework(1, mockStudent.userId, 'student', {
-        answers: { 1: 'Đây là câu trả lời của tôi' },
-      } as any);
+      const result = await service.submitHomework(
+        1,
+        mockStudent.userId,
+        'student',
+        {
+          answers: { 1: 'Đây là câu trả lời của tôi' },
+        },
+      );
 
       expect(result.grade).toBeNull();
-      expect(result.message).toBe('Nộp bài thành công. Chờ giáo viên chấm điểm.');
+      expect(result.message).toBe(
+        'Nộp bài thành công. Chờ giáo viên chấm điểm.',
+      );
     });
   });
 
@@ -586,14 +647,20 @@ describe('HomeworkService', () => {
     it('chấm điểm bài nộp thành công', async () => {
       mockPrisma.teacher.findFirst.mockResolvedValue(mockTeacher);
       mockPrisma.homework.findUnique.mockResolvedValue(mockHomework);
-      mockPrisma.homeworkSubmission.findUnique.mockResolvedValue(mockSubmission);
+      mockPrisma.homeworkSubmission.findUnique.mockResolvedValue(
+        mockSubmission,
+      );
       mockPrisma.homeworkSubmission.update.mockResolvedValue({
         ...mockSubmission,
         grade: 8.5,
         feedback: 'Làm tốt!',
       });
 
-      const result = await service.gradeSubmission(1, mockTeacher.userId, gradeDto as any);
+      const result = await service.gradeSubmission(
+        1,
+        mockTeacher.userId,
+        gradeDto,
+      );
 
       expect(result.message).toBe('Đã chấm điểm thành công');
       expect(result.submission.grade).toBe(8.5);
@@ -641,10 +708,16 @@ describe('HomeworkService', () => {
       mockPrisma.homeworkSubmission.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.gradeSubmission(1, mockTeacher.userId, { ...gradeDto, submissionId: 999 } as any),
+        service.gradeSubmission(1, mockTeacher.userId, {
+          ...gradeDto,
+          submissionId: 999,
+        } as any),
       ).rejects.toThrow(NotFoundException);
       await expect(
-        service.gradeSubmission(1, mockTeacher.userId, { ...gradeDto, submissionId: 999 } as any),
+        service.gradeSubmission(1, mockTeacher.userId, {
+          ...gradeDto,
+          submissionId: 999,
+        } as any),
       ).rejects.toThrow('Không tìm thấy bài làm của học sinh.');
     });
   });
@@ -664,7 +737,10 @@ describe('HomeworkService', () => {
         gradingMethod: 'HIGHEST_ATTEMPT',
         endTime: pastTime,
       });
-      mockPrisma.homeworkSubmission.findFirst.mockResolvedValue({ id: 5, grade: 9.5 });
+      mockPrisma.homeworkSubmission.findFirst.mockResolvedValue({
+        id: 5,
+        grade: 9.5,
+      });
 
       const result = await service.getSubmissionsCount(1, mockStudent.userId);
 

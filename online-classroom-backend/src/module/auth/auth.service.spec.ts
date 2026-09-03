@@ -22,7 +22,9 @@ jest.mock('bcryptjs', () => ({
 }));
 
 import * as bcryptjs from 'bcryptjs';
-const mockCompare = bcryptjs.compare as jest.MockedFunction<typeof bcryptjs.compare>;
+const mockCompare = bcryptjs.compare as jest.MockedFunction<
+  typeof bcryptjs.compare
+>;
 const mockHash = bcryptjs.hash as jest.MockedFunction<typeof bcryptjs.hash>;
 
 // ─── Mock data ───────────────────────────────────────────────────────────────
@@ -114,7 +116,7 @@ describe('AuthService', () => {
 
     it('đăng ký thành công với role student → trả về AuthResult có accessToken', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
-      mockPrismaService.$transaction.mockImplementation(async (cb: any) =>
+      mockPrismaService.$transaction.mockImplementation((cb: any) =>
         cb({
           user: { create: jest.fn().mockResolvedValue(mockUser) },
           student: { create: jest.fn().mockResolvedValue({}) },
@@ -135,7 +137,7 @@ describe('AuthService', () => {
       const mockTeacherCreate = jest.fn().mockResolvedValue({});
 
       mockPrismaService.user.findUnique.mockResolvedValue(null);
-      mockPrismaService.$transaction.mockImplementation(async (cb: any) =>
+      mockPrismaService.$transaction.mockImplementation((cb: any) =>
         cb({
           user: { create: jest.fn().mockResolvedValue(teacherUser) },
           student: { create: jest.fn() },
@@ -154,14 +156,20 @@ describe('AuthService', () => {
     it('throw ConflictException khi email đã tồn tại', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
-      await expect(service.signup(signupDto)).rejects.toThrow(ConflictException);
+      await expect(service.signup(signupDto)).rejects.toThrow(
+        ConflictException,
+      );
       await expect(service.signup(signupDto)).rejects.toThrow(
         'Email đã được sử dụng.',
       );
     });
 
     it('throw ConflictException khi số điện thoại đã tồn tại', async () => {
-      const phoneDto: SignupDto = { ...signupDto, email: undefined, phone: '0909090909' };
+      const phoneDto: SignupDto = {
+        ...signupDto,
+        email: undefined,
+        phone: '0909090909',
+      };
       // phone check → tồn tại
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
@@ -172,9 +180,15 @@ describe('AuthService', () => {
     });
 
     it('throw ConflictException khi không cung cấp email lẫn phone', async () => {
-      const noContactDto: SignupDto = { ...signupDto, email: undefined, phone: undefined };
+      const noContactDto: SignupDto = {
+        ...signupDto,
+        email: undefined,
+        phone: undefined,
+      };
 
-      await expect(service.signup(noContactDto)).rejects.toThrow(ConflictException);
+      await expect(service.signup(noContactDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -204,8 +218,12 @@ describe('AuthService', () => {
     it('throw UnauthorizedException khi user không tồn tại', async () => {
       mockPrismaService.user.findFirst.mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
-      await expect(service.login(loginDto)).rejects.toThrow('Tài khoản không tồn tại.');
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(service.login(loginDto)).rejects.toThrow(
+        'Tài khoản không tồn tại.',
+      );
     });
 
     it('throw ForbiddenException khi tài khoản bị khóa', async () => {
@@ -215,7 +233,9 @@ describe('AuthService', () => {
       });
 
       await expect(service.login(loginDto)).rejects.toThrow(ForbiddenException);
-      await expect(service.login(loginDto)).rejects.toThrow('Tài khoản đã bị khóa.');
+      await expect(service.login(loginDto)).rejects.toThrow(
+        'Tài khoản đã bị khóa.',
+      );
     });
 
     it('throw UnauthorizedException khi tài khoản Google (không có password)', async () => {
@@ -224,7 +244,9 @@ describe('AuthService', () => {
         password: null,
       });
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
       await expect(service.login(loginDto)).rejects.toThrow(
         'Tài khoản này đăng nhập bằng Google.',
       );
@@ -237,12 +259,19 @@ describe('AuthService', () => {
       });
       mockCompare.mockResolvedValue(false as never);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
-      await expect(service.login(loginDto)).rejects.toThrow('Mật khẩu không đúng.');
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(service.login(loginDto)).rejects.toThrow(
+        'Mật khẩu không đúng.',
+      );
     });
 
     it('đăng nhập bằng số điện thoại thành công', async () => {
-      const phoneLoginDto: LoginDto = { email: '0909090909', password: 'Password123' };
+      const phoneLoginDto: LoginDto = {
+        email: '0909090909',
+        password: 'Password123',
+      };
       const userWithPhone = {
         ...mockUser,
         email: null,
@@ -284,7 +313,9 @@ describe('AuthService', () => {
     });
 
     it('throw BadRequestException khi token là chuỗi rỗng', async () => {
-      await expect(service.verifyEmail('')).rejects.toThrow(BadRequestException);
+      await expect(service.verifyEmail('')).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(service.verifyEmail('')).rejects.toThrow(
         'Token xác thực không được để trống.',
       );
@@ -293,7 +324,9 @@ describe('AuthService', () => {
     it('throw BadRequestException khi token không tồn tại trong DB', async () => {
       mockPrismaService.verificationToken.findUnique.mockResolvedValue(null);
 
-      await expect(service.verifyEmail('nonexistent')).rejects.toThrow(BadRequestException);
+      await expect(service.verifyEmail('nonexistent')).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(service.verifyEmail('nonexistent')).rejects.toThrow(
         'Mã xác thực không hợp lệ hoặc đã được sử dụng.',
       );
@@ -308,9 +341,13 @@ describe('AuthService', () => {
         userId: mockUser.id,
         user: mockUser,
       });
-      mockPrismaService.verificationToken.deleteMany.mockResolvedValue({ count: 1 });
+      mockPrismaService.verificationToken.deleteMany.mockResolvedValue({
+        count: 1,
+      });
 
-      await expect(service.verifyEmail(validToken)).rejects.toThrow(BadRequestException);
+      await expect(service.verifyEmail(validToken)).rejects.toThrow(
+        BadRequestException,
+      );
       await expect(service.verifyEmail(validToken)).rejects.toThrow(
         'Mã xác thực đã hết hạn.',
       );
@@ -331,7 +368,9 @@ describe('AuthService', () => {
         email: 'test@example.com',
       };
       mockPrismaService.user.findUnique.mockResolvedValue(unverifiedUser);
-      mockPrismaService.verificationToken.deleteMany.mockResolvedValue({ count: 0 });
+      mockPrismaService.verificationToken.deleteMany.mockResolvedValue({
+        count: 0,
+      });
       mockPrismaService.verificationToken.create.mockResolvedValue({});
       mockMailService.sendVerificationEmail.mockResolvedValue(undefined);
 
@@ -396,7 +435,10 @@ describe('AuthService', () => {
       });
       mockCompare.mockResolvedValue(true as never);
 
-      const result = await service.refreshTokens(mockUser.id, 'raw_refresh_token');
+      const result = await service.refreshTokens(
+        mockUser.id,
+        'raw_refresh_token',
+      );
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
@@ -405,9 +447,9 @@ describe('AuthService', () => {
     it('throw ForbiddenException khi user không tồn tại', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.refreshTokens('nonexistent', 'token')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.refreshTokens('nonexistent', 'token'),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('throw ForbiddenException khi user bị banned', async () => {
@@ -440,12 +482,12 @@ describe('AuthService', () => {
       });
       mockCompare.mockResolvedValue(false as never);
 
-      await expect(service.refreshTokens(mockUser.id, 'wrong_token')).rejects.toThrow(
-        ForbiddenException,
-      );
-      await expect(service.refreshTokens(mockUser.id, 'wrong_token')).rejects.toThrow(
-        'Truy cập bị từ chối.',
-      );
+      await expect(
+        service.refreshTokens(mockUser.id, 'wrong_token'),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.refreshTokens(mockUser.id, 'wrong_token'),
+      ).rejects.toThrow('Truy cập bị từ chối.');
     });
   });
 

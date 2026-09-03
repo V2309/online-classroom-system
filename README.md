@@ -47,38 +47,12 @@
 
 ## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT (Browser)                     │
-│                   Next.js 14 (App Router)                   │
-└──────────────────────────┬──────────────────────────────────┘
-                           │  HTTP / WebSocket
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-  ┌───────────────┐ ┌────────────┐ ┌──────────────────┐
-  │  NestJS REST  │ │  Pusher    │ │   Stream.io       │
-  │  API (:8081)  │ │ (Realtime) │ │  (Video Call)     │
-  └───────┬───────┘ └────────────┘ └──────────────────┘
-          │
-    ┌─────┴──────┐
-    │            │
-    ▼            ▼
-┌──────────┐  ┌──────────────────┐
-│PostgreSQL│  │  FastAPI RAG API │
-│ (Prisma) │  │     (:8000)      │
-└──────────┘  │  LangChain+FAISS │
-              │  OpenAI / Gemini │
-              └──────────────────┘
-                      │
-               ┌──────┴──────┐
-               │             │
-               ▼             ▼
-          ┌────────┐   ┌──────────┐
-          │ImageKit│   │Cloudflare│
-          │(Images)│   │R2 (Files)│
-          └────────┘   └──────────┘
-```
+<div align="center">
+  <img src="docs/images/architecture.png" alt="Online Classroom System Architecture" width="100%" />
+</div>
+
+> 🌐 **Interactive Diagram**:[`online-classroom-backend/diagrams/online-classroom-architecture.html`](online-classroom-backend/diagrams/online-classroom-architecture.html).
+
 
 ---
 
@@ -644,30 +618,13 @@ The system supports both **Credentials Authentication** and **Google OAuth 2.0 I
 4. Next.js Middleware and SSR validate this cookie on protected routes.
 
 ### 2. Google OAuth 2.0 Integration
-```
-User clicks "Đăng nhập / Đăng ký bằng Google"
-        ↓
-Google Identity Popup (OAuth 2.0 Token / ID Token)
-        ↓
-Frontend receives Google Token & sends to POST /api/auth/google
-        ↓
-Backend verifies token signature with Google Auth Library
-        ↓
-┌────────────────────────────────────────────────────────┐
-│ User exists in Database (by googleId or email)?        │
-└────────────────────────────────────────────────────────┘
-       ↓ YES                                    ↓ NO
-       ↓                                        ↓
-Update avatar & emailVerified             Create User with selected role
-       ↓                                  (Student or Teacher) + Profile
-Issue JWT access & refresh tokens                ↓
-       ↓                                  Issue JWT access & refresh tokens
-       └──────────────────┬─────────────────────┘
-                          ↓
-Frontend stores 'session' cookie on Vercel domain (/api/auth/session)
-                          ↓
-Redirects user to role dashboard (/overview for student, /class for teacher)
-```
+
+<div align="center">
+  <img src="docs/images/google-oauth-sequence.png" alt="Google OAuth 2.0 Sequence Diagram" width="100%" />
+</div>
+
+> 🌐 **Interactive Sequence Diagram**:[`online-classroom-backend/diagrams/google-oauth-sequence.html`](online-classroom-backend/diagrams/google-oauth-sequence.html).
+
 
 **Roles & Permissions:**
 
