@@ -82,6 +82,22 @@
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1400px;
+
+  /* Conference & Stream Video dark theme tokens */
+  --color-dark-1: #1C1F2E;
+  --color-dark-2: #161925;
+  --color-dark-3: #252A41;
+  --color-dark-4: #1E2757;
+  --color-blue-1: #0E78F9;
+  --color-sky-1: #C9DDFF;
+  --color-sky-2: #ECF0FF;
+  --color-sky-3: #F5FCFF;
+  --color-orange-1: #FF742E;
+  --color-purple-1: #830EF9;
+  --color-yellow-1: #F9A90E;
+
+  /* Background Images */
+  --background-image-hero: url('/images/hero-background.png');
 }
 
 /* ─── Terra palette ───────────────────────────────────────────── */
@@ -298,7 +314,13 @@
   animation: accordion-up 0.2s ease-out;
 }
 
-/* Stream Video SDK glassmorphism */
+/* Stream Video SDK glassmorphism & overrides */
+.bg-hero {
+  background-image: url('/images/hero-background.png');
+  background-size: cover;
+  background-position: center;
+}
+
 .glassmorphism {
   background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(4px);
@@ -309,4 +331,35 @@
   background: rgba(18, 17, 17, 0.25);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.str-video {
+  background-color: var(--color-dark-2, #161925);
+}
+
+.str-video__call-stats {
+  max-width: 500px;
+  position: relative;
+}
+
+.str-video__speaker-layout__wrapper {
+  max-height: 700px;
+}
+
+.str-video__participant-details,
+.str-video__menu-container,
+.str-video__notification {
+  color: white;
+}
+
+.str-video__participant-list {
+  background-color: var(--color-dark-1, #1c1f2e);
+  padding: 10px;
+  border-radius: 10px;
+  color: white;
+  height: 100%;
+}
+
+.str-video__call-controls__button {
+  height: 40px;
 }

@@ -259,7 +259,9 @@ export class AuthService {
     }
 
     if (!payload || !payload.email) {
-      throw new BadRequestException('Không tìm thấy thông tin email từ tài khoản Google.');
+      throw new BadRequestException(
+        'Không tìm thấy thông tin email từ tài khoản Google.',
+      );
     }
 
     const { email, name, picture, sub: googleId } = payload;
@@ -267,10 +269,7 @@ export class AuthService {
     // 1. Kiểm tra xem User đã tồn tại trong DB theo googleId hoặc email
     let user = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          ...(googleId ? [{ googleId }] : []),
-          { email },
-        ],
+        OR: [...(googleId ? [{ googleId }] : []), { email }],
       },
       select: {
         id: true,

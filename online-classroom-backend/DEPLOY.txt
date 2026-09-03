@@ -1,0 +1,135 @@
+================================================================================
+           HƯỚNG DẪN CHI TIẾT CÁC BƯỚC DEPLOY ONLINE CLASSROOM SYSTEM
+================================================================================
+Kiến trúc triển khai:
+- Backend: NestJS -> Docker Container -> Azure Container Registry (ACR) -> Azure App Service (Linux Container)
+- CI/CD Backend: GitHub Actions tự động build Docker image và trigger deploy khi push vào nhánh `main`
+- Frontend: Next.js -> Vercel (Auto Deploy từ Git repo)
+- Database: Prisma Postgres Cloud / Remote DB
+================================================================================
+
+--------------------------------------------------------------------------------
+PHẦN 1: CHUẨN BỊ TÀI NGUYÊN TRÊN AZURE
+--------------------------------------------------------------------------------
+1. Tạo Resource Group:
+   - Tên: docus_backend
+   - Region: Japan East (hoặc khu vực bạn chọn)
+
+2. Tạo Azure Container Registry (ACR):
+   - Tên ACR: onlineclassroomacr
+   - Login Server: onlineclassroomacr.azurecr.io
+   - SKU: Basic
+   - Bật Admin User: Vào ACR -> Access Keys -> Bật "Admin user" -> Lấy Username & Password.
+
+3. Tạo Azure App Service:
+   - Tên Web App: docusbackend
+   - Publish: Docker Container
+   - Operating System: Linux
+   - Region: Japan East
+   - App Service Plan: B1 hoặc F1 (Free/Basic)
+   - Domain mặc định: https://docusbackend-hcgegde0aaanafat.japaneast-01.azurewebsites.net
+
+--------------------------------------------------------------------------------
+PHẦN 2: TẠO SERVICE PRINCIPAL (CẤP QUYỀN CHO GITHUB ACTIONS)
+--------------------------------------------------------------------------------
+1. Mở Azure Cloud Shell (Bash) và chạy lệnh:
+
+   az ad sp create-for-rbac \
+     --name "github-actions-deploy" \
+     --role contributor \
+     --scopes /subscriptions/$(az account show --query id -o tsv)/resourceGroups/docus_backend \
+     --json-auth
+
+2. Lưu lại chuỗi JSON kết quả trả về (dùng cho GitHub Secret AZURE_CREDENTIALS).
+
+--------------------------------------------------------------------------------
+PHẦN 3: CẤU HÌNH GITHUB SECRETS & VARIABLES
+--------------------------------------------------------------------------------
+Truy cập GitHub Repo -> Settings -> Secrets and variables -> Actions -> Bấm "New repository secret":
+
+1. AZURE_CREDENTIALS: Paste toàn bộ đoạn JSON từ bước tạo Service Principal ở trên.
+2. AZURE_WEBAPP_NAME: docusbackend
+3. ACR_LOGIN_SERVER: onlineclassroomacr.azurecr.io
+4. ACR_USERNAME: onlineclassroomacr
+5. ACR_PASSWORD: <Password lấy từ ACR Access Keys>
+
+--------------------------------------------------------------------------------
+PHẦN 4: DOCKERFILE & GITHUB ACTIONS WORKFLOW
+--------------------------------------------------------------------------------
+1. Dockerfile Backend (`online-classroom-backend/Dockerfile`):
+   - Multi-stage build với Node.js Alpine
+   - Chạy `npx prisma generate` trong quá trình build
+   - Expose port 8080
+   - Khởi động ứng dụng bằng `node dist/src/main`
+
+2. Workflow File (`.github/workflows/deploy-backend.yml`):
+   - Trigger: Push vào nhánh `main` với các file thay đổi trong thư mục `online-classroom-backend/**`
+   - Các bước:
+     a. Checkout repository
+     b. Log in vào Azure & ACR
+     c. Build & Push Docker image: `onlineclassroomacr.azurecr.io/online-classroom-backend:latest`
+     d. Deploy image lên Azure App Service qua action `azure/webapps-deploy@v3`
+
+--------------------------------------------------------------------------------
+PHẦN 5: CẤU HÌNH REGISTRY VÀ BIẾN MÔI TRƯỜNG (.ENV) TRÊN AZURE APP SERVICE
+--------------------------------------------------------------------------------
+1. Cấu hình quyền kéo Image cho App Service:
+   Chạy trong Azure Cloud Shell:
+   az webapp config container set \
+     --name docusbackend \
+     --resource-group docus_backend \
+     --docker-registry-server-url https://onlineclassroomacr.azurecr.io \
+     --docker-registry-server-user onlineclassroomacr \
+     --docker-registry-server-password "<ACR_PASSWORD>" \
+     --docker-custom-image-name onlineclassroomacr.azurecr.io/online-classroom-backend:latest
+
+2. Cấu hình Biến môi trường (Environment Variables):
+   - Vào Azure Portal -> Web App `docusbackend` -> Settings -> Environment variables
+   - Bấm nút "Advanced edit"
+   - Paste toàn bộ danh sách cấu hình dạng JSON (chuyển đổi từ file .env):
+     + PORT: 8080
+     + NODE_ENV: production
+     + DATABASE_URL: <Postgres Connection String>
+     + BACKEND_URL: https://docusbackend-hcgegde0aaanafat.japaneast-01.azurewebsites.net
+     + FRONTEND_URL: https://docusonline.vercel.app
+     + JWT_SECRET_KEY, IMAGEKIT_*, RESEND_*, PUSHER_*, R2_*, STREAM_*, PAYMENT KEYS...
+   - Bấm OK -> Apply -> Save để App Service khởi động lại.
+
+--------------------------------------------------------------------------------
+PHẦN 6: DEPLOY FRONTEND LÊN VERCEL
+--------------------------------------------------------------------------------
+1. Đăng nhập https://vercel.com -> Add New Project -> Import Git repository `online-classroom-system`.
+2. Thiết lập dự án trên Vercel:
+   - Framework Preset: Next.js
+   - Root Directory: `online-classroom-ui` (Quan trọng!)
+3. Thêm Environment Variables trên Vercel:
+   - NEXT_PUBLIC_API_URL: https://docusbackend-hcgegde0aaanafat.japaneast-01.azurewebsites.net/api
+   - NEXT_PUBLIC_BASE_URL: https://docusonline.vercel.app
+   - JWT_SECRET_KEY: <Key trùng khớp với backend>
+   - NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: <Endpoint ImageKit>
+   - NEXT_PUBLIC_STREAM_API_KEY: <Stream Key>
+   - NEXT_PUBLIC_PUSHER_KEY, NEXT_PUBLIC_PUSHER_CLUSTER...
+4. Bấm "Deploy".
+
+--------------------------------------------------------------------------------
+PHẦN 7: CÁC FIX QUAN TRỌNG ĐÃ THỰC HIỆN TRONG DỰ ÁN
+--------------------------------------------------------------------------------
+1. Fix Tự động sinh Prisma Client:
+   - Thêm `"postinstall": "prisma generate"` vào `package.json` của backend để không bị thiếu Prisma Client khi pull code hoặc build.
+
+2. Fix CORS ở Backend (`src/main.ts`):
+   - Hỗ trợ nhiều origin: cả `http://localhost:3000`, `http://localhost:3001` và `process.env.FRONTEND_URL` để vừa chạy được local vừa chạy được production.
+
+--------------------------------------------------------------------------------
+PHẦN 8: QUY TRÌNH DEPLOY HẰNG NGÀY (CI/CD)
+--------------------------------------------------------------------------------
+Khi có cập nhật tính năng mới:
+1. Code và kiểm tra ở nhánh `develop` hoặc feature branch.
+2. Merge code vào nhánh `main` và push:
+   git checkout main
+   git merge develop
+   git push origin main
+3. Hệ thống sẽ tự động:
+   - GitHub Actions tự build Docker backend và đẩy lên Azure App Service.
+   - Vercel tự build và cập nhật giao diện Frontend.
+================================================================================

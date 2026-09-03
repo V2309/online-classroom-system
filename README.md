@@ -47,38 +47,12 @@
 
 ## 🏗️ System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT (Browser)                     │
-│                   Next.js 14 (App Router)                   │
-└──────────────────────────┬──────────────────────────────────┘
-                           │  HTTP / WebSocket
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-  ┌───────────────┐ ┌────────────┐ ┌──────────────────┐
-  │  NestJS REST  │ │  Pusher    │ │   Stream.io       │
-  │  API (:8081)  │ │ (Realtime) │ │  (Video Call)     │
-  └───────┬───────┘ └────────────┘ └──────────────────┘
-          │
-    ┌─────┴──────┐
-    │            │
-    ▼            ▼
-┌──────────┐  ┌──────────────────┐
-│PostgreSQL│  │  FastAPI RAG API │
-│ (Prisma) │  │     (:8000)      │
-└──────────┘  │  LangChain+FAISS │
-              │  OpenAI / Gemini │
-              └──────────────────┘
-                      │
-               ┌──────┴──────┐
-               │             │
-               ▼             ▼
-          ┌────────┐   ┌──────────┐
-          │ImageKit│   │Cloudflare│
-          │(Images)│   │R2 (Files)│
-          └────────┘   └──────────┘
-```
+<div align="center">
+  <img src="docs/images/architecture.png" alt="Online Classroom System Architecture" width="100%" />
+</div>
+
+> 🌐 **Interactive Diagram**:[`online-classroom-backend/diagrams/online-classroom-architecture.html`](online-classroom-backend/diagrams/online-classroom-architecture.html).
+
 
 ---
 
@@ -117,21 +91,38 @@
 - Group chat within each class
 - Push notifications via Pusher
 
-### 🤖 AI Integration (RAG API)
-- **Smart Q&A**: Answer questions based on uploaded documents (RAG)
-- **Auto Quiz Generation**: AI generates multiple-choice questions from lesson content
-- **Podcast Generator**: Convert documents into audio podcasts
-- **Hybrid Search**: Combines vector search (FAISS) + BM25 keyword search
-- **Multi-LLM Support**: OpenAI GPT, Google Gemini, Tavily Web Search
+### 🤖 AI Integration & Smart Tools (RAG API)
+- **Document Q&A (RAG)**: Chat with uploaded PDF documents using LangChain + vector search
+- **Auto Quiz & Exam Extraction**: Automatically parse and extract multiple-choice questions from PDF / Word documents
+- **Exam Shuffling & Export**: Randomize questions and answer choices for anti-cheat and export directly to PDF / DOCX
+- **Essay Question Generator**: Generate customized essay questions, sample answers, and grading rubrics
+- **Podcast Generator**: Convert document content into conversational audio podcasts
+- **Multi-LLM Engine**: Support for OpenAI GPT, Google Gemini, and Tavily Web Search
+
+### ✍️ Exam & Homework Management
+- **Multiple Choice & Essay Exams**: Full support for both automatic grading (quizzes) and detailed manual grading with rubrics (essays)
+- **Homework Assignment**: Teachers assign homework with deadlines, attachments, and maximum scores
+- **Student Submissions**: Online submission with multiple file uploads and realtime countdown timer
+- **Gradebook & Export**: Detailed score analytics, student progress tracking, and Excel export
+
+### 🔐 Authentication & Presence
+- **Google OAuth 2.0 Single Sign-On**: One-click Google login/signup with role selection (Teacher / Student)
+- **JWT & Role-Based Access Control (RBAC)**: Secure authorization for Admin, Teacher, and Student roles
+- **Real-time User Presence**: Live online/offline status tracking across classrooms and chat channels via Pusher
+
+### 💬 Quick Contact & Live Support Widget
+- **Speed Dial Contact Bubble**: Floating quick-access widget on the landing page with smooth expand/collapse animations
+- **Multi-Channel Support**: Instant connection to Hotline call (`tel:`), Zalo chat (`zalo.me`), and Facebook Messenger (`m.me`)
+- **Integrated Mini Live Chat**: Interactive customer service drawer with FAQ suggestions and auto-responder
 
 ### 🔔 Notifications
 - Real-time notifications for all class activities
 - Transactional email notifications (Resend)
 
 ### 👑 Admin Dashboard
-- Manage all system users
-- View statistics and reports
-- Ban / unban user accounts
+- Manage all system users, classes, and roles
+- View system-wide statistics, revenue, and active analytics
+- Ban / unban user accounts and system configuration
 
 ---
 
@@ -627,30 +618,13 @@ The system supports both **Credentials Authentication** and **Google OAuth 2.0 I
 4. Next.js Middleware and SSR validate this cookie on protected routes.
 
 ### 2. Google OAuth 2.0 Integration
-```
-User clicks "Đăng nhập / Đăng ký bằng Google"
-        ↓
-Google Identity Popup (OAuth 2.0 Token / ID Token)
-        ↓
-Frontend receives Google Token & sends to POST /api/auth/google
-        ↓
-Backend verifies token signature with Google Auth Library
-        ↓
-┌────────────────────────────────────────────────────────┐
-│ User exists in Database (by googleId or email)?        │
-└────────────────────────────────────────────────────────┘
-       ↓ YES                                    ↓ NO
-       ↓                                        ↓
-Update avatar & emailVerified             Create User with selected role
-       ↓                                  (Student or Teacher) + Profile
-Issue JWT access & refresh tokens                ↓
-       ↓                                  Issue JWT access & refresh tokens
-       └──────────────────┬─────────────────────┘
-                          ↓
-Frontend stores 'session' cookie on Vercel domain (/api/auth/session)
-                          ↓
-Redirects user to role dashboard (/overview for student, /class for teacher)
-```
+
+<div align="center">
+  <img src="docs/images/google-oauth-sequence.png" alt="Google OAuth 2.0 Sequence Diagram" width="100%" />
+</div>
+
+> 🌐 **Interactive Sequence Diagram**:[`online-classroom-backend/diagrams/google-oauth-sequence.html`](online-classroom-backend/diagrams/google-oauth-sequence.html).
+
 
 **Roles & Permissions:**
 

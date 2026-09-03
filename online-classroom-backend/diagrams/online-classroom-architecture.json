@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Online Classroom System Architecture",
+    "output": "online-classroom-backend/diagrams/online-classroom-architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "full-flow",
+        "label": "Toàn bộ kiến trúc",
+        "focus": ["users", "frontend", "backend", "database", "rag_service", "stream_video", "pusher_realtime", "s3_storage", "auth_payment"],
+        "note": "Tổng quan toàn bộ hệ sinh thái từ Vercel Frontend, Azure Docker Backend, Neon Database đến các Cloud Services."
+      },
+      {
+        "id": "core-path",
+        "label": "Luồng xử lý chính",
+        "focus": ["users", "frontend", "backend", "database"],
+        "note": "Người dùng truy cập qua Vercel, gọi API đến NestJS trên Azure và lưu trữ dữ liệu vào Neon Serverless Postgres."
+      },
+      {
+        "id": "ai-multimedia",
+        "label": "AI & Realtime Services",
+        "focus": ["frontend", "backend", "rag_service", "stream_video", "pusher_realtime"],
+        "note": "Tích hợp AI RAG sinh quiz/podcast trên Azure, lớp học trực tuyến Stream.io và thông báo Pusher."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Học sinh & Giảng viên",
+      "sublabel": "Browser / Mobile",
+      "pos": [40, 180],
+      "size": [140, 60]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "brand": "vercel",
+      "label": "Frontend UI",
+      "sublabel": "Next.js 14 / Vercel",
+      "pos": [240, 180],
+      "size": [150, 60],
+      "tag": "Vercel Platform"
+    },
+    {
+      "id": "backend",
+      "type": "backend",
+      "brand": "docker",
+      "label": "Backend API",
+      "sublabel": "NestJS / Docker",
+      "pos": [470, 180],
+      "size": [150, 60],
+      "tag": "Azure Container"
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "brand": "neon",
+      "label": "Neon PostgreSQL",
+      "sublabel": "Serverless Postgres",
+      "pos": [700, 180],
+      "size": [150, 60],
+      "tag": "Neon DB / Prisma"
+    },
+    {
+      "id": "stream_video",
+      "type": "cloud",
+      "label": "Stream.io Video",
+      "sublabel": "WebRTC Video Call",
+      "pos": [240, 50],
+      "size": [150, 60],
+      "tag": "Live Class"
+    },
+    {
+      "id": "rag_service",
+      "type": "backend",
+      "brand": "python",
+      "label": "RAG AI Service",
+      "sublabel": "FastAPI / Docker",
+      "pos": [470, 50],
+      "size": [150, 60],
+      "tag": "Azure Container"
+    },
+    {
+      "id": "pusher_realtime",
+      "type": "messagebus",
+      "label": "Pusher Realtime",
+      "sublabel": "WebSocket Events",
+      "pos": [240, 310],
+      "size": [150, 60],
+      "tag": "Live Updates"
+    },
+    {
+      "id": "s3_storage",
+      "type": "cloud",
+      "brand": "cloudflare",
+      "label": "Cloudflare R2 / S3",
+      "sublabel": "Object Storage CDN",
+      "pos": [470, 310],
+      "size": [150, 60],
+      "tag": "Zero Egress Fee"
+    },
+    {
+      "id": "auth_payment",
+      "type": "security",
+      "label": "OAuth & VNPay",
+      "sublabel": "Google / VNPay Gateway",
+      "pos": [700, 310],
+      "size": [150, 60],
+      "tag": "Auth & Billing"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Microsoft Azure Cloud (Docker Containers)",
+      "wraps": ["backend", "rag_service"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Managed Cloud Infrastructure & Services",
+      "wraps": ["frontend", "database", "stream_video", "pusher_realtime", "s3_storage", "auth_payment"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-users-fe",
+      "from": "users",
+      "to": "frontend",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "conn-fe-be",
+      "from": "frontend",
+      "to": "backend",
+      "label": "REST API / JWT",
+      "variant": "emphasis"
+    },
+    {
+      "id": "conn-be-db",
+      "from": "backend",
+      "to": "database",
+      "label": "Neon Driver SQL",
+      "variant": "default"
+    },
+    {
+      "id": "conn-fe-stream",
+      "from": "frontend",
+      "to": "stream_video",
+      "label": "Video Room",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "conn-be-rag",
+      "from": "backend",
+      "to": "rag_service",
+      "label": "AI Generation",
+      "variant": "default",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "conn-be-pusher",
+      "from": "backend",
+      "to": "pusher_realtime",
+      "label": "Trigger Event",
+      "variant": "default"
+    },
+    {
+      "id": "conn-fe-pusher",
+      "from": "frontend",
+      "to": "pusher_realtime",
+      "label": "Subscribe WS",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "conn-be-s3",
+      "from": "backend",
+      "to": "s3_storage",
+      "label": "Presigned Upload",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "conn-be-external",
+      "from": "backend",
+      "to": "auth_payment",
+      "label": "Verify / IPN",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Frontend & Edge Layer",
+      "items": [
+        "Next.js 14 App Router triển khai trên Vercel Edge Platform",
+        "Stream Video SDK cho lớp học trực tuyến WebRTC",
+        "Pusher client lắng nghe sự kiện thông báo thời gian thực"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Backend & Cloud Services",
+      "items": [
+        "NestJS REST API và Python AI Service đóng gói Docker trên Microsoft Azure",
+        "Neon Serverless PostgreSQL tối ưu truy vấn kết hợp Prisma ORM",
+        "RAG Engine tự động trích xuất tài liệu, tạo quiz & podcast"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Storage & External Gateways",
+      "items": [
+        "Cloudflare R2 & AWS S3 / ImageKit lưu trữ tài liệu đề thi (Zero Egress Fee)",
+        "Cổng thanh toán VNPay xử lý nạp tiền / mua khóa học",
+        "Google OAuth2 & Resend Email cho xác thực và thông báo"
+      ]
+    }
+  ]
+}

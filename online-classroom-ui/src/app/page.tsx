@@ -22,6 +22,7 @@ import {
   LineChart,
 } from "lucide-react";
 import { PricingSection } from "@/components/pricing/PricingSection";
+import FloatingContactWidget from "@/components/FloatingContactWidget";
 
 
 // Lazy-load YouTube component
@@ -586,6 +587,9 @@ export default function Home() {
           © {new Date().getFullYear()} DoCus Education. Bảo lưu mọi quyền.
         </div>
       </footer>
+
+      {/* ── FLOATING CONTACT WIDGET (CHAT, CALL, ZALO, MESSENGER) ── */}
+      <FloatingContactWidget />
     </div>
   );
 }
